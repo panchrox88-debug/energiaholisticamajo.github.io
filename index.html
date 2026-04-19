@@ -821,35 +821,42 @@
     }
 
     .detail-header {
-      text-align: center;
-      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
     }
+    .detail-header-text { flex: 1; min-width: 0; }
     .detail-eyebrow {
       font-family: 'Cormorant Garamond', serif;
       font-style: italic;
       color: var(--rose);
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      font-size: 0.8rem;
-      margin-bottom: 4px;
+      font-size: 0.78rem;
+      margin-bottom: 3px;
     }
     .detail-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+      font-size: clamp(1.3rem, 2.2vw, 1.9rem);
       color: var(--dark);
       font-weight: 500;
       margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .detail-divider {
       width: 50px; height: 1px;
       background: var(--rose-lt);
-      margin: 10px auto 0;
+      margin: 0 0 14px;
     }
 
     .carousel-stage {
       position: relative;
-      width: min(420px, 90%);
-      max-height: 60vh;
+      width: min(460px, 94%);
+      max-height: 68vh;
       margin: 0 auto;
       aspect-ratio: 639 / 793;
       border-radius: 20px;
@@ -917,34 +924,33 @@
       letter-spacing: 0.1em; margin-top: 6px;
     }
 
-    /* Sin fotos: solo muestra el botón de reserva */
-    .service-modal.no-slides .detail-header,
+    /* Sin fotos: solo muestra encabezado con botón, sin carrusel */
     .service-modal.no-slides .carousel-stage,
     .service-modal.no-slides .carousel-dots,
-    .service-modal.no-slides .carousel-counter { display: none; }
-    .service-modal.no-slides .service-detail { padding: 56px 48px 48px; }
-    .service-modal.no-slides .detail-cta { margin-top: 0; }
+    .service-modal.no-slides .carousel-counter,
+    .service-modal.no-slides .detail-divider { display: none; }
+    .service-modal.no-slides .service-detail { padding: 36px 40px; }
 
-    .detail-cta { text-align: center; margin-top: 18px; }
     .detail-cta-btn {
-      display: inline-flex; align-items: center; gap: 10px;
+      display: inline-flex; align-items: center; gap: 8px;
       background: var(--rose); color: white;
-      padding: 14px 32px; border-radius: 100px;
-      text-decoration: none;
+      padding: 10px 20px; border-radius: 100px;
+      text-decoration: none; white-space: nowrap; flex-shrink: 0;
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.1rem; letter-spacing: 0.05em;
+      font-size: 1rem; letter-spacing: 0.04em;
       transition: all 0.3s; border: none; cursor: pointer;
     }
     .detail-cta-btn:hover {
       background: var(--dark); transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(122, 84, 84, 0.2);
+      box-shadow: 0 8px 20px rgba(122, 84, 84, 0.2);
     }
 
     @media (max-width: 900px) {
       .service-modal { padding: 16px; }
       .service-detail { padding: 24px 20px 28px; }
       .detail-title { font-size: 1.5rem; }
-      .carousel-stage { width: min(340px, 90%); max-height: 50vh; }
+      .carousel-stage { width: min(360px, 94%); max-height: 58vh; }
+      .detail-title { white-space: normal; }
       .carousel-arrow { width: 36px; height: 36px; font-size: 1.2rem; }
       .carousel-arrow.prev { left: 6px; }
       .carousel-arrow.next { right: 6px; }
@@ -1314,10 +1320,13 @@
         <button class="detail-close" id="detailClose" aria-label="Cerrar">✕</button>
         <div class="detail-inner">
           <div class="detail-header">
-            <p class="detail-eyebrow">Conoce más</p>
-            <h3 class="detail-title" id="detailTitle">—</h3>
-            <div class="detail-divider"></div>
+            <div class="detail-header-text">
+              <p class="detail-eyebrow">Conoce más</p>
+              <h3 class="detail-title" id="detailTitle">—</h3>
+            </div>
+            <button class="detail-cta-btn" id="detailReserve">Reservar →</button>
           </div>
+          <div class="detail-divider"></div>
           <div class="carousel-stage">
             <button class="carousel-arrow prev" id="carouselPrev" aria-label="Anterior">‹</button>
             <div class="carousel-track" id="carouselTrack"></div>
@@ -1325,9 +1334,6 @@
           </div>
           <div class="carousel-dots" id="carouselDots"></div>
           <p class="carousel-counter" id="carouselCounter">1 / 1</p>
-          <div class="detail-cta">
-            <button class="detail-cta-btn" id="detailReserve">Reservar esta sesión →</button>
-          </div>
         </div>
       </div>
     </div>
