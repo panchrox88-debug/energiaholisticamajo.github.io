@@ -962,17 +962,7 @@
       .detail-title { font-size: 1.5rem; }
       .carousel-stage { width: min(360px, 94%); max-height: 58vh; }
       .detail-title { white-space: normal; }
-      .carousel-arrow {
-        width: 28px; height: 28px; font-size: 1rem;
-        background: rgba(255,255,255,0.35);
-        backdrop-filter: blur(3px);
-        box-shadow: none;
-        top: auto; bottom: 12px;
-        transform: none;
-      }
-      .carousel-arrow:hover:not(:disabled) { transform: none; }
-      .carousel-arrow.prev { left: 10px; }
-      .carousel-arrow.next { right: 10px; }
+      .carousel-arrow { display: none; }
       .detail-cta-btn { padding: 12px 24px; font-size: 1rem; }
     }
 
@@ -1893,14 +1883,27 @@
       else if (e.key === 'Escape') closeService();
     });
 
-    // Swipe support on the carousel
+    // Swipe + tap-zone en mobile
+    const stage = document.querySelector('.carousel-stage');
     let touchStartX = 0;
-    carousel.track.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-    carousel.track.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].screenX - touchStartX;
-      if (Math.abs(dx) > 50) {
+    let touchStartY = 0;
+    stage.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+    stage.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        // Swipe horizontal
         if (dx < 0) goToSlide(carousel.idx + 1);
         else goToSlide(carousel.idx - 1);
+      } else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+        // Tap: mitad izquierda = prev, mitad derecha = next
+        const rect = stage.getBoundingClientRect();
+        const tapX = e.changedTouches[0].clientX - rect.left;
+        if (tapX < rect.width / 2) goToSlide(carousel.idx - 1);
+        else goToSlide(carousel.idx + 1);
       }
     }, { passive: true });
 
