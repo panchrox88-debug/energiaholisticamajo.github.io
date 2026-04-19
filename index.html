@@ -61,6 +61,64 @@
       border-bottom: 1px solid rgba(201,133,138,0.12);
       z-index: 100;
     }
+
+    /* Hamburger */
+    .nav-toggle {
+      display: none;
+      background: transparent; border: none; cursor: pointer;
+      width: 40px; height: 40px;
+      padding: 0; position: relative; z-index: 110;
+    }
+    .nav-toggle span {
+      display: block; position: absolute; left: 8px; right: 8px;
+      height: 1.5px; background: var(--dark);
+      transition: transform 0.3s, top 0.3s, opacity 0.3s;
+    }
+    .nav-toggle span:nth-child(1) { top: 13px; }
+    .nav-toggle span:nth-child(2) { top: 19px; }
+    .nav-toggle span:nth-child(3) { top: 25px; }
+    .nav-toggle.open span:nth-child(1) { top: 19px; transform: rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; }
+    .nav-toggle.open span:nth-child(3) { top: 19px; transform: rotate(-45deg); }
+
+    /* Mobile menu overlay */
+    .mobile-menu {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(250,245,240,0.98);
+      backdrop-filter: blur(20px);
+      z-index: 105;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 32px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .mobile-menu.open { opacity: 1; pointer-events: auto; }
+    .mobile-menu ul {
+      list-style: none; display: flex; flex-direction: column;
+      gap: 28px; text-align: center;
+    }
+    .mobile-menu a {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 300;
+      color: var(--dark); text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: color 0.3s;
+    }
+    .mobile-menu a:hover, .mobile-menu a:active { color: var(--rose); }
+    .mobile-menu .mobile-cta {
+      margin-top: 16px;
+      background: var(--rose); color: white;
+      padding: 14px 36px; border-radius: 40px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.75rem; letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+    .mobile-menu-divider {
+      width: 40px; height: 1px; background: var(--gold-lt);
+    }
+    body.menu-open { overflow: hidden; }
     .nav-logo {
       display: flex; flex-direction: column; line-height: 1.1;
     }
@@ -421,9 +479,9 @@
     /* ── CONTACT ── */
     .contact {
       padding: 120px 64px;
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 80px; align-items: start;
+      text-align: center;
     }
+    .contact-left { max-width: 720px; margin: 0 auto; }
     .contact-left .section-eyebrow {
       font-size: 0.65rem; letter-spacing: 0.45em;
       text-transform: uppercase; color: var(--gold); margin-bottom: 16px;
@@ -436,7 +494,13 @@
     .contact-left h2 em { font-style: italic; color: var(--rose); }
     .contact-left p { font-size: 0.9rem; line-height: 2; color: var(--muted); }
 
-    .contact-info { margin-top: 40px; display: flex; flex-direction: column; gap: 20px; }
+    .contact-info {
+      margin-top: 48px;
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 20px 40px;
+      max-width: 620px; margin-left: auto; margin-right: auto;
+      text-align: left;
+    }
     .contact-info-item {
       display: flex; align-items: center; gap: 16px;
     }
@@ -487,6 +551,423 @@
       box-shadow: 0 4px 20px rgba(201,133,138,0.3);
     }
     .form-btn:hover { background: #b87278; transform: translateY(-1px); }
+
+    /* ── AGENDA (BOOKING) ── */
+    .booking {
+      padding: 120px 64px;
+      background: linear-gradient(180deg, var(--cream) 0%, var(--beige) 100%);
+      text-align: center;
+      position: relative;
+    }
+    .booking .section-eyebrow {
+      font-size: 0.65rem; letter-spacing: 0.45em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 16px;
+    }
+    .booking h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 300; color: var(--dark); margin-bottom: 16px;
+    }
+    .booking h2 em { font-style: italic; color: var(--rose); }
+    .booking .section-sub {
+      font-size: 0.9rem; color: var(--muted); max-width: 520px;
+      margin: 0 auto 56px; line-height: 1.9;
+    }
+
+    .booking-wrap {
+      max-width: 1100px; margin: 0 auto;
+      background: white;
+      border-radius: 32px;
+      padding: 56px 56px;
+      border: 1px solid rgba(201,133,138,0.12);
+      box-shadow: 0 20px 60px rgba(201,133,138,0.1);
+      text-align: left;
+    }
+
+    .step { margin-bottom: 40px; }
+    .step:last-of-type { margin-bottom: 0; }
+    .step-label {
+      display: block;
+      font-size: 0.68rem; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 20px;
+    }
+    .step-label .step-num {
+      color: var(--rose); font-weight: 400; margin-right: 6px;
+    }
+
+    /* Service grid */
+    .bk-services {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .bk-opt {
+      background: var(--cream);
+      border: 1.5px solid rgba(201,133,138,0.2);
+      border-radius: 18px;
+      padding: 22px 18px;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-align: center;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+      font-family: 'Nunito', sans-serif;
+      color: var(--dark);
+      font-size: 0.88rem; font-weight: 300;
+      line-height: 1.4;
+    }
+    .bk-opt:hover { border-color: var(--rose-lt); background: white; transform: translateY(-2px); }
+    .bk-opt.selected {
+      border-color: var(--rose);
+      background: var(--blush);
+      box-shadow: 0 6px 20px rgba(201,133,138,0.2);
+    }
+    .bk-opt.disabled {
+      opacity: 0.4; cursor: not-allowed;
+      pointer-events: none;
+    }
+    .bk-opt-icon { font-size: 1.6rem; }
+    .bk-opt-name { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--dark); }
+
+    /* Modality */
+    .bk-modality {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .bk-mod {
+      background: var(--cream);
+      border: 1.5px solid rgba(201,133,138,0.2);
+      border-radius: 18px;
+      padding: 22px;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem; color: var(--dark);
+    }
+    .bk-mod:hover:not(.disabled) { border-color: var(--rose-lt); background: white; }
+    .bk-mod.selected {
+      border-color: var(--rose); background: var(--blush);
+      box-shadow: 0 6px 20px rgba(201,133,138,0.2);
+    }
+    .bk-mod.disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+    .bk-mod-icon { font-size: 1.1rem; }
+
+    /* Days */
+    .bk-days-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+    .bk-days {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+    .bk-day {
+      background: var(--cream);
+      border: 1.5px solid rgba(201,133,138,0.2);
+      border-radius: 14px;
+      padding: 14px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .bk-day:hover:not(.disabled) { border-color: var(--rose-lt); background: white; }
+    .bk-day.selected {
+      border-color: var(--rose); background: var(--blush);
+      box-shadow: 0 4px 14px rgba(201,133,138,0.2);
+    }
+    .bk-day.disabled { opacity: 0.3; cursor: not-allowed; }
+    .bk-day-name {
+      font-size: 0.62rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .bk-day-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; color: var(--dark);
+      line-height: 1;
+    }
+    .bk-day.selected .bk-day-num { color: var(--rose); }
+
+    /* Times */
+    .bk-times {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+    }
+    .bk-time {
+      background: var(--cream);
+      border: 1.5px solid rgba(201,133,138,0.2);
+      border-radius: 12px;
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem; color: var(--dark);
+    }
+    .bk-time:hover:not(.disabled) { border-color: var(--rose-lt); background: white; }
+    .bk-time.selected {
+      border-color: var(--rose); background: var(--blush);
+      color: var(--rose); font-weight: 400;
+      box-shadow: 0 4px 14px rgba(201,133,138,0.2);
+    }
+    .bk-time.disabled {
+      opacity: 0.4; cursor: not-allowed;
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    /* Summary & confirm */
+    .bk-summary {
+      margin-top: 40px;
+      padding: 28px 32px;
+      background: linear-gradient(145deg, var(--blush), var(--beige));
+      border-radius: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .bk-summary-details {
+      display: flex; flex-direction: column; gap: 4px;
+      font-size: 0.88rem; color: var(--dark);
+      font-family: 'Nunito', sans-serif; line-height: 1.6;
+    }
+    .bk-summary-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem; color: var(--rose); font-style: italic;
+      margin-bottom: 4px;
+    }
+    .bk-summary-empty { color: var(--muted); font-size: 0.88rem; }
+    .bk-confirm {
+      background: var(--rose); color: white; border: none;
+      padding: 16px 36px; border-radius: 40px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.78rem; letter-spacing: 0.22em;
+      text-transform: uppercase; cursor: pointer;
+      transition: background 0.3s, transform 0.2s, opacity 0.3s;
+      box-shadow: 0 4px 20px rgba(201,133,138,0.3);
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .bk-confirm:hover { background: #b87278; transform: translateY(-1px); }
+    .bk-confirm:disabled, .bk-confirm.disabled {
+      opacity: 0.4; cursor: not-allowed;
+      transform: none;
+      pointer-events: none;
+    }
+
+    /* ── SERVICE INLINE EXPANSION ── */
+    .service-card { cursor: pointer; transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+    .service-card[data-empty] { cursor: default; }
+
+    /* Wrapper: grid + detail panel share a container so only one is visible at a time */
+    .services-grid {
+      transition: opacity 0.4s ease, max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1), margin 0.6s ease;
+      overflow: hidden;
+    }
+    .services-grid.collapsed {
+      opacity: 0;
+      max-height: 0;
+      margin: 0;
+      pointer-events: none;
+    }
+    /* Keep cards interactive unless collapsed */
+    .services-grid.has-expanded .service-card { pointer-events: none; }
+
+    .service-detail {
+      max-width: 1100px;
+      margin: 0 auto;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.5s ease 0.2s,
+                  margin-top 0.5s ease;
+      margin-top: 0;
+    }
+    .service-detail.open {
+      max-height: 2400px;
+      opacity: 1;
+      margin-top: 0;
+    }
+
+    .detail-inner {
+      background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(238,231,223,0.3) 100%);
+      border: 1px solid rgba(212, 165, 165, 0.25);
+      border-radius: 28px;
+      padding: 48px 48px 56px;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(122, 84, 84, 0.08);
+    }
+
+    .detail-close {
+      position: absolute;
+      top: 20px; right: 20px;
+      width: 42px; height: 42px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(212, 165, 165, 0.3);
+      color: var(--dark);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      transition: all 0.25s;
+      z-index: 4;
+    }
+    .detail-close:hover {
+      background: var(--rose-lt);
+      color: white;
+      transform: rotate(90deg);
+    }
+
+    .detail-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .detail-eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: var(--rose);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+    .detail-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      color: var(--dark);
+      font-weight: 500;
+      margin: 0;
+    }
+    .detail-divider {
+      width: 60px;
+      height: 1px;
+      background: var(--rose-lt);
+      margin: 20px auto 0;
+    }
+
+    .carousel-stage {
+      position: relative;
+      width: min(520px, 100%);
+      margin: 0 auto;
+      aspect-ratio: 639 / 793;
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--cream);
+      box-shadow: 0 20px 50px rgba(122, 84, 84, 0.18);
+    }
+    .carousel-track {
+      display: flex;
+      height: 100%;
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .carousel-slide {
+      flex: 0 0 100%;
+      height: 100%;
+      background: var(--cream);
+    }
+    .carousel-slide img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(212, 165, 165, 0.25);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      line-height: 1;
+      color: var(--dark);
+      transition: all 0.25s;
+      box-shadow: 0 4px 14px rgba(122, 84, 84, 0.15);
+      z-index: 2;
+    }
+    .carousel-arrow:hover:not(:disabled) {
+      background: white;
+      transform: translateY(-50%) scale(1.08);
+      color: var(--rose);
+    }
+    .carousel-arrow.prev { left: -20px; }
+    .carousel-arrow.next { right: -20px; }
+    .carousel-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    .carousel-dots {
+      margin-top: 24px;
+      display: flex; gap: 10px;
+      justify-content: center;
+    }
+    .carousel-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(212, 165, 165, 0.3);
+      cursor: pointer;
+      transition: all 0.25s;
+      border: none;
+      padding: 0;
+    }
+    .carousel-dot:hover { background: rgba(212, 165, 165, 0.6); }
+    .carousel-dot.active {
+      background: var(--rose);
+      transform: scale(1.3);
+    }
+
+    .carousel-counter {
+      text-align: center;
+      color: var(--muted);
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+      margin-top: 12px;
+    }
+
+    .detail-cta {
+      text-align: center;
+      margin-top: 32px;
+    }
+    .detail-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--rose);
+      color: white;
+      padding: 14px 32px;
+      border-radius: 100px;
+      text-decoration: none;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+    .detail-cta-btn:hover {
+      background: var(--dark);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(122, 84, 84, 0.2);
+    }
+
+    @media (max-width: 900px) {
+      .detail-inner { padding: 36px 20px 40px; }
+      .carousel-arrow { width: 40px; height: 40px; font-size: 1.3rem; }
+      .carousel-arrow.prev { left: 8px; }
+      .carousel-arrow.next { right: 8px; }
+    }
 
     /* ── FOOTER ── */
     footer {
@@ -548,17 +1029,160 @@
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* ── RESPONSIVE ── */
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+      nav { padding: 20px 32px; }
+      .nav-links { gap: 24px; }
+      .about, .contact { padding: 100px 32px; gap: 56px; }
+      .services, .testimonials, .booking { padding: 100px 32px; }
+      .services-grid, .testimonials-grid { grid-template-columns: repeat(2, 1fr); }
+      .booking-wrap { padding: 48px 40px; }
+      .bk-services { grid-template-columns: repeat(2, 1fr); }
+      .bk-times { grid-template-columns: repeat(4, 1fr); }
+      .cta-banner { margin: 0 32px 72px; padding: 64px 48px; }
+      footer { padding: 56px 32px 28px; }
+    }
+
+    /* Tablet small / large mobile */
     @media (max-width: 900px) {
-      nav { padding: 18px 24px; }
+      nav { padding: 16px 24px; }
       .nav-links, .nav-btn { display: none; }
-      .hero { padding: 100px 24px 60px; }
-      .about, .contact { grid-template-columns: 1fr; padding: 80px 24px; gap: 48px; }
+      .nav-toggle { display: block; }
+      .mobile-menu { display: flex; }
+      .nav-logo-main { font-size: 1.1rem; letter-spacing: 0.1em; }
+      .nav-logo-sub { font-size: 0.55rem; letter-spacing: 0.3em; }
+
+      .hero { padding: 120px 24px 80px; min-height: auto; }
+      .hero-moon { font-size: 3rem; }
+      .hero-eyebrow { font-size: 0.62rem; letter-spacing: 0.35em; }
+      .hero-desc { font-size: 0.95rem; line-height: 1.8; }
+      .hero-ctas { flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 36px; }
+      .btn-primary, .btn-outline { width: 100%; text-align: center; padding: 16px 32px; font-size: 0.75rem; }
+      .hero-tags { gap: 8px; margin-top: 28px; }
+      .hero-tag { padding: 6px 14px; font-size: 0.65rem; letter-spacing: 0.12em; }
+      .hero-scroll-hint { bottom: 24px; }
+
+      .about, .contact {
+        grid-template-columns: 1fr;
+        padding: 80px 24px;
+        gap: 56px;
+      }
+      .about-card { height: 380px; border-radius: 20px 60px 20px 60px; }
+      .about-card-icon { font-size: 4rem; }
+      .about-card-name { font-size: 1.4rem; text-align: center; padding: 0 24px; }
+      .about-badge {
+        right: 16px; bottom: 20px;
+        padding: 12px 18px;
+      }
+      .badge-num { font-size: 1.6rem; }
+      .badge-text { font-size: 0.66rem; }
+
       .services { padding: 80px 24px; }
-      .services-grid, .testimonials-grid { grid-template-columns: 1fr; }
-      .cta-banner { margin: 0 24px 60px; padding: 48px 32px; grid-template-columns: 1fr; }
+      .services-grid, .testimonials-grid { grid-template-columns: 1fr; gap: 16px; }
+      .service-card { padding: 36px 24px; }
+      .services .section-sub { margin-bottom: 48px; }
+
       .testimonials { padding: 80px 24px; }
-      .footer-top { grid-template-columns: 1fr; gap: 40px; }
-      footer { padding: 48px 24px 24px; }
+      .testimonials h2 { margin-bottom: 48px; }
+      .testimonial-card { padding: 32px 24px; }
+      .testimonial-text { font-size: 1rem; }
+
+      /* Booking */
+      .booking { padding: 80px 24px; }
+      .booking-wrap { padding: 32px 20px; border-radius: 24px; }
+      .step { margin-bottom: 32px; }
+      .step-label { font-size: 0.64rem; letter-spacing: 0.25em; margin-bottom: 14px; }
+      .bk-services { grid-template-columns: 1fr; gap: 10px; }
+      .bk-opt { flex-direction: row; justify-content: flex-start; padding: 16px 18px; text-align: left; gap: 14px; }
+      .bk-opt-icon { font-size: 1.4rem; }
+      .bk-opt-name { font-size: 1.05rem; }
+      .bk-modality { gap: 10px; }
+      .bk-mod { padding: 18px; font-size: 0.9rem; }
+      .bk-days { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .bk-day { padding: 12px 6px; }
+      .bk-day-num { font-size: 1.25rem; }
+      .bk-times { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .bk-time { padding: 11px 6px; font-size: 0.82rem; }
+      .bk-summary {
+        flex-direction: column; align-items: stretch;
+        padding: 24px; margin-top: 32px; gap: 20px;
+        text-align: center;
+      }
+      .bk-summary-details { align-items: center; }
+      .bk-confirm { width: 100%; justify-content: center; padding: 16px 24px; }
+
+      .cta-banner {
+        margin: 0 24px 64px;
+        padding: 56px 32px;
+        grid-template-columns: 1fr;
+        gap: 32px; text-align: center;
+        border-radius: 24px;
+      }
+      .cta-banner::before { display: none; }
+      .btn-white { width: 100%; padding: 16px 32px; font-size: 0.75rem; }
+
+      .contact-form { padding: 32px 24px; }
+      .contact-form h3 { font-size: 1.4rem; margin-bottom: 24px; }
+
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding-bottom: 36px;
+        margin-bottom: 32px;
+      }
+      .footer-brand-desc { max-width: 100%; }
+      .footer-bottom {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+      footer { padding: 56px 24px 28px; }
+    }
+
+    /* Small mobile */
+    @media (max-width: 480px) {
+      nav { padding: 14px 20px; }
+      .nav-logo-main { font-size: 1rem; }
+      .nav-logo-sub { font-size: 0.5rem; }
+
+      .hero { padding: 110px 20px 72px; }
+      .hero-moon { font-size: 2.6rem; margin-bottom: 16px; }
+      .hero-eyebrow { font-size: 0.58rem; margin-bottom: 16px; }
+      .hero-title { font-size: 2.6rem; line-height: 1.15; }
+      .hero-divider { margin: 24px auto; }
+      .hero-divider-line { width: 40px; }
+      .hero-desc { font-size: 0.92rem; }
+
+      .about, .contact { padding: 64px 20px; gap: 48px; }
+      .about-content h2 { font-size: 1.9rem; }
+      .about-content p { font-size: 0.9rem; }
+
+      .services, .testimonials { padding: 64px 20px; }
+      .services h2, .testimonials h2 { font-size: 1.9rem; }
+      .service-card h3 { font-size: 1.3rem; }
+
+      .booking { padding: 64px 20px; }
+      .booking h2 { font-size: 1.9rem; }
+      .booking-wrap { padding: 28px 18px; }
+      .bk-days { grid-template-columns: repeat(3, 1fr); }
+      .bk-times { grid-template-columns: repeat(3, 1fr); }
+
+      .cta-banner {
+        margin: 0 20px 56px;
+        padding: 44px 24px;
+      }
+      .cta-banner h2 { font-size: 1.6rem; }
+      .cta-banner p { font-size: 0.85rem; }
+
+      .contact-left h2 { font-size: 1.9rem; }
+      .contact-form { padding: 28px 20px; border-radius: 20px; }
+      .form-input, .form-select, .form-textarea { padding: 13px 16px; font-size: 0.9rem; }
+
+      footer { padding: 48px 20px 24px; }
+      .footer-brand-name { font-size: 1.2rem; }
+
+      .mobile-menu a { font-size: 1.6rem; }
     }
   </style>
 </head>
@@ -576,11 +1200,28 @@
     <ul class="nav-links">
       <li><a href="#about">Sobre mí</a></li>
       <li><a href="#services">Servicios</a></li>
+      <li><a href="#booking">Agenda</a></li>
       <li><a href="#testimonials">Testimonios</a></li>
       <li><a href="#contact">Contacto</a></li>
     </ul>
-    <a href="#contact" class="nav-btn">Agendar sesión</a>
+    <a href="#booking" class="nav-btn">Agendar sesión</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <ul>
+      <li><a href="#about">Sobre mí</a></li>
+      <li><a href="#services">Servicios</a></li>
+      <li><a href="#booking">Agenda</a></li>
+      <li><a href="#testimonials">Testimonios</a></li>
+      <li><a href="#contact">Contacto</a></li>
+    </ul>
+    <div class="mobile-menu-divider"></div>
+    <a href="#booking" class="mobile-cta">Agendar sesión</a>
+  </div>
 
   <!-- HERO -->
   <section class="hero">
@@ -601,7 +1242,7 @@
       <span class="hero-tag">Online & Presencial</span>
     </div>
     <div class="hero-ctas">
-      <a href="#contact" class="btn-primary">Comenzar mi camino ✨</a>
+      <a href="#booking" class="btn-primary">Comenzar mi camino ✨</a>
       <a href="#services" class="btn-outline">Ver servicios</a>
     </div>
     <div class="hero-scroll-hint">
@@ -646,41 +1287,63 @@
     <p class="section-sub reveal">Cada servicio está diseñado para acompañarte en tu proceso único de sanación y transformación.</p>
 
     <div class="services-grid">
-      <div class="service-card reveal">
+      <div class="service-card reveal" data-service="psico">
         <div class="service-icon">🧠</div>
         <h3>Psicoterapia Transpersonal</h3>
         <p>Un espacio de escucha profunda donde trabajamos tus emociones, miedos y bloqueos desde la raíz, integrando cuerpo y mente.</p>
         <span class="service-mode">Online & Presencial</span>
       </div>
-      <div class="service-card reveal">
+      <div class="service-card reveal" data-service="limpieza">
         <div class="service-icon">✨</div>
         <h3>Limpieza Energética</h3>
         <p>Limpieza y armonización de tu campo energético para liberar cargas que ya no te pertenecen y restaurar tu flujo vital.</p>
         <span class="service-mode">Online & Presencial</span>
       </div>
-      <div class="service-card reveal">
+      <div class="service-card reveal" data-service="reiki">
         <div class="service-icon">🌊</div>
         <h3>Reiki Usui</h3>
         <p>Canalización de energía universal para activar tu propio poder sanador, relajar el sistema nervioso y equilibrar tus chakras.</p>
         <span class="service-mode">Presencial</span>
       </div>
-      <div class="service-card reveal">
+      <div class="service-card reveal" data-service="masaje">
         <div class="service-icon">💆</div>
         <h3>Masaje Terapéutico</h3>
         <p>Trabajo corporal que integra técnicas de masaje con conciencia energética para liberar tensiones físicas y emocionales.</p>
         <span class="service-mode">Presencial</span>
       </div>
-      <div class="service-card reveal">
+      <div class="service-card reveal" data-service="utero">
         <div class="service-icon">🌺</div>
         <h3>Sanación de Útero</h3>
         <p>Proceso de reconexión con tu centro femenino, liberando memorias y heridas para recuperar tu poder y creatividad.</p>
         <span class="service-mode">Online & Presencial</span>
       </div>
-      <div class="service-card reveal">
+      <div class="service-card reveal" data-service="circulo">
         <div class="service-icon">🌙</div>
         <h3>Círculos de Mujeres</h3>
         <p>Espacios de encuentro, sanación colectiva y comunidad donde nos acompañamos en el camino de reconocernos y crecer.</p>
         <span class="service-mode">Presencial</span>
+      </div>
+    </div>
+
+    <!-- Panel de detalle inline (sibling of grid, max-width-aligned) -->
+    <div class="service-detail" id="serviceDetail" aria-hidden="true">
+      <div class="detail-inner">
+        <button class="detail-close" id="detailClose" aria-label="Cerrar">✕</button>
+        <div class="detail-header">
+          <p class="detail-eyebrow">Conoce más</p>
+          <h3 class="detail-title" id="detailTitle">—</h3>
+          <div class="detail-divider"></div>
+        </div>
+        <div class="carousel-stage">
+          <button class="carousel-arrow prev" id="carouselPrev" aria-label="Anterior">‹</button>
+          <div class="carousel-track" id="carouselTrack"></div>
+          <button class="carousel-arrow next" id="carouselNext" aria-label="Siguiente">›</button>
+        </div>
+        <div class="carousel-dots" id="carouselDots"></div>
+        <p class="carousel-counter" id="carouselCounter">1 / 1</p>
+        <div class="detail-cta">
+          <button class="detail-cta-btn" id="detailReserve">Reservar esta sesión →</button>
+        </div>
       </div>
     </div>
   </section>
@@ -726,13 +1389,57 @@
     </div>
   </section>
 
+  <!-- BOOKING -->
+  <section class="booking" id="booking">
+    <p class="section-eyebrow reveal">Agenda</p>
+    <h2 class="reveal">Reserva tu <em>sesión</em></h2>
+    <p class="section-sub reveal">Elige el servicio, modalidad, día y horario que mejor se ajuste a ti.</p>
+
+    <div class="booking-wrap reveal">
+      <!-- Step 1: Service -->
+      <div class="step" id="step1">
+        <span class="step-label"><span class="step-num">1 ·</span> Servicio</span>
+        <div class="bk-services" id="bkServices"></div>
+      </div>
+
+      <!-- Step 2: Modality -->
+      <div class="step" id="step2">
+        <span class="step-label"><span class="step-num">2 ·</span> Modalidad</span>
+        <div class="bk-modality" id="bkModality">
+          <div class="bk-mod" data-mod="online"><span class="bk-mod-icon">💻</span> Online</div>
+          <div class="bk-mod" data-mod="presencial"><span class="bk-mod-icon">🌸</span> Presencial</div>
+        </div>
+      </div>
+
+      <!-- Step 3: Day -->
+      <div class="step" id="step3">
+        <span class="step-label"><span class="step-num">3 ·</span> Selecciona un día</span>
+        <div class="bk-days" id="bkDays"></div>
+      </div>
+
+      <!-- Step 4: Time -->
+      <div class="step" id="step4">
+        <span class="step-label"><span class="step-num">4 ·</span> Elige tu horario</span>
+        <div class="bk-times" id="bkTimes"></div>
+      </div>
+
+      <!-- Summary -->
+      <div class="bk-summary" id="stepSummary">
+        <div class="bk-summary-details" id="bkSummary">
+          <span class="bk-summary-empty">Completa los pasos para agendar tu sesión ✨</span>
+        </div>
+        <a href="#" class="bk-confirm disabled" id="bkConfirm">Confirmar por WhatsApp ✨</a>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA BANNER -->
   <div class="cta-banner reveal">
     <div>
       <h2>¿Lista para comenzar<br>tu proceso de sanación?</h2>
       <p>Agenda tu primera sesión y da el primer paso hacia la versión más libre de ti.</p>
     </div>
-    <a href="#contact" class="btn-white">Agendar ahora ✨</a>
+    <a href="#booking" class="btn-white">Agendar ahora ✨</a>
   </div>
 
   <!-- CONTACT -->
@@ -774,33 +1481,6 @@
       </div>
     </div>
 
-    <div class="contact-form reveal">
-      <h3>Escríbeme 🌸</h3>
-      <div class="form-group">
-        <label class="form-label">Nombre</label>
-        <input type="text" class="form-input" placeholder="Tu nombre completo"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Correo electrónico</label>
-        <input type="email" class="form-input" placeholder="tu@correo.com"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Servicio de interés</label>
-        <select class="form-select form-input">
-          <option>Psicoterapia Transpersonal</option>
-          <option>Limpieza Energética</option>
-          <option>Reiki Usui</option>
-          <option>Masaje Terapéutico</option>
-          <option>Sanación de Útero</option>
-          <option>Círculo de Mujeres</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Mensaje</label>
-        <textarea class="form-textarea" placeholder="Cuéntame brevemente qué te trae por aquí..."></textarea>
-      </div>
-      <button class="form-btn">Enviar mensaje ✨</button>
-    </div>
   </section>
 
   <!-- FOOTER -->
@@ -858,6 +1538,24 @@
       starsEl.appendChild(s);
     }
 
+    // Mobile menu
+    const navToggle = document.getElementById('navToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const closeMenu = () => {
+      navToggle.classList.remove('open');
+      mobileMenu.classList.remove('open');
+      document.body.classList.remove('menu-open');
+      navToggle.setAttribute('aria-expanded', 'false');
+    };
+    navToggle.addEventListener('click', () => {
+      const isOpen = navToggle.classList.toggle('open');
+      mobileMenu.classList.toggle('open', isOpen);
+      document.body.classList.toggle('menu-open', isOpen);
+      navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+    window.addEventListener('resize', () => { if (window.innerWidth > 900) closeMenu(); });
+
     // Scroll reveal
     const reveals = document.querySelectorAll('.reveal');
     const obs = new IntersectionObserver((entries) => {
@@ -866,6 +1564,331 @@
       });
     }, { threshold: 0.12 });
     reveals.forEach(r => obs.observe(r));
+
+    // ─────────── BOOKING AGENDA ───────────
+    const SERVICES = [
+      { id: 'psico',    name: 'Psicoterapia',         icon: '🧠', modes: ['online','presencial'] },
+      { id: 'limpieza', name: 'Limpieza Energetica',  icon: '✨', modes: ['online','presencial'] },
+      { id: 'reiki',    name: 'Reiki Usui',           icon: '🌊', modes: ['presencial'] },
+      { id: 'masaje',   name: 'Masaje Terapeutico',   icon: '💆', modes: ['presencial'] },
+      { id: 'utero',    name: 'Sanacion de Utero',    icon: '🌺', modes: ['online','presencial'] },
+      { id: 'circulo',  name: 'Circulo de Mujeres',   icon: '🌙', modes: ['presencial'] },
+    ];
+
+    const WHATSAPP = '56966638304';
+    const DAY_NAMES = ['DOM','LUN','MAR','MIE','JUE','VIE','SAB'];
+    const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const TIMES = ['9:00','10:00','11:00','12:00','15:00','16:00','17:00','18:00'];
+
+    const state = { service: null, modality: null, day: null, time: null };
+
+    // Smooth scroll to next step with offset for fixed nav
+    function scrollToStep(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const navH = document.querySelector('nav').offsetHeight;
+      const targetY = el.getBoundingClientRect().top + window.pageYOffset - navH - 40;
+      const startY = window.pageYOffset;
+      const dist = targetY - startY;
+      if (Math.abs(dist) < 20) return;
+      const duration = 650;
+      const startT = performance.now();
+      const ease = t => 1 - Math.pow(1 - t, 3); // easeOutCubic — soft start, smooth settle
+      function step(now) {
+        const t = Math.min((now - startT) / duration, 1);
+        window.scrollTo(0, startY + dist * ease(t));
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    const elServices = document.getElementById('bkServices');
+    const elModality = document.getElementById('bkModality');
+    const elDays     = document.getElementById('bkDays');
+    const elTimes    = document.getElementById('bkTimes');
+    const elSummary  = document.getElementById('bkSummary');
+    const elConfirm  = document.getElementById('bkConfirm');
+
+    // Render services
+    SERVICES.forEach(s => {
+      const el = document.createElement('div');
+      el.className = 'bk-opt';
+      el.dataset.id = s.id;
+      el.innerHTML = `<span class="bk-opt-icon">${s.icon}</span><span class="bk-opt-name">${s.name}</span>`;
+      el.addEventListener('click', () => selectService(s.id));
+      elServices.appendChild(el);
+    });
+
+    // Build upcoming days (next 12 weekdays: Mon–Sat)
+    const days = [];
+    const today = new Date();
+    let cursor = new Date(today); cursor.setHours(0,0,0,0);
+    while (days.length < 12) {
+      cursor.setDate(cursor.getDate() + 1);
+      const dow = cursor.getDay();
+      if (dow !== 0) days.push(new Date(cursor)); // skip Sunday
+    }
+    days.forEach((d, i) => {
+      const el = document.createElement('div');
+      el.className = 'bk-day';
+      el.dataset.idx = i;
+      el.innerHTML = `<span class="bk-day-name">${DAY_NAMES[d.getDay()]}</span><span class="bk-day-num">${d.getDate()}</span>`;
+      el.addEventListener('click', () => selectDay(i));
+      elDays.appendChild(el);
+    });
+
+    // Render times (pseudo-busy: depends on selected day to feel real)
+    function renderTimes() {
+      elTimes.innerHTML = '';
+      const dayIdx = state.day ?? -1;
+      TIMES.forEach((t, i) => {
+        const el = document.createElement('div');
+        el.className = 'bk-time';
+        // Pseudo-random busy slots seeded by day index
+        const busy = dayIdx >= 0 && ((i * 7 + dayIdx * 3) % 5 === 0);
+        if (busy) el.classList.add('disabled');
+        el.dataset.time = t;
+        el.textContent = t;
+        if (!busy) el.addEventListener('click', () => selectTime(t));
+        elTimes.appendChild(el);
+      });
+    }
+    renderTimes();
+
+    // Modality click
+    elModality.querySelectorAll('.bk-mod').forEach(el => {
+      el.addEventListener('click', () => {
+        if (el.classList.contains('disabled')) return;
+        selectModality(el.dataset.mod);
+      });
+    });
+
+    function selectService(id) {
+      state.service = id;
+      [...elServices.children].forEach(c => c.classList.toggle('selected', c.dataset.id === id));
+      // Update modality availability
+      const svc = SERVICES.find(s => s.id === id);
+      elModality.querySelectorAll('.bk-mod').forEach(m => {
+        const available = svc.modes.includes(m.dataset.mod);
+        m.classList.toggle('disabled', !available);
+        if (!available && state.modality === m.dataset.mod) {
+          state.modality = null;
+          m.classList.remove('selected');
+        }
+      });
+      // Auto-select if only one modality
+      if (svc.modes.length === 1) {
+        selectModality(svc.modes[0]);
+        setTimeout(() => scrollToStep('step3'), 200);
+      } else {
+        setTimeout(() => scrollToStep('step2'), 200);
+      }
+      updateSummary();
+    }
+
+    function selectModality(mod) {
+      state.modality = mod;
+      elModality.querySelectorAll('.bk-mod').forEach(m => {
+        m.classList.toggle('selected', m.dataset.mod === mod);
+      });
+      updateSummary();
+      if (state.service && !state.day) setTimeout(() => scrollToStep('step3'), 200);
+    }
+
+    function selectDay(idx) {
+      state.day = idx;
+      [...elDays.children].forEach((c, i) => c.classList.toggle('selected', i === idx));
+      state.time = null;
+      renderTimes();
+      updateSummary();
+      setTimeout(() => scrollToStep('step4'), 200);
+    }
+
+    function selectTime(t) {
+      state.time = t;
+      elTimes.querySelectorAll('.bk-time').forEach(c => c.classList.toggle('selected', c.dataset.time === t));
+      updateSummary();
+      setTimeout(() => scrollToStep('stepSummary'), 200);
+    }
+
+    function updateSummary() {
+      const complete = state.service && state.modality && state.day !== null && state.time;
+      if (!complete) {
+        elSummary.innerHTML = '<span class="bk-summary-empty">Completa los pasos para agendar tu sesión ✨</span>';
+        elConfirm.classList.add('disabled');
+        elConfirm.removeAttribute('href');
+        return;
+      }
+      const svc = SERVICES.find(s => s.id === state.service);
+      const d = days[state.day];
+      const modLabel = state.modality === 'online' ? 'Online' : 'Presencial';
+      const dayLabel = `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
+      elSummary.innerHTML = `
+        <span class="bk-summary-title">${svc.icon} ${svc.name}</span>
+        <span>${modLabel} · ${dayLabel} · ${state.time} hrs</span>
+      `;
+      // Build WhatsApp message — strip anything outside safe ASCII range
+      const raw = [
+        'Hola Majo, quiero agendar una sesion:',
+        '',
+        'Servicio: ' + svc.name,
+        'Modalidad: ' + modLabel,
+        'Dia: ' + dayLabel,
+        'Hora: ' + state.time + ' hrs',
+        '',
+        'Me confirmas disponibilidad?'
+      ].join('\n');
+      // Keep only printable ASCII + newlines
+      const clean = raw.split('').filter(c => {
+        const code = c.charCodeAt(0);
+        return code === 10 || (code >= 32 && code <= 126);
+      }).join('');
+      elConfirm.href = 'https://api.whatsapp.com/send?phone=' + WHATSAPP + '&text=' + encodeURIComponent(clean);
+      elConfirm.target = '_blank';
+      elConfirm.rel = 'noopener';
+      elConfirm.classList.remove('disabled');
+    }
+
+    // ─────────── INLINE SERVICE EXPANSION ───────────
+    const SERVICE_DATA = {
+      reiki: {
+        title: 'Reiki Usui',
+        slides: [
+          'img/reiki/01-portada.png',
+          'img/reiki/02-frase.png',
+          'img/reiki/03-descripcion.png',
+          'img/reiki/04-beneficios.png',
+          'img/reiki/05-incluye.png',
+        ],
+      },
+      psico: { title: 'Psicoterapia Transpersonal', slides: [] },
+      limpieza: { title: 'Limpieza Energética', slides: [] },
+      masaje: { title: 'Masaje Terapéutico', slides: [] },
+      utero: { title: 'Sanación de Útero', slides: [] },
+      circulo: { title: 'Círculos de Mujeres', slides: [] },
+    };
+
+    const servicesGrid = document.querySelector('.services-grid');
+    const detailPanel = document.getElementById('serviceDetail');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailClose = document.getElementById('detailClose');
+    const detailReserve = document.getElementById('detailReserve');
+
+    const carousel = {
+      track: document.getElementById('carouselTrack'),
+      dots: document.getElementById('carouselDots'),
+      counter: document.getElementById('carouselCounter'),
+      prev: document.getElementById('carouselPrev'),
+      next: document.getElementById('carouselNext'),
+      slides: [],
+      idx: 0,
+      currentService: null,
+    };
+
+    function openService(serviceId) {
+      const data = SERVICE_DATA[serviceId];
+      if (!data || !data.slides.length) return;
+
+      carousel.slides = data.slides;
+      carousel.idx = 0;
+      carousel.currentService = serviceId;
+
+      // Title
+      detailTitle.textContent = data.title;
+
+      // Slides
+      carousel.track.innerHTML = data.slides.map(src =>
+        `<div class="carousel-slide"><img src="${src}" alt="" draggable="false"/></div>`
+      ).join('');
+
+      // Dots
+      carousel.dots.innerHTML = data.slides.map((_, i) =>
+        `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-idx="${i}" aria-label="Slide ${i+1}"></button>`
+      ).join('');
+      carousel.dots.querySelectorAll('.carousel-dot').forEach(d => {
+        d.addEventListener('click', () => goToSlide(parseInt(d.dataset.idx, 10)));
+      });
+
+      updateCarousel();
+
+      // Collapse grid, show panel
+      servicesGrid.classList.add('collapsed', 'has-expanded');
+      detailPanel.classList.add('open');
+      detailPanel.setAttribute('aria-hidden', 'false');
+
+      // Smooth scroll so the section header + panel are comfortably visible
+      setTimeout(() => {
+        const section = document.getElementById('services');
+        const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: sectionTop - 60, behavior: 'smooth' });
+      }, 100);
+    }
+
+    function closeService() {
+      detailPanel.classList.remove('open');
+      detailPanel.setAttribute('aria-hidden', 'true');
+      servicesGrid.classList.remove('collapsed', 'has-expanded');
+      carousel.currentService = null;
+    }
+
+    function goToSlide(i) {
+      carousel.idx = Math.max(0, Math.min(carousel.slides.length - 1, i));
+      updateCarousel();
+    }
+
+    function updateCarousel() {
+      carousel.track.style.transform = `translateX(-${carousel.idx * 100}%)`;
+      carousel.counter.textContent = `${carousel.idx + 1} / ${carousel.slides.length}`;
+      carousel.dots.querySelectorAll('.carousel-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === carousel.idx);
+      });
+      carousel.prev.disabled = carousel.idx === 0;
+      carousel.next.disabled = carousel.idx === carousel.slides.length - 1;
+    }
+
+    carousel.prev.addEventListener('click', () => goToSlide(carousel.idx - 1));
+    carousel.next.addEventListener('click', () => goToSlide(carousel.idx + 1));
+    detailClose.addEventListener('click', closeService);
+
+    // "Reservar" CTA: close + scroll to booking + preselect service
+    detailReserve.addEventListener('click', () => {
+      const serviceId = carousel.currentService;
+      closeService();
+      setTimeout(() => {
+        const booking = document.getElementById('booking');
+        if (booking) booking.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    });
+
+    // Keyboard navigation
+    window.addEventListener('keydown', e => {
+      if (!detailPanel.classList.contains('open')) return;
+      if (e.key === 'ArrowLeft') goToSlide(carousel.idx - 1);
+      else if (e.key === 'ArrowRight') goToSlide(carousel.idx + 1);
+      else if (e.key === 'Escape') closeService();
+    });
+
+    // Swipe support on the carousel
+    let touchStartX = 0;
+    carousel.track.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    carousel.track.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(dx) > 50) {
+        if (dx < 0) goToSlide(carousel.idx + 1);
+        else goToSlide(carousel.idx - 1);
+      }
+    }, { passive: true });
+
+    // Wire up service cards
+    document.querySelectorAll('.service-card[data-service]').forEach(card => {
+      const id = card.dataset.service;
+      const hasSlides = (SERVICE_DATA[id]?.slides || []).length > 0;
+      if (!hasSlides) {
+        card.setAttribute('data-empty', 'true');
+        return;
+      }
+      card.addEventListener('click', () => openService(id));
+    });
   </script>
 </body>
 </html>
