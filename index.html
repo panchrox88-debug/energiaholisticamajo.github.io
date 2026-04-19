@@ -162,10 +162,30 @@
       text-align: center;
       padding: 120px 40px 80px;
       position: relative;
-      background: radial-gradient(ellipse at 50% 0%, rgba(201,133,138,0.18) 0%, transparent 65%),
-                  radial-gradient(ellipse at 80% 80%, rgba(201,169,110,0.12) 0%, transparent 50%),
-                  var(--cream);
+      overflow: hidden;
+      background: var(--cream);
     }
+    /* Fondo de fotos en carrusel */
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    .hero-bg-slide {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      opacity: 0;
+      transition: opacity 1.8s ease-in-out;
+    }
+    .hero-bg-slide.active { opacity: 1; }
+    /* Overlay crema + gradiente para mantener legibilidad */
+    .hero-bg-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(201,133,138,0.18) 0%, transparent 65%),
+        radial-gradient(ellipse at 80% 80%, rgba(201,169,110,0.12) 0%, transparent 50%),
+        rgba(250, 245, 240, 0.68);
+    }
+    /* Todo el contenido del hero va sobre el bg */
+    .hero > *:not(.hero-bg) { position: relative; z-index: 2; }
 
     .hero-moon {
       font-size: 3.5rem;
@@ -1310,6 +1330,9 @@
 
   <!-- HERO -->
   <section class="hero">
+    <div class="hero-bg" id="heroBg">
+      <div class="hero-bg-overlay"></div>
+    </div>
     <div class="hero-moon">🌙</div>
     <p class="hero-eyebrow">Psicóloga · Terapeuta Holística · Chile</p>
     <h1 class="hero-title">Acompaño tu proceso<br>de <em>sanación</em></h1>
@@ -1848,6 +1871,34 @@
       }
     }
 
+    // ── HERO BACKGROUND CAROUSEL ──────────────────────────────
+    async function loadHeroBg() {
+      try {
+        const res  = await fetch('content/hero.json');
+        const data = await res.json();
+        const fotos = (data.fotos || []).filter(Boolean);
+        if (!fotos.length) return; // sin fotos → fondo crema normal
+        const bg = document.getElementById('heroBg');
+        // Insertar slides antes del overlay
+        const overlay = bg.querySelector('.hero-bg-overlay');
+        fotos.forEach((src, i) => {
+          const slide = document.createElement('div');
+          slide.className = 'hero-bg-slide' + (i === 0 ? ' active' : '');
+          slide.style.backgroundImage = `url('${src.startsWith('/') ? src.slice(1) : src}')`;
+          bg.insertBefore(slide, overlay);
+        });
+        if (fotos.length < 2) return; // una sola foto → no rota
+        let current = 0;
+        setInterval(() => {
+          const slides = bg.querySelectorAll('.hero-bg-slide');
+          slides[current].classList.remove('active');
+          current = (current + 1) % slides.length;
+          slides[current].classList.add('active');
+        }, 6000);
+      } catch(e) { console.warn('No se pudo cargar hero.json', e); }
+    }
+
+    loadHeroBg();
     loadContacto();
 
     // ── CARRUSEL TESTIMONIOS (infinite forward) ────────────────

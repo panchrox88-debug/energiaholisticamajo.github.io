@@ -9,6 +9,20 @@ public_folder: /img/uploads
 
 collections:
 
+  # ── HERO ───────────────────────────────────────────────────
+  - name: hero
+    label: "Portada (fotos de fondo)"
+    files:
+      - name: fotos
+        label: Fotos de fondo
+        file: content/hero.json
+        fields:
+          - label: Fotos
+            name: fotos
+            widget: list
+            hint: "Se muestran en carrusel detrás del texto principal. Recomendado: fotos verticales o cuadradas, ambientes cálidos."
+            field: { label: Foto, name: src, widget: image }
+
   # ── SERVICIOS ──────────────────────────────────────────────
   - name: servicios
     label: Servicios
