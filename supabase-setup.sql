@@ -192,3 +192,27 @@ VALUES (1,
   '6.4K',
   'Personas que confían en mí'
 ) ON CONFLICT (id) DO NOTHING;
+
+-- ── HERO TEXTO ────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS hero_texto (
+  id         int  PRIMARY KEY DEFAULT 1,
+  eyebrow    text NOT NULL DEFAULT 'Psicóloga · Terapeuta Holística · Chile',
+  titulo     text NOT NULL DEFAULT 'Acompaño tu proceso de',
+  titulo_em  text NOT NULL DEFAULT 'sanación',
+  descripcion text NOT NULL DEFAULT 'Un espacio seguro y consciente donde cuerpo, mente y alma se encuentran para sanar desde adentro.',
+  tags       jsonb NOT NULL DEFAULT '["Psicoterapia","Reiki","Limpiezas Energéticas","Masajes","Online & Presencial"]'
+);
+
+ALTER TABLE hero_texto ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public read hero_texto" ON hero_texto FOR SELECT USING (true);
+CREATE POLICY "admin all hero_texto"   ON hero_texto FOR ALL USING (auth.role() = 'authenticated');
+
+INSERT INTO hero_texto (id, eyebrow, titulo, titulo_em, descripcion, tags)
+VALUES (1,
+  'Psicóloga · Terapeuta Holística · Chile',
+  'Acompaño tu proceso de',
+  'sanación',
+  'Un espacio seguro y consciente donde cuerpo, mente y alma se encuentran para sanar desde adentro.',
+  '["Psicoterapia","Reiki","Limpiezas Energéticas","Masajes","Online & Presencial"]'
+) ON CONFLICT (id) DO NOTHING;

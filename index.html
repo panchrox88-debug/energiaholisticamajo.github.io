@@ -1363,15 +1363,15 @@
       <div class="hero-bg-overlay"></div>
     </div>
     <div class="hero-moon">🌙</div>
-    <p class="hero-eyebrow">Psicóloga · Terapeuta Holística · Chile</p>
-    <h1 class="hero-title">Acompaño tu proceso<br>de <em>sanación</em></h1>
+    <p class="hero-eyebrow" id="heroEyebrow">Psicóloga · Terapeuta Holística · Chile</p>
+    <h1 class="hero-title" id="heroTitulo">Acompaño tu proceso<br>de <em>sanación</em></h1>
     <div class="hero-divider">
       <div class="hero-divider-line"></div>
       <span class="hero-divider-icon">✦</span>
       <div class="hero-divider-line"></div>
     </div>
-    <p class="hero-desc">Un espacio seguro y consciente donde cuerpo, mente y alma se encuentran para sanar desde adentro.</p>
-    <div class="hero-tags">
+    <p class="hero-desc" id="heroDesc">Un espacio seguro y consciente donde cuerpo, mente y alma se encuentran para sanar desde adentro.</p>
+    <div class="hero-tags" id="heroTags">
       <span class="hero-tag">Psicoterapia</span>
       <span class="hero-tag">Reiki</span>
       <span class="hero-tag">Limpiezas Energéticas</span>
@@ -1925,6 +1925,25 @@
       }
     }
 
+    // ── HERO TEXTO ────────────────────────────────────────────
+    async function loadHeroTexto() {
+      try {
+        const res  = await sbFetch('/hero_texto?id=eq.1&select=*');
+        const rows = await res.json();
+        const d    = rows && rows[0] ? rows[0] : {};
+        if (d.eyebrow) document.getElementById('heroEyebrow').textContent = d.eyebrow;
+        if (d.titulo || d.titulo_em) {
+          document.getElementById('heroTitulo').innerHTML =
+            (d.titulo || 'Acompaño tu proceso de') + ' <em>' + (d.titulo_em || 'sanación') + '</em>';
+        }
+        if (d.descripcion) document.getElementById('heroDesc').textContent = d.descripcion;
+        if (d.tags && d.tags.length) {
+          document.getElementById('heroTags').innerHTML =
+            d.tags.map(t => `<span class="hero-tag">${t}</span>`).join('');
+        }
+      } catch(e) { console.warn('No se pudo cargar hero texto', e); }
+    }
+
     // ── HERO BACKGROUND CAROUSEL ──────────────────────────────
     async function loadHeroBg() {
       try {
@@ -2008,6 +2027,7 @@
       } catch(e) { console.warn('No se pudo cargar sobre mí', e); }
     }
 
+    loadHeroTexto();
     loadHeroBg();
     loadContacto();
     loadSobreMi();

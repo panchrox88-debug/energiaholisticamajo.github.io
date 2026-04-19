@@ -464,7 +464,33 @@
       <div id="tab-portada" class="section">
         <h2 class="section-title">Fotos de portada</h2>
         <div id="portadaMsg" class="msg-banner"></div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px">
+        <div class="section-subtitle">Texto</div>
+        <div class="card">
+          <div class="field">
+            <label>Eyebrow (línea pequeña arriba)</label>
+            <input type="text" id="ht-eyebrow" placeholder="Psicóloga · Terapeuta Holística · Chile"/>
+          </div>
+          <div class="field">
+            <label>Título (primera parte)</label>
+            <input type="text" id="ht-titulo" placeholder="Acompaño tu proceso de"/>
+          </div>
+          <div class="field">
+            <label>Palabra en cursiva rosada</label>
+            <input type="text" id="ht-em" placeholder="sanación"/>
+          </div>
+          <div class="field">
+            <label>Descripción</label>
+            <textarea id="ht-desc" style="min-height:80px"></textarea>
+          </div>
+          <div class="field">
+            <label>Tags (uno por línea)</label>
+            <textarea id="ht-tags" style="min-height:90px" placeholder="Psicoterapia&#10;Reiki&#10;Limpiezas Energéticas"></textarea>
+          </div>
+          <button class="btn btn-primary" id="saveHeroTextoBtn">Guardar texto</button>
+        </div>
+
+        <div class="section-subtitle">Fotos del carrusel</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">
           Las fotos rotan cada 6 segundos detrás del texto principal.<br>
           Tamaño recomendado: 1920×1080 px · JPG · máx 500 KB.
           Puedes comprimir en <a href="https://squoosh.app" target="_blank" style="color:var(--rose)">squoosh.app</a>
@@ -669,7 +695,7 @@
       if (link.dataset.tab === 'servicios')   loadServicios();
       if (link.dataset.tab === 'contacto')    loadContacto();
       if (link.dataset.tab === 'agenda')      loadAgenda();
-      if (link.dataset.tab === 'portada')     loadPortada();
+      if (link.dataset.tab === 'portada')     { loadPortada(); loadHeroTextoAdmin(); }
       if (link.dataset.tab === 'sobremi')     loadSobreMiAdmin();
     });
   });
@@ -1138,6 +1164,37 @@
       loadPortada();
     } catch(e) { showMsg('portadaMsg', 'Error: ' + e.message, 'err'); }
     this.value = '';
+  });
+
+  // ── HERO TEXTO ADMIN ─────────────────────────────────────
+  async function loadHeroTextoAdmin() {
+    try {
+      const rows = await sbGet('/hero_texto?id=eq.1&select=*');
+      const d = rows[0] || {};
+      document.getElementById('ht-eyebrow').value = d.eyebrow     || '';
+      document.getElementById('ht-titulo').value  = d.titulo      || '';
+      document.getElementById('ht-em').value      = d.titulo_em   || '';
+      document.getElementById('ht-desc').value    = d.descripcion || '';
+      document.getElementById('ht-tags').value    = (d.tags || []).join('\n');
+    } catch(e) { showMsg('portadaMsg', 'Error al cargar texto: ' + e.message, 'err'); }
+  }
+
+  document.getElementById('saveHeroTextoBtn').addEventListener('click', async () => {
+    const body = {
+      eyebrow:     document.getElementById('ht-eyebrow').value.trim(),
+      titulo:      document.getElementById('ht-titulo').value.trim(),
+      titulo_em:   document.getElementById('ht-em').value.trim(),
+      descripcion: document.getElementById('ht-desc').value.trim(),
+      tags:        document.getElementById('ht-tags').value.split('\n').map(s => s.trim()).filter(Boolean),
+    };
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/hero_texto?id=eq.1`, {
+        method: 'PATCH', headers: authHeaders({ 'Prefer': 'return=minimal' }),
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) await sbPost('/hero_texto', { id: 1, ...body });
+      showMsg('portadaMsg', 'Texto guardado ✓');
+    } catch(e) { showMsg('portadaMsg', 'Error: ' + e.message, 'err'); }
   });
 
   // Close modals on backdrop click
