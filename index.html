@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Energía Holística Majo — María José Toro</title>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1584,6 +1583,22 @@
   </footer>
 
   <script>
+    // ── SUPABASE CONFIG ───────────────────────────────────────
+    const SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
+    const SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
+
+    async function sbFetch(path, opts = {}) {
+      return fetch(SB_URL + '/rest/v1' + path, {
+        ...opts,
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          ...(opts.headers || {}),
+        },
+      });
+    }
+
     // Stars
     const starsEl = document.getElementById('stars');
     for (let i = 0; i < 40; i++) {
@@ -1645,10 +1660,10 @@
 
     async function loadAgenda() {
       try {
-        const res  = await fetch('content/agenda.json');
-        const data = await res.json();
-        AGENDA = { ...AGENDA, ...data };
-      } catch(e) { console.warn('No se pudo cargar agenda.json', e); }
+        const res  = await sbFetch('/agenda?id=eq.1&select=*');
+        const rows = await res.json();
+        if (rows && rows[0]) AGENDA = { ...AGENDA, ...rows[0] };
+      } catch(e) { console.warn('No se pudo cargar agenda', e); }
     }
 
     // Genera slots de hora automáticamente según duración + pausa + descanso diario
@@ -1854,11 +1869,11 @@
 
     async function loadContacto() {
       try {
-        const res  = await fetch('content/contacto.json');
-        const data = await res.json();
-        const grid = document.getElementById('contactInfoGrid');
+        const res     = await sbFetch('/contacto?select=*&order=orden.asc');
+        const canales = await res.json();
+        const grid    = document.getElementById('contactInfoGrid');
         if (!grid) return;
-        grid.innerHTML = (data.canales || []).map(c => `
+        grid.innerHTML = (canales || []).map(c => `
           <div class="contact-info-item">
             <div class="info-icon">${CONTACT_ICONS[c.tipo] || '💬'}</div>
             <div>
@@ -1867,24 +1882,23 @@
             </div>
           </div>`).join('');
       } catch (e) {
-        console.warn('No se pudo cargar contacto.json', e);
+        console.warn('No se pudo cargar contacto', e);
       }
     }
 
     // ── HERO BACKGROUND CAROUSEL ──────────────────────────────
     async function loadHeroBg() {
       try {
-        const res  = await fetch('content/hero.json');
-        const data = await res.json();
-        const fotos = (data.fotos || []).filter(Boolean);
+        const res   = await sbFetch('/hero_fotos?select=*&order=orden.asc');
+        const rows  = await res.json();
+        const fotos = (rows || []).filter(r => r && r.src);
         if (!fotos.length) return; // sin fotos → fondo crema normal
         const bg = document.getElementById('heroBg');
         // Insertar slides antes del overlay
         const overlay = bg.querySelector('.hero-bg-overlay');
         fotos.forEach((foto, i) => {
-          // Soporte para string (legado) y objeto {src, posicion}
-          const src      = typeof foto === 'string' ? foto : (foto.src || '');
-          const posicion = typeof foto === 'string' ? 'center center' : (foto.posicion || 'center center');
+          const src      = foto.src || '';
+          const posicion = foto.posicion || 'center center';
           const cleanSrc = src.startsWith('/') ? src.slice(1) : src;
           const slide = document.createElement('div');
           slide.className = 'hero-bg-slide' + (i === 0 ? ' active' : '');
@@ -1999,12 +2013,11 @@
 
     async function loadTestimonios() {
       try {
-        const res  = await fetch('content/testimonios.json');
-        const data = await res.json();
+        const res     = await sbFetch('/testimonios?select=*&visible=eq.true&order=created_at.desc&limit=10');
+        const visibles = await res.json();
         if (!tcTrack) return;
-        const visibles = (data.lista || []).filter(t => t.visible).slice(-10);
-        tcTotal = visibles.length;
-        tcTrack.innerHTML = visibles.map(t => {
+        tcTotal = (visibles || []).length;
+        tcTrack.innerHTML = (visibles || []).map(t => {
           const rating  = Math.min(5, Math.max(1, t.rating || 5));
           const stars   = '★'.repeat(rating) + '☆'.repeat(5 - rating);
           return `
@@ -2033,7 +2046,7 @@
           if (Math.abs(dx) > 40) { tcManualGoTo(dx < 0 ? tcManualPage + 1 : tcManualPage - 1); tcResetAuto(); }
         }, { passive: true });
       } catch(e) {
-        console.warn('No se pudo cargar testimonios.json', e);
+        console.warn('No se pudo cargar testimonios', e);
       }
     }
 
@@ -2087,12 +2100,12 @@
       tfMsg.className = 'tf-msg';
 
       try {
-        const res = await fetch('/.netlify/functions/submit-testimonio', {
+        const res = await sbFetch('/testimonios', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, ciudad, texto, rating }),
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ nombre, ciudad, texto, emoji: '🌸', rating, visible: false }),
         });
-        if (res.ok) {
+        if (res.ok || res.status === 201) {
           testimonioForm.reset();
           tfMsg.textContent = '¡Gracias! Tu testimonio fue recibido y será revisado pronto. 🌸';
           tfMsg.className = 'tf-msg ok';
@@ -2117,16 +2130,16 @@
 
     async function loadServicios() {
       try {
-        const res  = await fetch('content/servicios.json');
-        const data = await res.json();
-        SERVICIOS_DATA = (data.lista || []).map(s => ({
+        const res  = await sbFetch('/servicios?select=*&order=orden.asc');
+        const rows = await res.json();
+        SERVICIOS_DATA = (rows || []).map(s => ({
           ...s,
           slides: (s.slides || []).map(src => src.startsWith('/') ? src.slice(1) : src),
           modes:  modoToModes(s.modo),
         }));
         SERVICES = SERVICIOS_DATA; // sincroniza con el array de booking
       } catch (e) {
-        console.warn('No se pudo cargar servicios.json', e);
+        console.warn('No se pudo cargar servicios', e);
       }
     }
 
@@ -2319,18 +2332,6 @@
       buildCalendar();
       renderTimes();
     });
-  </script>
-  <script>
-    // Netlify Identity: redirigir al admin tras login/confirmación
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on('init', user => {
-        if (!user) {
-          window.netlifyIdentity.on('login', () => {
-            document.location.href = '/admin/';
-          });
-        }
-      });
-    }
   </script>
 </body>
 </html>

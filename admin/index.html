@@ -3,89 +3,1080 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Panel — Energía Holística Majo</title>
+  <title>Panel Admin — Energía Holística Majo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --rose:   #c9858a;
+      --blush:  #f0dada;
+      --cream:  #faf5f0;
+      --beige:  #ede0d4;
+      --gold:   #c9a96e;
+      --dark:   #3d2b2b;
+      --muted:  #7a5c5c;
+      --white:  #ffffff;
+      --green:  #5a9a7a;
+      --red:    #c9585a;
+    }
+    body {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      background: var(--cream);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN ── */
+    #loginScreen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 8px 40px rgba(61,43,43,0.10);
+    }
+    .login-card h1 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.5rem; font-weight: 400;
+      color: var(--dark); text-align: center;
+      margin-bottom: 8px;
+    }
+    .login-card p {
+      text-align: center; color: var(--muted);
+      font-size: 0.8rem; margin-bottom: 32px;
+    }
+    .login-err {
+      background: #fde8e8; color: var(--red);
+      padding: 10px 14px; border-radius: 8px;
+      font-size: 0.8rem; margin-bottom: 16px;
+      display: none;
+    }
+
+    /* ── FORMS ── */
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: 0.75rem;
+      color: var(--muted); margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--beige);
+      border-radius: 10px; font-size: 0.9rem;
+      font-family: 'Nunito', sans-serif; font-weight: 300;
+      background: var(--cream); color: var(--dark);
+      outline: none; transition: border 0.2s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--rose);
+    }
+    .field textarea { min-height: 80px; resize: vertical; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border: none; border-radius: 10px;
+      font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 400;
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--rose); color: var(--white); }
+    .btn-ghost   { background: var(--beige); color: var(--dark); }
+    .btn-danger  { background: var(--red); color: var(--white); }
+    .btn-green   { background: var(--green); color: var(--white); }
+    .btn-full    { width: 100%; justify-content: center; }
+
+    /* ── ADMIN LAYOUT ── */
+    #adminScreen { display: none; min-height: 100vh; }
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--beige);
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    header h1 {
+      font-size: 1rem; font-weight: 600;
+      color: var(--dark);
+    }
+    header span { font-size: 0.75rem; color: var(--muted); margin-left: 8px; }
+    .main-wrap { display: flex; min-height: calc(100vh - 57px); }
+
+    /* Sidebar */
+    .sidebar {
+      width: 200px; background: var(--white);
+      border-right: 1px solid var(--beige);
+      padding: 16px 0; flex-shrink: 0;
+    }
+    .sidebar-link {
+      display: block; padding: 10px 20px;
+      font-size: 0.85rem; color: var(--muted);
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-link:hover { background: var(--cream); color: var(--dark); }
+    .sidebar-link.active {
+      background: var(--blush); color: var(--rose);
+      border-left-color: var(--rose); font-weight: 600;
+    }
+
+    /* Content area */
+    .content { flex: 1; padding: 28px 32px; max-width: 900px; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .section-title {
+      font-size: 1.3rem; font-weight: 400; color: var(--dark);
+      margin-bottom: 24px;
+    }
+    .section-subtitle {
+      font-size: 0.75rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 12px; margin-top: 24px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--white); border-radius: 14px;
+      padding: 20px 24px; margin-bottom: 12px;
+      border: 1.5px solid var(--beige);
+    }
+    .card-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px;
+    }
+    .card-body { flex: 1; min-width: 0; }
+    .card-name { font-size: 0.95rem; font-weight: 600; color: var(--dark); }
+    .card-sub  { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+    .card-text { font-size: 0.85rem; color: var(--dark); margin-top: 6px; line-height: 1.6; }
+    .card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* Toggle switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+    .toggle {
+      position: relative; width: 40px; height: 22px;
+      cursor: pointer;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--beige); border-radius: 22px;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute; width: 16px; height: 16px;
+      background: var(--white); border-radius: 50%;
+      left: 3px; top: 3px; transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--green); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+    .toggle-label { font-size: 0.8rem; color: var(--muted); }
+
+    /* Chips / badges */
+    .badge {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 20px; font-size: 0.7rem;
+      background: var(--blush); color: var(--rose);
+    }
+    .badge.green { background: #e0f0e8; color: var(--green); }
+
+    /* Stars display */
+    .stars-display { color: var(--gold); font-size: 0.85rem; }
+
+    /* Message banner */
+    .msg-banner {
+      padding: 10px 16px; border-radius: 10px;
+      font-size: 0.82rem; margin-bottom: 16px;
+      display: none;
+    }
+    .msg-banner.ok  { background: #e0f0e8; color: var(--green); display: block; }
+    .msg-banner.err { background: #fde8e8; color: var(--red);   display: block; }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(61,43,43,0.35);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--white); border-radius: 18px;
+      padding: 32px 28px; width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 1.1rem; font-weight: 600; color: var(--dark);
+      margin-bottom: 20px;
+    }
+    .modal-footer {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* Inline image grid */
+    .img-grid {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin: 12px 0;
+    }
+    .img-thumb {
+      position: relative; width: 90px; height: 70px;
+      border-radius: 8px; overflow: hidden;
+      border: 1.5px solid var(--beige);
+    }
+    .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .img-thumb-del {
+      position: absolute; top: 3px; right: 3px;
+      background: rgba(201,88,90,0.9); color: white;
+      border: none; border-radius: 50%;
+      width: 20px; height: 20px; cursor: pointer;
+      font-size: 12px; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Agenda form grid */
+    .agenda-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .agenda-grid { grid-template-columns: 1fr; } }
+
+    /* Dias habiles checkboxes */
+    .days-check {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .day-pill {
+      padding: 6px 14px; border-radius: 20px; cursor: pointer;
+      font-size: 0.8rem; border: 1.5px solid var(--beige);
+      background: var(--cream); color: var(--muted);
+      transition: background 0.15s, color 0.15s, border 0.15s;
+      user-select: none;
+    }
+    .day-pill.sel {
+      background: var(--rose); color: white; border-color: var(--rose);
+    }
+
+    /* Loading spinner */
+    .loading {
+      text-align: center; padding: 40px;
+      color: var(--muted); font-size: 0.85rem;
+    }
+    .spinner {
+      width: 28px; height: 28px; border: 3px solid var(--beige);
+      border-top-color: var(--rose); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--beige); border-radius: 12px;
+      padding: 24px; text-align: center;
+      cursor: pointer; transition: border-color 0.2s;
+      color: var(--muted); font-size: 0.85rem;
+    }
+    .upload-zone:hover { border-color: var(--rose); }
+    .upload-zone input[type=file] { display: none; }
+  </style>
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-  <script>
-    // ── Preview del Hero ────────────────────────────────────────
-    var HeroPreview = function(props) {
-      var h        = window.h;
-      var fotos    = props.entry.getIn(['data', 'fotos']);
-      var fotoUrl  = '';
-      var posicion = 'center center';
 
-      if (fotos && fotos.size > 0) {
-        var first = fotos.get(0);
-        // Soporte para string (src directo) y objeto {src, posicion}
-        if (typeof first === 'string') {
-          fotoUrl = props.getAsset(first) ? props.getAsset(first).toString() : first;
-        } else if (first && first.get) {
-          var src = first.get('src') || '';
-          fotoUrl  = props.getAsset(src) ? props.getAsset(src).toString() : src;
-          posicion = first.get('posicion') || 'center center';
-        }
-      }
+<!-- ── LOGIN ─────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>✦ Panel Admin</h1>
+    <p>Energía Holística Majo</p>
+    <div id="loginErr" class="login-err"></div>
+    <form id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required placeholder="majo@ejemplo.com"/>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPwd" required/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="loginBtn">Entrar</button>
+    </form>
+  </div>
+</div>
 
-      return h('div', { style: { fontFamily: 'Georgia, serif', color: '#3d2b2b' } },
-        // Franja de preview
-        h('div', {
-          style: {
-            position: 'relative', height: '420px', overflow: 'hidden',
-            background: '#faf5f0', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-          }
-        },
-          // Foto de fondo
-          fotoUrl && h('div', {
-            style: {
-              position: 'absolute', inset: 0,
-              backgroundImage: 'url(' + fotoUrl + ')',
-              backgroundSize: 'cover',
-              backgroundPosition: posicion,
-            }
-          }),
-          // Overlay crema
-          h('div', {
-            style: {
-              position: 'absolute', inset: 0,
-              background: 'rgba(250,245,240,0.68)',
-            }
-          }),
-          // Contenido
-          h('div', { style: { position: 'relative', zIndex: 1, padding: '0 40px' } },
-            h('p', {
-              style: {
-                fontSize: '0.6rem', letterSpacing: '0.4em',
-                textTransform: 'uppercase', color: '#c9a96e', marginBottom: '12px',
-              }
-            }, 'Psicóloga · Terapeuta Holística · Chile'),
-            h('h1', {
-              style: {
-                fontSize: '2.6rem', fontWeight: 300,
-                lineHeight: 1.2, color: '#3d2b2b', margin: '0 0 16px',
-              }
-            },
-              'Acompaño tu proceso de ',
-              h('em', { style: { color: '#c9858a', fontStyle: 'italic' } }, 'sanación')
-            ),
-            !fotoUrl && h('p', {
-              style: { fontSize: '0.8rem', color: '#7a5c5c', marginTop: '24px' }
-            }, '← Sube una foto para ver el preview aquí')
-          )
-        ),
-        // Nota informativa
-        h('p', {
-          style: {
-            fontSize: '0.75rem', color: '#7a5c5c',
-            padding: '12px 16px', background: '#f0dada',
-            borderRadius: '8px', margin: '16px',
-          }
-        }, '✦ Este preview muestra la primera foto. En el sitio las fotos rotan cada 6 segundos.')
-      );
+<!-- ── ADMIN ─────────────────────────────────── -->
+<div id="adminScreen">
+  <header>
+    <div>
+      <h1>✦ Panel Admin</h1>
+      <span id="userEmail"></span>
+    </div>
+    <button class="btn btn-ghost" id="logoutBtn">Cerrar sesión</button>
+  </header>
+  <div class="main-wrap">
+    <nav class="sidebar">
+      <div class="sidebar-link active" data-tab="testimonios">💬 Testimonios</div>
+      <div class="sidebar-link" data-tab="servicios">✨ Servicios</div>
+      <div class="sidebar-link" data-tab="contacto">📱 Contacto</div>
+      <div class="sidebar-link" data-tab="agenda">🗓️ Agenda</div>
+      <div class="sidebar-link" data-tab="portada">🖼️ Portada</div>
+    </nav>
+    <main class="content">
+
+      <!-- TESTIMONIOS -->
+      <div id="tab-testimonios" class="section active">
+        <h2 class="section-title">Testimonios</h2>
+        <div id="testiMsg" class="msg-banner"></div>
+        <div class="section-subtitle">Pendientes de revisión</div>
+        <div id="testiPending"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+        <div class="section-subtitle">Publicados</div>
+        <div id="testiVisible"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+        <div class="section-subtitle">Ocultos / rechazados</div>
+        <div id="testiHidden"></div>
+      </div>
+
+      <!-- SERVICIOS -->
+      <div id="tab-servicios" class="section">
+        <h2 class="section-title">Servicios</h2>
+        <div id="serviciosMsg" class="msg-banner"></div>
+        <button class="btn btn-primary" id="addServicioBtn" style="margin-bottom:16px">+ Nuevo servicio</button>
+        <div id="serviciosList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+      </div>
+
+      <!-- CONTACTO -->
+      <div id="tab-contacto" class="section">
+        <h2 class="section-title">Canales de contacto</h2>
+        <div id="contactoMsg" class="msg-banner"></div>
+        <button class="btn btn-primary" id="addCanalBtn" style="margin-bottom:16px">+ Agregar canal</button>
+        <div id="contactoList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+      </div>
+
+      <!-- AGENDA -->
+      <div id="tab-agenda" class="section">
+        <h2 class="section-title">Agenda y horarios</h2>
+        <div id="agendaMsg" class="msg-banner"></div>
+        <div class="card">
+          <div class="agenda-grid">
+            <div class="field">
+              <label>Hora inicio (ej: 9:00)</label>
+              <input type="text" id="ag-inicio" placeholder="9:00"/>
+            </div>
+            <div class="field">
+              <label>Hora fin (ej: 19:00)</label>
+              <input type="text" id="ag-fin" placeholder="19:00"/>
+            </div>
+            <div class="field">
+              <label>Duración sesión (minutos)</label>
+              <input type="number" id="ag-dur" min="15" max="240" step="15"/>
+            </div>
+            <div class="field">
+              <label>Pausa entre sesiones (minutos)</label>
+              <input type="number" id="ag-pausa" min="0" max="60" step="5"/>
+            </div>
+            <div class="field">
+              <label>Descanso desde (opcional)</label>
+              <input type="text" id="ag-break-desde" placeholder="13:00"/>
+            </div>
+            <div class="field">
+              <label>Descanso hasta (opcional)</label>
+              <input type="text" id="ag-break-hasta" placeholder="15:00"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Días de atención</label>
+            <div class="days-check" id="agDays">
+              <div class="day-pill" data-d="1">Lunes</div>
+              <div class="day-pill" data-d="2">Martes</div>
+              <div class="day-pill" data-d="3">Miércoles</div>
+              <div class="day-pill" data-d="4">Jueves</div>
+              <div class="day-pill" data-d="5">Viernes</div>
+              <div class="day-pill" data-d="6">Sábado</div>
+              <div class="day-pill" data-d="0">Domingo</div>
+            </div>
+          </div>
+          <div class="field" style="margin-top:8px">
+            <label>Fechas bloqueadas</label>
+            <div id="fechasBloquedas" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="date" id="nuevaFecha" style="flex:1"/>
+              <button type="button" class="btn btn-ghost" id="addFechaBtn">+ Añadir</button>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="saveAgendaBtn">Guardar cambios</button>
+        </div>
+      </div>
+
+      <!-- PORTADA -->
+      <div id="tab-portada" class="section">
+        <h2 class="section-title">Fotos de portada</h2>
+        <div id="portadaMsg" class="msg-banner"></div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px">
+          Las fotos rotan cada 6 segundos detrás del texto principal.<br>
+          Tamaño recomendado: 1920×1080 px · JPG · máx 500 KB.
+          Puedes comprimir en <a href="https://squoosh.app" target="_blank" style="color:var(--rose)">squoosh.app</a>
+        </p>
+        <div id="portadaFotos" style="margin-bottom:16px"></div>
+        <label class="upload-zone" id="portadaUploadZone">
+          <input type="file" id="portadaFileInput" accept="image/*" multiple/>
+          📁 Haz clic para subir fotos (JPG, PNG, AVIF)
+        </label>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── MODAL SERVICIO ── -->
+<div class="modal-overlay" id="servicioModal">
+  <div class="modal-box">
+    <div class="modal-title" id="servicioModalTitle">Servicio</div>
+    <input type="hidden" id="svc-id-original"/>
+    <div class="field">
+      <label>ID interno (solo letras y guiones, ej: reiki)</label>
+      <input type="text" id="svc-id" placeholder="reiki"/>
+    </div>
+    <div class="field">
+      <label>Emoji (ícono)</label>
+      <input type="text" id="svc-emoji" placeholder="✨" maxlength="4"/>
+    </div>
+    <div class="field">
+      <label>Título</label>
+      <input type="text" id="svc-titulo"/>
+    </div>
+    <div class="field">
+      <label>Descripción (tarjeta)</label>
+      <textarea id="svc-desc"></textarea>
+    </div>
+    <div class="field">
+      <label>Modalidad</label>
+      <select id="svc-modo">
+        <option value="Presencial">Presencial</option>
+        <option value="Online">Online</option>
+        <option value="Online & Presencial">Online & Presencial</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Imágenes del carrusel</label>
+      <div id="svcSlides" class="img-grid"></div>
+      <label class="upload-zone" style="margin-top:10px">
+        <input type="file" id="svcSlideInput" accept="image/*" multiple/>
+        📁 Subir imágenes para el carrusel
+      </label>
+    </div>
+    <div id="servicioModalMsg" class="msg-banner"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelServicioBtn">Cancelar</button>
+      <button class="btn btn-primary" id="saveServicioBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL CANAL ── -->
+<div class="modal-overlay" id="canalModal">
+  <div class="modal-box">
+    <div class="modal-title" id="canalModalTitle">Canal de contacto</div>
+    <input type="hidden" id="canal-id"/>
+    <div class="field">
+      <label>Etiqueta (ej: WhatsApp, Instagram, Email…)</label>
+      <input type="text" id="canal-etiqueta"/>
+    </div>
+    <div class="field">
+      <label>Valor (ej: +56 9 1234 5678 / @usuario)</label>
+      <input type="text" id="canal-valor"/>
+    </div>
+    <div class="field">
+      <label>Tipo (ícono)</label>
+      <select id="canal-tipo">
+        <option value="whatsapp">📱 WhatsApp</option>
+        <option value="instagram">📸 Instagram</option>
+        <option value="tiktok">🎵 TikTok</option>
+        <option value="email">📧 Email</option>
+        <option value="ubicacion">📍 Ubicación</option>
+        <option value="modalidad">🌐 Modalidad</option>
+        <option value="otro">💬 Otro</option>
+      </select>
+    </div>
+    <div id="canalModalMsg" class="msg-banner"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelCanalBtn">Cancelar</button>
+      <button class="btn btn-primary" id="saveCanalBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // ── CONFIG ────────────────────────────────────────────────
+  const SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
+  const SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
+
+  // ── STATE ─────────────────────────────────────────────────
+  let SESSION = null;   // supabase auth session
+  let AGENDA_DATA = {};
+  let FECHAS_BLOQUEADAS = [];
+  let DIAS_HABILES = [1,2,3,4,5,6];
+
+  // ── REST helpers ──────────────────────────────────────────
+  function authHeaders(extra = {}) {
+    const token = SESSION?.access_token || SB_KEY;
+    return {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+      ...extra,
     };
+  }
 
-    CMS.registerPreviewTemplate('hero', HeroPreview);
-  </script>
+  async function sbGet(path) {
+    const r = await fetch(SB_URL + '/rest/v1' + path, { headers: authHeaders() });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  async function sbPost(path, body, extra = {}) {
+    const r = await fetch(SB_URL + '/rest/v1' + path, {
+      method: 'POST', headers: authHeaders({ 'Prefer': 'return=representation', ...extra }),
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  async function sbPatch(path, body) {
+    const r = await fetch(SB_URL + '/rest/v1' + path, {
+      method: 'PATCH', headers: authHeaders({ 'Prefer': 'return=representation' }),
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  async function sbDelete(path) {
+    const r = await fetch(SB_URL + '/rest/v1' + path, {
+      method: 'DELETE', headers: authHeaders(),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return true;
+  }
+
+  // ── STORAGE upload ─────────────────────────────────────────
+  async function uploadFile(file, folder = 'general') {
+    const ext  = file.name.split('.').pop();
+    const name = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const r = await fetch(`${SB_URL}/storage/v1/object/uploads/${name}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + (SESSION?.access_token || SB_KEY),
+        'Content-Type': file.type,
+      },
+      body: file,
+    });
+    if (!r.ok) throw new Error('Error al subir imagen: ' + await r.text());
+    return `${SB_URL}/storage/v1/object/public/uploads/${name}`;
+  }
+
+  // ── AUTH ──────────────────────────────────────────────────
+  async function signIn(email, password) {
+    const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error_description || data.msg || 'Error al iniciar sesión');
+    return data;
+  }
+
+  async function signOut() {
+    if (!SESSION) return;
+    await fetch(`${SB_URL}/auth/v1/logout`, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SESSION.access_token },
+    });
+  }
+
+  // ── DOM refs ──────────────────────────────────────────────
+  const loginScreen  = document.getElementById('loginScreen');
+  const adminScreen  = document.getElementById('adminScreen');
+  const loginForm    = document.getElementById('loginForm');
+  const loginErr     = document.getElementById('loginErr');
+  const logoutBtn    = document.getElementById('logoutBtn');
+  const userEmailEl  = document.getElementById('userEmail');
+
+  // ── TABS ──────────────────────────────────────────────────
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      link.classList.add('active');
+      const tab = document.getElementById('tab-' + link.dataset.tab);
+      if (tab) tab.classList.add('active');
+      if (link.dataset.tab === 'testimonios') loadTestimonios();
+      if (link.dataset.tab === 'servicios')   loadServicios();
+      if (link.dataset.tab === 'contacto')    loadContacto();
+      if (link.dataset.tab === 'agenda')      loadAgenda();
+      if (link.dataset.tab === 'portada')     loadPortada();
+    });
+  });
+
+  // ── LOGIN ─────────────────────────────────────────────────
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const pwd   = document.getElementById('loginPwd').value;
+    loginErr.style.display = 'none';
+    const btn = document.getElementById('loginBtn');
+    btn.textContent = 'Entrando…'; btn.disabled = true;
+    try {
+      SESSION = await signIn(email, pwd);
+      showAdmin(SESSION.user?.email);
+    } catch (err) {
+      loginErr.textContent = err.message;
+      loginErr.style.display = 'block';
+    } finally {
+      btn.textContent = 'Entrar'; btn.disabled = false;
+    }
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    await signOut();
+    SESSION = null;
+    adminScreen.style.display = 'none';
+    loginScreen.style.display = 'flex';
+  });
+
+  function showAdmin(email) {
+    loginScreen.style.display = 'none';
+    adminScreen.style.display = 'block';
+    userEmailEl.textContent = email || '';
+    loadTestimonios();
+  }
+
+  // ── SHOW BANNER ───────────────────────────────────────────
+  function showMsg(elId, text, type = 'ok') {
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.className = 'msg-banner ' + type;
+    setTimeout(() => el.className = 'msg-banner', 4000);
+  }
+
+  // ── TESTIMONIOS ───────────────────────────────────────────
+  async function loadTestimonios() {
+    try {
+      const all = await sbGet('/testimonios?select=*&order=created_at.desc');
+      const pending = all.filter(t => !t.visible && !t._rejected);
+      const visible = all.filter(t => t.visible);
+      const hidden  = all.filter(t => !t.visible && t._rejected);
+
+      renderTestiGroup('testiPending', all.filter(t => !t.visible), true);
+      renderTestiGroup('testiVisible', visible, false);
+    } catch (e) {
+      document.getElementById('testiPending').innerHTML =
+        `<p style="color:var(--red);font-size:.8rem">Error: ${e.message}</p>`;
+    }
+  }
+
+  function renderTestiGroup(containerId, items, showApprove) {
+    const el = document.getElementById(containerId);
+    if (!items.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.8rem;padding:8px 0">— Ninguno —</p>'; return; }
+    el.innerHTML = items.map(t => {
+      const stars = '★'.repeat(t.rating || 5) + '☆'.repeat(5 - (t.rating || 5));
+      const date  = new Date(t.created_at).toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
+      return `
+      <div class="card" id="testi-${t.id}">
+        <div class="card-row">
+          <div class="card-body">
+            <div class="card-name">${t.emoji || '🌸'} ${t.nombre} <span style="color:var(--muted);font-weight:300;font-size:.8rem">— ${t.ciudad || ''}</span></div>
+            <div class="stars-display">${stars}</div>
+            <div class="card-text">"${t.texto}"</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:6px">${date}</div>
+          </div>
+          <div class="card-actions" style="flex-direction:column;align-items:flex-end">
+            <label class="toggle-wrap" title="${t.visible ? 'Publicado' : 'Oculto'}">
+              <span class="toggle-label">${t.visible ? 'Publicado' : 'Oculto'}</span>
+              <label class="toggle">
+                <input type="checkbox" ${t.visible ? 'checked' : ''}
+                  onchange="window._toggleTesti('${t.id}', this.checked)"/>
+                <span class="toggle-slider"></span>
+              </label>
+            </label>
+            <button class="btn btn-danger" style="margin-top:8px;padding:6px 12px;font-size:.75rem"
+              onclick="window._deleteTesti('${t.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window._toggleTesti = async (id, visible) => {
+    try {
+      await sbPatch(`/testimonios?id=eq.${id}`, { visible });
+      showMsg('testiMsg', visible ? 'Testimonio publicado ✓' : 'Testimonio ocultado ✓');
+      await loadTestimonios();
+    } catch (e) { showMsg('testiMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  window._deleteTesti = async (id) => {
+    if (!confirm('¿Eliminar este testimonio permanentemente?')) return;
+    try {
+      await sbDelete(`/testimonios?id=eq.${id}`);
+      document.getElementById('testi-' + id)?.remove();
+      showMsg('testiMsg', 'Testimonio eliminado');
+    } catch (e) { showMsg('testiMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  // ── SERVICIOS ─────────────────────────────────────────────
+  async function loadServicios() {
+    try {
+      const rows = await sbGet('/servicios?select=*&order=orden.asc');
+      const el = document.getElementById('serviciosList');
+      el.innerHTML = rows.map(s => `
+        <div class="card" id="svc-card-${s.id}">
+          <div class="card-row">
+            <div class="card-body">
+              <div class="card-name">${s.emoji} ${s.titulo}</div>
+              <div class="card-sub">${s.modo} · ${(s.slides||[]).length} imágenes</div>
+              <div class="card-text">${s.descripcion || ''}</div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-ghost" onclick="window._editSvc(${JSON.stringify(s).replace(/"/g,'&quot;')})">Editar</button>
+              <button class="btn btn-danger" onclick="window._deleteSvc('${s.id}')">×</button>
+            </div>
+          </div>
+        </div>`).join('');
+    } catch (e) {
+      document.getElementById('serviciosList').innerHTML =
+        `<p style="color:var(--red);font-size:.8rem">Error: ${e.message}</p>`;
+    }
+  }
+
+  // Modal servicio
+  const servicioModal    = document.getElementById('servicioModal');
+  const servicioModalTitle = document.getElementById('servicioModalTitle');
+  let svcCurrentSlides   = [];
+
+  function openSvcModal(svc = null) {
+    svcCurrentSlides = svc ? [...(svc.slides || [])] : [];
+    document.getElementById('svc-id-original').value = svc?.id || '';
+    document.getElementById('svc-id').value          = svc?.id || '';
+    document.getElementById('svc-emoji').value       = svc?.emoji || '✨';
+    document.getElementById('svc-titulo').value      = svc?.titulo || '';
+    document.getElementById('svc-desc').value        = svc?.descripcion || '';
+    document.getElementById('svc-modo').value        = svc?.modo || 'Presencial';
+    servicioModalTitle.textContent = svc ? 'Editar servicio' : 'Nuevo servicio';
+    document.getElementById('svc-id').disabled = !!svc; // no editar ID si existe
+    renderSvcSlides();
+    document.getElementById('servicioModalMsg').className = 'msg-banner';
+    servicioModal.classList.add('open');
+  }
+
+  function renderSvcSlides() {
+    const el = document.getElementById('svcSlides');
+    el.innerHTML = svcCurrentSlides.map((src, i) => `
+      <div class="img-thumb">
+        <img src="${src}" alt="" onerror="this.style.display='none'"/>
+        <button class="img-thumb-del" onclick="window._removeSvcSlide(${i})">×</button>
+      </div>`).join('');
+  }
+
+  window._removeSvcSlide = i => {
+    svcCurrentSlides.splice(i, 1);
+    renderSvcSlides();
+  };
+
+  window._editSvc = svc => {
+    if (typeof svc === 'string') svc = JSON.parse(svc);
+    openSvcModal(svc);
+  };
+
+  document.getElementById('addServicioBtn').addEventListener('click', () => openSvcModal());
+  document.getElementById('cancelServicioBtn').addEventListener('click', () => servicioModal.classList.remove('open'));
+
+  // Upload slides
+  document.getElementById('svcSlideInput').addEventListener('change', async function() {
+    const msgEl = document.getElementById('servicioModalMsg');
+    msgEl.textContent = 'Subiendo imágenes…';
+    msgEl.className = 'msg-banner ok';
+    try {
+      for (const file of this.files) {
+        const url = await uploadFile(file, 'servicios');
+        svcCurrentSlides.push(url);
+      }
+      renderSvcSlides();
+      msgEl.textContent = 'Imágenes subidas ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 3000);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    this.value = '';
+  });
+
+  document.getElementById('saveServicioBtn').addEventListener('click', async () => {
+    const idOriginal = document.getElementById('svc-id-original').value;
+    const id    = document.getElementById('svc-id').value.trim().toLowerCase().replace(/\s+/g,'-');
+    const emoji = document.getElementById('svc-emoji').value.trim();
+    const titulo = document.getElementById('svc-titulo').value.trim();
+    const descripcion = document.getElementById('svc-desc').value.trim();
+    const modo  = document.getElementById('svc-modo').value;
+    const msgEl = document.getElementById('servicioModalMsg');
+
+    if (!id || !titulo) { msgEl.textContent = 'ID y título son obligatorios'; msgEl.className = 'msg-banner err'; return; }
+
+    const body = { id, emoji, titulo, descripcion, modo, slides: svcCurrentSlides };
+    try {
+      if (idOriginal) {
+        await sbPatch(`/servicios?id=eq.${idOriginal}`, body);
+      } else {
+        // Get max orden
+        const all = await sbGet('/servicios?select=orden&order=orden.desc&limit=1');
+        body.orden = (all[0]?.orden || 0) + 1;
+        await sbPost('/servicios', body);
+      }
+      servicioModal.classList.remove('open');
+      showMsg('serviciosMsg', 'Servicio guardado ✓');
+      loadServicios();
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+  });
+
+  window._deleteSvc = async id => {
+    if (!confirm(`¿Eliminar el servicio "${id}"?`)) return;
+    try {
+      await sbDelete(`/servicios?id=eq.${id}`);
+      document.getElementById('svc-card-' + id)?.remove();
+      showMsg('serviciosMsg', 'Servicio eliminado');
+    } catch(e) { showMsg('serviciosMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  // ── CONTACTO ──────────────────────────────────────────────
+  async function loadContacto() {
+    try {
+      const rows = await sbGet('/contacto?select=*&order=orden.asc');
+      const el = document.getElementById('contactoList');
+      const ICONS = { whatsapp:'📱', instagram:'📸', tiktok:'🎵', email:'📧', ubicacion:'📍', modalidad:'🌐', otro:'💬' };
+      el.innerHTML = rows.map(c => `
+        <div class="card" id="canal-card-${c.id}">
+          <div class="card-row">
+            <div class="card-body">
+              <div class="card-name">${ICONS[c.tipo]||'💬'} ${c.etiqueta}</div>
+              <div class="card-sub">${c.valor}</div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-ghost" onclick="window._editCanal(${JSON.stringify(c).replace(/"/g,'&quot;')})">Editar</button>
+              <button class="btn btn-danger" onclick="window._deleteCanal('${c.id}')">×</button>
+            </div>
+          </div>
+        </div>`).join('');
+    } catch(e) {
+      document.getElementById('contactoList').innerHTML =
+        `<p style="color:var(--red);font-size:.8rem">Error: ${e.message}</p>`;
+    }
+  }
+
+  const canalModal = document.getElementById('canalModal');
+  document.getElementById('addCanalBtn').addEventListener('click', () => openCanalModal());
+  document.getElementById('cancelCanalBtn').addEventListener('click', () => canalModal.classList.remove('open'));
+
+  function openCanalModal(c = null) {
+    document.getElementById('canal-id').value       = c?.id || '';
+    document.getElementById('canal-etiqueta').value = c?.etiqueta || '';
+    document.getElementById('canal-valor').value    = c?.valor || '';
+    document.getElementById('canal-tipo').value     = c?.tipo || 'otro';
+    document.getElementById('canalModalTitle').textContent = c ? 'Editar canal' : 'Nuevo canal';
+    document.getElementById('canalModalMsg').className = 'msg-banner';
+    canalModal.classList.add('open');
+  }
+
+  window._editCanal = c => {
+    if (typeof c === 'string') c = JSON.parse(c);
+    openCanalModal(c);
+  };
+
+  window._deleteCanal = async id => {
+    if (!confirm('¿Eliminar este canal?')) return;
+    try {
+      await sbDelete(`/contacto?id=eq.${id}`);
+      document.getElementById('canal-card-' + id)?.remove();
+      showMsg('contactoMsg', 'Canal eliminado');
+    } catch(e) { showMsg('contactoMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  document.getElementById('saveCanalBtn').addEventListener('click', async () => {
+    const id       = document.getElementById('canal-id').value;
+    const etiqueta = document.getElementById('canal-etiqueta').value.trim();
+    const valor    = document.getElementById('canal-valor').value.trim();
+    const tipo     = document.getElementById('canal-tipo').value;
+    const msgEl    = document.getElementById('canalModalMsg');
+
+    if (!etiqueta || !valor) { msgEl.textContent = 'Etiqueta y valor son obligatorios'; msgEl.className = 'msg-banner err'; return; }
+
+    try {
+      if (id) {
+        await sbPatch(`/contacto?id=eq.${id}`, { etiqueta, valor, tipo });
+      } else {
+        const all = await sbGet('/contacto?select=orden&order=orden.desc&limit=1');
+        await sbPost('/contacto', { etiqueta, valor, tipo, orden: (all[0]?.orden || 0) + 1 });
+      }
+      canalModal.classList.remove('open');
+      showMsg('contactoMsg', 'Canal guardado ✓');
+      loadContacto();
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+  });
+
+  // ── AGENDA ───────────────────────────────────────────────
+  async function loadAgenda() {
+    try {
+      const rows = await sbGet('/agenda?id=eq.1&select=*');
+      const a = rows[0] || {};
+      AGENDA_DATA = a;
+      DIAS_HABILES = a.dias_habiles || [1,2,3,4,5,6];
+      FECHAS_BLOQUEADAS = a.fechas_bloqueadas || [];
+
+      document.getElementById('ag-inicio').value      = a.hora_inicio || '9:00';
+      document.getElementById('ag-fin').value         = a.hora_fin || '19:00';
+      document.getElementById('ag-dur').value         = a.duracion_sesion || 60;
+      document.getElementById('ag-pausa').value       = a.pausa_minutos || 15;
+      document.getElementById('ag-break-desde').value = a.descanso_desde || '';
+      document.getElementById('ag-break-hasta').value = a.descanso_hasta || '';
+
+      // Días
+      document.querySelectorAll('.day-pill').forEach(pill => {
+        const d = parseInt(pill.dataset.d);
+        pill.classList.toggle('sel', DIAS_HABILES.includes(d));
+      });
+
+      renderFechasBloqueadas();
+    } catch(e) { showMsg('agendaMsg', 'Error al cargar agenda: ' + e.message, 'err'); }
+  }
+
+  // Toggle día
+  document.querySelectorAll('.day-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const d = parseInt(pill.dataset.d);
+      if (DIAS_HABILES.includes(d)) {
+        DIAS_HABILES = DIAS_HABILES.filter(x => x !== d);
+      } else {
+        DIAS_HABILES.push(d);
+        DIAS_HABILES.sort();
+      }
+      pill.classList.toggle('sel');
+    });
+  });
+
+  // Fechas bloqueadas
+  function renderFechasBloqueadas() {
+    const el = document.getElementById('fechasBloquedas');
+    el.innerHTML = FECHAS_BLOQUEADAS.map(f => `
+      <span style="background:var(--blush);padding:4px 10px;border-radius:20px;font-size:.75rem;display:inline-flex;align-items:center;gap:6px">
+        ${f}
+        <button onclick="window._removeFecha('${f}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;line-height:1">×</button>
+      </span>`).join('');
+  }
+
+  window._removeFecha = f => {
+    FECHAS_BLOQUEADAS = FECHAS_BLOQUEADAS.filter(x => x !== f);
+    renderFechasBloqueadas();
+  };
+
+  document.getElementById('addFechaBtn').addEventListener('click', () => {
+    const v = document.getElementById('nuevaFecha').value;
+    if (v && !FECHAS_BLOQUEADAS.includes(v)) {
+      FECHAS_BLOQUEADAS.push(v);
+      FECHAS_BLOQUEADAS.sort();
+      renderFechasBloqueadas();
+      document.getElementById('nuevaFecha').value = '';
+    }
+  });
+
+  document.getElementById('saveAgendaBtn').addEventListener('click', async () => {
+    const body = {
+      hora_inicio:      document.getElementById('ag-inicio').value.trim(),
+      hora_fin:         document.getElementById('ag-fin').value.trim(),
+      duracion_sesion:  parseInt(document.getElementById('ag-dur').value) || 60,
+      pausa_minutos:    parseInt(document.getElementById('ag-pausa').value) || 15,
+      descanso_desde:   document.getElementById('ag-break-desde').value.trim() || null,
+      descanso_hasta:   document.getElementById('ag-break-hasta').value.trim() || null,
+      dias_habiles:     DIAS_HABILES,
+      fechas_bloqueadas: FECHAS_BLOQUEADAS,
+    };
+    try {
+      // upsert: update if exists, insert if not
+      const r = await fetch(`${SB_URL}/rest/v1/agenda?id=eq.1`, {
+        method: 'PATCH',
+        headers: authHeaders({ 'Prefer': 'return=minimal' }),
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        // row doesn't exist yet → insert
+        await sbPost('/agenda', { id: 1, ...body });
+      }
+      showMsg('agendaMsg', 'Agenda guardada ✓');
+    } catch(e) { showMsg('agendaMsg', 'Error: ' + e.message, 'err'); }
+  });
+
+  // ── PORTADA ───────────────────────────────────────────────
+  async function loadPortada() {
+    try {
+      const rows = await sbGet('/hero_fotos?select=*&order=orden.asc');
+      renderPortadaFotos(rows);
+    } catch(e) { showMsg('portadaMsg', 'Error al cargar fotos: ' + e.message, 'err'); }
+  }
+
+  function renderPortadaFotos(rows) {
+    const el = document.getElementById('portadaFotos');
+    if (!rows.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.82rem">Aún no hay fotos. Sube la primera arriba.</p>'; return; }
+    el.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        ${rows.map(r => `
+          <div class="card" style="width:220px;padding:12px">
+            <img src="${r.src}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px;display:block;margin-bottom:8px"
+              onerror="this.style.background='var(--beige)'"/>
+            <select onchange="window._updateFotoPosicion('${r.id}',this.value)" style="width:100%;margin-bottom:8px;font-size:.78rem">
+              ${['center center','center top','center bottom','left center','right center'].map(v =>
+                `<option value="${v}" ${r.posicion===v?'selected':''}>${v}</option>`
+              ).join('')}
+            </select>
+            <button class="btn btn-danger" style="width:100%;font-size:.75rem;padding:6px"
+              onclick="window._deleteFoto('${r.id}')">Eliminar</button>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  window._updateFotoPosicion = async (id, posicion) => {
+    try {
+      await sbPatch(`/hero_fotos?id=eq.${id}`, { posicion });
+      showMsg('portadaMsg', 'Posición actualizada ✓');
+    } catch(e) { showMsg('portadaMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  window._deleteFoto = async id => {
+    if (!confirm('¿Eliminar esta foto de portada?')) return;
+    try {
+      await sbDelete(`/hero_fotos?id=eq.${id}`);
+      showMsg('portadaMsg', 'Foto eliminada');
+      loadPortada();
+    } catch(e) { showMsg('portadaMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  document.getElementById('portadaFileInput').addEventListener('change', async function() {
+    showMsg('portadaMsg', 'Subiendo foto…');
+    try {
+      const all = await sbGet('/hero_fotos?select=orden&order=orden.desc&limit=1');
+      let orden = (all[0]?.orden || 0) + 1;
+      for (const file of this.files) {
+        const url = await uploadFile(file, 'portada');
+        await sbPost('/hero_fotos', { src: url, posicion: 'center center', orden });
+        orden++;
+      }
+      showMsg('portadaMsg', 'Foto(s) subida(s) ✓');
+      loadPortada();
+    } catch(e) { showMsg('portadaMsg', 'Error: ' + e.message, 'err'); }
+    this.value = '';
+  });
+
+  // Close modals on backdrop click
+  [servicioModal, canalModal].forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+</script>
 </body>
 </html>
