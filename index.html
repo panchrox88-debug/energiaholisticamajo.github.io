@@ -375,8 +375,8 @@
       background: linear-gradient(90deg, var(--rose), var(--gold));
       opacity: 0; transition: opacity 0.3s;
     }
-    .service-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(201,133,138,0.15); }
-    .service-card:hover::before { opacity: 1; }
+    .service-card:hover { box-shadow: 2px 6px 8px 1px rgba(201,133,138,0.26); }
+    .service-card:hover::before { opacity: 0; }
 
     .service-icon { font-size: 2.8rem; margin-bottom: 20px; }
     .service-card h3 {
@@ -760,49 +760,45 @@
       pointer-events: none;
     }
 
-    /* ── SERVICE INLINE EXPANSION ── */
-    .service-card { cursor: pointer; transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+    /* ── SERVICE MODAL ── */
+    .service-card { cursor: pointer; }
     .service-card[data-empty] { cursor: default; }
 
-    /* Wrapper: grid + detail panel share a container so only one is visible at a time */
-    .services-grid {
-      transition: opacity 0.4s ease, max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1), margin 0.6s ease;
-      overflow: hidden;
+    /* Overlay fijo centrado */
+    .service-modal {
+      position: fixed; inset: 0;
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
     }
-    .services-grid.collapsed {
-      opacity: 0;
-      max-height: 0;
-      margin: 0;
-      pointer-events: none;
-    }
-    /* Keep cards interactive unless collapsed */
-    .services-grid.has-expanded .service-card { pointer-events: none; }
+    .service-modal.open { opacity: 1; pointer-events: auto; }
 
+    .modal-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(61, 43, 43, 0.52);
+      backdrop-filter: blur(6px);
+      cursor: pointer;
+    }
+
+    /* Tarjeta del diálogo */
     .service-detail {
-      max-width: 1100px;
-      margin: 0 auto;
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: max-height 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                  opacity 0.5s ease 0.2s,
-                  margin-top 0.5s ease;
-      margin-top: 0;
+      position: relative; z-index: 1;
+      background: var(--cream);
+      border-radius: 28px;
+      padding: 48px 48px 52px;
+      max-width: 600px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(61, 43, 43, 0.22);
+      transform: translateY(28px) scale(0.97);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .service-detail.open {
-      max-height: 2400px;
-      opacity: 1;
-      margin-top: 0;
+    .service-modal.open .service-detail {
+      transform: translateY(0) scale(1);
     }
 
-    .detail-inner {
-      background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(238,231,223,0.3) 100%);
-      border: 1px solid rgba(212, 165, 165, 0.25);
-      border-radius: 28px;
-      padding: 48px 48px 56px;
-      position: relative;
-      box-shadow: 0 20px 60px rgba(122, 84, 84, 0.08);
-    }
+    .detail-inner { /* wrapper estructural */ }
 
     .detail-close {
       position: absolute;
@@ -839,21 +835,20 @@
     }
     .detail-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
       color: var(--dark);
       font-weight: 500;
       margin: 0;
     }
     .detail-divider {
-      width: 60px;
-      height: 1px;
+      width: 60px; height: 1px;
       background: var(--rose-lt);
       margin: 20px auto 0;
     }
 
     .carousel-stage {
       position: relative;
-      width: min(520px, 100%);
+      width: min(460px, 100%);
       margin: 0 auto;
       aspect-ratio: 639 / 793;
       border-radius: 20px;
@@ -862,37 +857,31 @@
       box-shadow: 0 20px 50px rgba(122, 84, 84, 0.18);
     }
     .carousel-track {
-      display: flex;
-      height: 100%;
+      display: flex; height: 100%;
       transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .carousel-slide {
-      flex: 0 0 100%;
-      height: 100%;
+      flex: 0 0 100%; height: 100%;
       background: var(--cream);
     }
     .carousel-slide img {
       width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-      user-select: none;
-      -webkit-user-drag: none;
+      object-fit: cover; display: block;
+      user-select: none; -webkit-user-drag: none;
     }
 
     .carousel-arrow {
-      position: absolute;
-      top: 50%;
+      position: absolute; top: 50%;
       transform: translateY(-50%);
-      width: 48px; height: 48px;
-      background: rgba(255,255,255,0.85);
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,0.88);
       backdrop-filter: blur(6px);
       border: 1px solid rgba(212, 165, 165, 0.25);
       border-radius: 50%;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.6rem;
-      line-height: 1;
+      font-size: 1.5rem; line-height: 1;
       color: var(--dark);
       transition: all 0.25s;
       box-shadow: 0 4px 14px rgba(122, 84, 84, 0.15);
@@ -903,70 +892,58 @@
       transform: translateY(-50%) scale(1.08);
       color: var(--rose);
     }
-    .carousel-arrow.prev { left: -20px; }
-    .carousel-arrow.next { right: -20px; }
+    .carousel-arrow.prev { left: -16px; }
+    .carousel-arrow.next { right: -16px; }
     .carousel-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
 
     .carousel-dots {
-      margin-top: 24px;
-      display: flex; gap: 10px;
-      justify-content: center;
+      margin-top: 20px;
+      display: flex; gap: 10px; justify-content: center;
     }
     .carousel-dot {
       width: 8px; height: 8px; border-radius: 50%;
       background: rgba(212, 165, 165, 0.3);
-      cursor: pointer;
-      transition: all 0.25s;
-      border: none;
-      padding: 0;
+      cursor: pointer; transition: all 0.25s;
+      border: none; padding: 0;
     }
     .carousel-dot:hover { background: rgba(212, 165, 165, 0.6); }
-    .carousel-dot.active {
-      background: var(--rose);
-      transform: scale(1.3);
-    }
+    .carousel-dot.active { background: var(--rose); transform: scale(1.3); }
 
     .carousel-counter {
-      text-align: center;
-      color: var(--muted);
+      text-align: center; color: var(--muted);
       font-family: 'Cormorant Garamond', serif;
-      font-style: italic;
-      font-size: 0.95rem;
-      letter-spacing: 0.1em;
-      margin-top: 12px;
+      font-style: italic; font-size: 0.95rem;
+      letter-spacing: 0.1em; margin-top: 10px;
     }
 
-    .detail-cta {
-      text-align: center;
-      margin-top: 32px;
-    }
+    /* Sin fotos: solo muestra el botón de reserva */
+    .service-modal.no-slides .detail-header,
+    .service-modal.no-slides .carousel-stage,
+    .service-modal.no-slides .carousel-dots,
+    .service-modal.no-slides .carousel-counter { display: none; }
+    .service-modal.no-slides .service-detail { padding: 56px 48px 48px; }
+    .service-modal.no-slides .detail-cta { margin-top: 0; }
+
+    .detail-cta { text-align: center; margin-top: 28px; }
     .detail-cta-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--rose);
-      color: white;
-      padding: 14px 32px;
-      border-radius: 100px;
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--rose); color: white;
+      padding: 14px 32px; border-radius: 100px;
       text-decoration: none;
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.05em;
-      transition: all 0.3s;
-      border: none;
-      cursor: pointer;
+      font-size: 1.1rem; letter-spacing: 0.05em;
+      transition: all 0.3s; border: none; cursor: pointer;
     }
     .detail-cta-btn:hover {
-      background: var(--dark);
-      transform: translateY(-2px);
+      background: var(--dark); transform: translateY(-2px);
       box-shadow: 0 10px 24px rgba(122, 84, 84, 0.2);
     }
 
     @media (max-width: 900px) {
-      .detail-inner { padding: 36px 20px 40px; }
-      .carousel-arrow { width: 40px; height: 40px; font-size: 1.3rem; }
-      .carousel-arrow.prev { left: 8px; }
-      .carousel-arrow.next { right: 8px; }
+      .service-detail { padding: 40px 24px 44px; }
+      .carousel-arrow { width: 38px; height: 38px; font-size: 1.3rem; }
+      .carousel-arrow.prev { left: 6px; }
+      .carousel-arrow.next { right: 6px; }
     }
 
     /* ── FOOTER ── */
@@ -1325,24 +1302,27 @@
       </div>
     </div>
 
-    <!-- Panel de detalle inline (sibling of grid, max-width-aligned) -->
-    <div class="service-detail" id="serviceDetail" aria-hidden="true">
-      <div class="detail-inner">
+    <!-- Modal popup -->
+    <div class="service-modal" id="serviceDetail" aria-hidden="true">
+      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="service-detail" role="dialog" aria-modal="true">
         <button class="detail-close" id="detailClose" aria-label="Cerrar">✕</button>
-        <div class="detail-header">
-          <p class="detail-eyebrow">Conoce más</p>
-          <h3 class="detail-title" id="detailTitle">—</h3>
-          <div class="detail-divider"></div>
-        </div>
-        <div class="carousel-stage">
-          <button class="carousel-arrow prev" id="carouselPrev" aria-label="Anterior">‹</button>
-          <div class="carousel-track" id="carouselTrack"></div>
-          <button class="carousel-arrow next" id="carouselNext" aria-label="Siguiente">›</button>
-        </div>
-        <div class="carousel-dots" id="carouselDots"></div>
-        <p class="carousel-counter" id="carouselCounter">1 / 1</p>
-        <div class="detail-cta">
-          <button class="detail-cta-btn" id="detailReserve">Reservar esta sesión →</button>
+        <div class="detail-inner">
+          <div class="detail-header">
+            <p class="detail-eyebrow">Conoce más</p>
+            <h3 class="detail-title" id="detailTitle">—</h3>
+            <div class="detail-divider"></div>
+          </div>
+          <div class="carousel-stage">
+            <button class="carousel-arrow prev" id="carouselPrev" aria-label="Anterior">‹</button>
+            <div class="carousel-track" id="carouselTrack"></div>
+            <button class="carousel-arrow next" id="carouselNext" aria-label="Siguiente">›</button>
+          </div>
+          <div class="carousel-dots" id="carouselDots"></div>
+          <p class="carousel-counter" id="carouselCounter">1 / 1</p>
+          <div class="detail-cta">
+            <button class="detail-cta-btn" id="detailReserve">Reservar esta sesión →</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1750,6 +1730,10 @@
     }
 
     // ─────────── INLINE SERVICE EXPANSION ───────────
+    // Para agregar imágenes a un servicio: sube los archivos a img/<servicio>/
+    // con nombres 01.png, 02.png, 03.png... (hasta 10 por servicio).
+    // No hay que tocar el código — aparecen automáticamente.
+    const _imgs = id => Array.from({length: 10}, (_, i) => `img/${id}/${String(i+1).padStart(2,'0')}.png`);
     const SERVICE_DATA = {
       reiki: {
         title: 'Reiki Usui',
@@ -1761,11 +1745,11 @@
           'img/reiki/05-incluye.png',
         ],
       },
-      psico: { title: 'Psicoterapia Transpersonal', slides: [] },
-      limpieza: { title: 'Limpieza Energética', slides: [] },
-      masaje: { title: 'Masaje Terapéutico', slides: [] },
-      utero: { title: 'Sanación de Útero', slides: [] },
-      circulo: { title: 'Círculos de Mujeres', slides: [] },
+      psico:    { title: 'Psicoterapia Transpersonal', slides: _imgs('psico') },
+      limpieza: { title: 'Limpieza Energética',        slides: _imgs('limpieza') },
+      masaje:   { title: 'Masaje Terapéutico',         slides: _imgs('masaje') },
+      utero:    { title: 'Sanación de Útero',          slides: _imgs('utero') },
+      circulo:  { title: 'Círculos de Mujeres',        slides: _imgs('circulo') },
     };
 
     const servicesGrid = document.querySelector('.services-grid');
@@ -1787,13 +1771,15 @@
 
     function openService(serviceId) {
       const data = SERVICE_DATA[serviceId];
-      if (!data || !data.slides.length) return;
+      if (!data) return;
+      const hasSlides = data.slides.length > 0;
 
+      // Guardar el servicio actual y resetear índice
       carousel.slides = data.slides;
       carousel.idx = 0;
       carousel.currentService = serviceId;
 
-      // Title
+      // Título
       detailTitle.textContent = data.title;
 
       // Slides
@@ -1811,23 +1797,17 @@
 
       updateCarousel();
 
-      // Collapse grid, show panel
-      servicesGrid.classList.add('collapsed', 'has-expanded');
+      // Mostrar modal
+      detailPanel.classList.toggle('no-slides', !hasSlides);
       detailPanel.classList.add('open');
       detailPanel.setAttribute('aria-hidden', 'false');
-
-      // Smooth scroll so the section header + panel are comfortably visible
-      setTimeout(() => {
-        const section = document.getElementById('services');
-        const sectionTop = section.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top: sectionTop - 60, behavior: 'smooth' });
-      }, 100);
+      document.body.style.overflow = 'hidden'; // evitar scroll del fondo
     }
 
     function closeService() {
       detailPanel.classList.remove('open');
       detailPanel.setAttribute('aria-hidden', 'true');
-      servicesGrid.classList.remove('collapsed', 'has-expanded');
+      document.body.style.overflow = '';
       carousel.currentService = null;
     }
 
@@ -1849,6 +1829,7 @@
     carousel.prev.addEventListener('click', () => goToSlide(carousel.idx - 1));
     carousel.next.addEventListener('click', () => goToSlide(carousel.idx + 1));
     detailClose.addEventListener('click', closeService);
+    document.getElementById('modalBackdrop').addEventListener('click', closeService);
 
     // "Reservar" CTA: close + scroll to booking + preselect service
     detailReserve.addEventListener('click', () => {
@@ -1857,6 +1838,10 @@
       setTimeout(() => {
         const booking = document.getElementById('booking');
         if (booking) booking.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Preseleccionar el servicio en el booking
+        if (serviceId && typeof selectService === 'function') {
+          setTimeout(() => selectService(serviceId), 400);
+        }
       }, 300);
     });
 
@@ -1879,15 +1864,24 @@
       }
     }, { passive: true });
 
-    // Wire up service cards
+    // Precarga imágenes y filtra las que no existen, luego activa la tarjeta
+    function preloadSlides(paths) {
+      return Promise.all(paths.map(src => new Promise(resolve => {
+        const img = new Image();
+        img.onload  = () => resolve(src);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      }))).then(r => r.filter(Boolean));
+    }
+
     document.querySelectorAll('.service-card[data-service]').forEach(card => {
       const id = card.dataset.service;
-      const hasSlides = (SERVICE_DATA[id]?.slides || []).length > 0;
-      if (!hasSlides) {
-        card.setAttribute('data-empty', 'true');
-        return;
-      }
-      card.addEventListener('click', () => openService(id));
+      const paths = SERVICE_DATA[id]?.slides || [];
+      // Precargar para filtrar imágenes que no existen, luego habilitar el click
+      preloadSlides(paths).then(valid => {
+        SERVICE_DATA[id].slides = valid;
+        card.addEventListener('click', () => openService(id));
+      });
     });
   </script>
 </body>
