@@ -1028,11 +1028,22 @@
       <div style="display:flex;flex-wrap:wrap;gap:12px">
         ${rows.map(r => `
           <div class="card" style="width:220px;padding:12px">
-            <img src="${r.src}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px;display:block;margin-bottom:8px"
-              onerror="this.style.background='var(--beige)'"/>
-            <select onchange="window._updateFotoPosicion('${r.id}',this.value)" style="width:100%;margin-bottom:8px;font-size:.78rem">
-              ${['center center','center top','center bottom','left center','right center'].map(v =>
-                `<option value="${v}" ${r.posicion===v?'selected':''}>${v}</option>`
+            <div id="prev-${r.id}" style="
+              width:100%; height:120px; border-radius:8px; margin-bottom:8px;
+              background-image: url('${r.src}');
+              background-size: cover;
+              background-position: ${r.posicion};
+            "></div>
+            <select onchange="window._updateFotoPosicion('${r.id}', this.value)"
+              style="width:100%;margin-bottom:8px;font-size:.78rem">
+              ${[
+                ['center center','Centro (por defecto)'],
+                ['center top',   'Arriba'],
+                ['center bottom','Abajo'],
+                ['left center',  'Izquierda'],
+                ['right center', 'Derecha'],
+              ].map(([v, lbl]) =>
+                `<option value="${v}" ${r.posicion===v?'selected':''}>${lbl}</option>`
               ).join('')}
             </select>
             <button class="btn btn-danger" style="width:100%;font-size:.75rem;padding:6px"
@@ -1042,9 +1053,12 @@
   }
 
   window._updateFotoPosicion = async (id, posicion) => {
+    // Actualiza preview al instante
+    const prev = document.getElementById('prev-' + id);
+    if (prev) prev.style.backgroundPosition = posicion;
     try {
       await sbPatch(`/hero_fotos?id=eq.${id}`, { posicion });
-      showMsg('portadaMsg', 'Posición actualizada ✓');
+      showMsg('portadaMsg', 'Posición guardada ✓');
     } catch(e) { showMsg('portadaMsg', 'Error: ' + e.message, 'err'); }
   };
 
