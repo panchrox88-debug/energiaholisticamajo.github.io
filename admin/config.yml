@@ -115,13 +115,16 @@ collections:
   # ── TESTIMONIOS ────────────────────────────────────────────
   - name: testimonios
     label: Testimonios
-    file: content/testimonios.json
-    fields:
-      - label: Testimonios
-        name: lista
-        widget: list
+    files:
+      - name: todos
+        label: Todos los testimonios
+        file: content/testimonios.json
         fields:
-          - { label: Nombre,     name: nombre,    widget: string }
-          - { label: Ciudad,     name: ciudad,    widget: string }
-          - { label: Texto,      name: texto,     widget: text }
-          - { label: Emoji,      name: emoji,     widget: string, default: "🌸" }
+          - label: Testimonios
+            name: lista
+            widget: list
+            fields:
+              - { label: Nombre,     name: nombre,    widget: string }
+              - { label: Ciudad,     name: ciudad,    widget: string }
+              - { label: Texto,      name: texto,     widget: text }
+              - { label: Emoji,      name: emoji,     widget: string, default: "🌸" }
