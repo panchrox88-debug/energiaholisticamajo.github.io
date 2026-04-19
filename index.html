@@ -453,6 +453,55 @@
     .testimonial-name { font-size: 0.82rem; font-weight: 400; color: var(--dark); }
     .testimonial-loc  { font-size: 0.72rem; color: var(--muted); }
 
+    /* ── FORMULARIO TESTIMONIO ── */
+    .testimonio-form-wrap {
+      margin-top: 72px; max-width: 640px; margin-left: auto; margin-right: auto;
+      text-align: center;
+    }
+    .testimonio-form-title {
+      font-family: 'Cormorant Garamond', serif; font-weight: 300;
+      font-size: clamp(1.5rem, 2.5vw, 2rem); color: var(--dark);
+      margin-bottom: 10px; line-height: 1.3;
+    }
+    .testimonio-form-title em { font-style: italic; color: var(--rose); }
+    .testimonio-form-sub {
+      font-size: 0.88rem; color: var(--muted); line-height: 1.8; margin-bottom: 32px;
+    }
+    .testimonio-form { text-align: left; display: flex; flex-direction: column; gap: 16px; }
+    .tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .tf-field { display: flex; flex-direction: column; gap: 6px; }
+    .tf-field label {
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); font-family: 'Nunito', sans-serif;
+    }
+    .tf-field input, .tf-field textarea {
+      border: 1px solid rgba(201,133,138,0.25); border-radius: 12px;
+      padding: 12px 16px; font-family: 'Nunito', sans-serif; font-size: 0.88rem;
+      color: var(--dark); background: white; outline: none; resize: vertical;
+      transition: border-color 0.2s;
+    }
+    .tf-field input:focus, .tf-field textarea:focus {
+      border-color: var(--rose);
+    }
+    .tf-submit {
+      align-self: center; margin-top: 8px;
+      background: var(--rose); color: white; border: none; border-radius: 50px;
+      padding: 14px 36px; font-family: 'Nunito', sans-serif; font-size: 0.88rem;
+      letter-spacing: 0.05em; cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .tf-submit:hover { background: var(--rose-lt); transform: translateY(-1px); }
+    .tf-submit:disabled { opacity: 0.6; cursor: default; transform: none; }
+    .tf-msg {
+      text-align: center; font-size: 0.85rem; min-height: 1.4em;
+      color: var(--muted); margin-top: 4px;
+    }
+    .tf-msg.ok  { color: #6a9e7f; }
+    .tf-msg.err { color: #c0585e; }
+    @media (max-width: 600px) {
+      .tf-row { grid-template-columns: 1fr; }
+    }
+
     /* ── CTA BANNER ── */
     .cta-banner {
       margin: 0 64px 80px;
@@ -1322,40 +1371,33 @@
   <section class="testimonials" id="testimonials">
     <p class="section-eyebrow reveal">Testimonios</p>
     <h2 class="reveal">Voces que han <em>sanado</em></h2>
-    <div class="testimonials-grid">
-      <div class="testimonial-card reveal">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"Majo me acompañó en uno de los momentos más difíciles de mi vida. Su enfoque integrador me ayudó a sanar desde un lugar que no sabía que existía."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">🌸</div>
-          <div>
-            <div class="testimonial-name">Valentina M.</div>
-            <div class="testimonial-loc">Santiago, Chile</div>
+    <div class="testimonials-grid" id="testimoniosGrid">
+      <!-- cargado dinámicamente desde content/testimonios.json -->
+    </div>
+
+    <!-- Formulario de testimonio -->
+    <div class="testimonio-form-wrap reveal">
+      <p class="section-eyebrow" style="margin-bottom:8px">Tu experiencia</p>
+      <h3 class="testimonio-form-title">¿Quieres compartir <em>tu historia</em>?</h3>
+      <p class="testimonio-form-sub">Tu testimonio puede ser la luz que otra persona necesita para dar el primer paso.</p>
+      <form class="testimonio-form" id="testimonioForm" novalidate>
+        <div class="tf-row">
+          <div class="tf-field">
+            <label for="tf-nombre">Nombre *</label>
+            <input id="tf-nombre" name="nombre" type="text" placeholder="Tu nombre" required/>
+          </div>
+          <div class="tf-field">
+            <label for="tf-ciudad">Ciudad</label>
+            <input id="tf-ciudad" name="ciudad" type="text" placeholder="Ej: Santiago, Chile"/>
           </div>
         </div>
-      </div>
-      <div class="testimonial-card reveal">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"Las sesiones de Reiki con Majo transformaron mi relación con mi cuerpo y mis emociones. Me siento más liviana, más yo."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">✨</div>
-          <div>
-            <div class="testimonial-name">Camila R.</div>
-            <div class="testimonial-loc">Viña del Mar, Chile</div>
-          </div>
+        <div class="tf-field">
+          <label for="tf-texto">Tu testimonio *</label>
+          <textarea id="tf-texto" name="texto" rows="4" placeholder="Cuéntanos tu experiencia con Majo…" required></textarea>
         </div>
-      </div>
-      <div class="testimonial-card reveal">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"Participé en el círculo de mujeres y fue una experiencia que cambió mi vida. Gracias por crear ese espacio tan sagrado y seguro."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">🌙</div>
-          <div>
-            <div class="testimonial-name">Catalina F.</div>
-            <div class="testimonial-loc">Providencia, Santiago</div>
-          </div>
-        </div>
-      </div>
+        <button type="submit" class="tf-submit" id="tfSubmit">Enviar testimonio ✨</button>
+        <p class="tf-msg" id="tfMsg"></p>
+      </form>
     </div>
   </section>
 
@@ -1711,6 +1753,75 @@
     }
 
     loadContacto();
+
+    // ── TESTIMONIOS DINÁMICOS ──────────────────────────────────
+    async function loadTestimonios() {
+      try {
+        const res  = await fetch('content/testimonios.json');
+        const data = await res.json();
+        const grid = document.getElementById('testimoniosGrid');
+        if (!grid) return;
+        const visibles = (data.lista || []).filter(t => t.visible);
+        grid.innerHTML = visibles.map(t => `
+          <div class="testimonial-card reveal">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="testimonial-text">"${t.texto}"</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">${t.emoji || '🌸'}</div>
+              <div>
+                <div class="testimonial-name">${t.nombre}</div>
+                <div class="testimonial-loc">${t.ciudad || ''}</div>
+              </div>
+            </div>
+          </div>`).join('');
+        grid.querySelectorAll('.testimonial-card').forEach(c => obs.observe(c));
+      } catch(e) {
+        console.warn('No se pudo cargar testimonios.json', e);
+      }
+    }
+
+    loadTestimonios();
+
+    // ── FORMULARIO TESTIMONIO ──────────────────────────────────
+    const testimonioForm = document.getElementById('testimonioForm');
+    const tfSubmit       = document.getElementById('tfSubmit');
+    const tfMsg          = document.getElementById('tfMsg');
+
+    testimonioForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const nombre = document.getElementById('tf-nombre').value.trim();
+      const ciudad = document.getElementById('tf-ciudad').value.trim();
+      const texto  = document.getElementById('tf-texto').value.trim();
+
+      if (!nombre || !texto) {
+        tfMsg.textContent = 'Por favor completa nombre y testimonio.';
+        tfMsg.className = 'tf-msg err';
+        return;
+      }
+
+      tfSubmit.disabled = true;
+      tfMsg.textContent = 'Enviando…';
+      tfMsg.className = 'tf-msg';
+
+      try {
+        const res = await fetch('/.netlify/functions/submit-testimonio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, ciudad, texto }),
+        });
+        if (res.ok) {
+          testimonioForm.reset();
+          tfMsg.textContent = '¡Gracias! Tu testimonio fue recibido y será revisado pronto. 🌸';
+          tfMsg.className = 'tf-msg ok';
+        } else {
+          throw new Error('Error del servidor');
+        }
+      } catch {
+        tfMsg.textContent = 'Hubo un problema al enviar. Intenta de nuevo.';
+        tfMsg.className = 'tf-msg err';
+        tfSubmit.disabled = false;
+      }
+    });
 
     // ── SERVICIOS DINÁMICOS ────────────────────────────────────
     let SERVICIOS_DATA = []; // poblado desde content/servicios.json

@@ -74,7 +74,9 @@ collections:
             name: lista
             widget: list
             fields:
-              - { label: Nombre,     name: nombre,    widget: string }
-              - { label: Ciudad,     name: ciudad,    widget: string }
-              - { label: Texto,      name: texto,     widget: text }
-              - { label: Emoji,      name: emoji,     widget: string, default: "🌸" }
+              - { label: Nombre,              name: nombre,    widget: string }
+              - { label: Ciudad,              name: ciudad,    widget: string }
+              - { label: Texto,               name: texto,     widget: text }
+              - { label: Emoji,               name: emoji,     widget: string, default: "🌸" }
+              - { label: "Mostrar en el sitio", name: visible, widget: boolean, default: false,
+                  hint: "Activa para que este testimonio aparezca públicamente en la página." }
