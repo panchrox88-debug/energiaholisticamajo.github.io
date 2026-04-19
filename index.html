@@ -433,7 +433,7 @@
     .tc-viewport { overflow: hidden; flex: 1; }
     .tc-track {
       display: flex; gap: 24px;
-      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     .testimonial-card {
       background: linear-gradient(145deg, var(--blush), white);
@@ -1801,20 +1801,25 @@
       return window.innerWidth < 640 ? 1 : window.innerWidth < 1000 ? 2 : 3;
     }
 
+    // Máximo índice: siempre quedan perPage tarjetas visibles al final
+    function tcMaxPage() {
+      return Math.max(0, tcTotal - tcPerPage());
+    }
+
     function tcGoTo(p) {
-      const pp = tcPerPage();
-      const pages = Math.ceil(tcTotal / pp);
-      tcPage = Math.max(0, Math.min(pages - 1, p));
-      tcTrack.style.transform = `translateX(-${tcPage * tcViewport.offsetWidth}px)`;
+      tcPage = Math.max(0, Math.min(tcMaxPage(), p));
+      // Desplazamiento de a 1 tarjeta (ancho real + gap)
+      const card = tcTrack.children[0];
+      const step = card ? card.offsetWidth + 24 : 0;
+      tcTrack.style.transform = `translateX(-${tcPage * step}px)`;
       tcDotsEl.querySelectorAll('.tc-dot').forEach((d, i) => d.classList.toggle('active', i === tcPage));
       tcPrev.disabled = tcPage === 0;
-      tcNext.disabled = tcPage >= pages - 1;
+      tcNext.disabled = tcPage >= tcMaxPage();
     }
 
     function tcBuildDots() {
-      const pp    = tcPerPage();
-      const pages = Math.ceil(tcTotal / pp);
-      tcDotsEl.innerHTML = Array.from({ length: pages }, (_, i) =>
+      const count = tcMaxPage() + 1;
+      tcDotsEl.innerHTML = Array.from({ length: count }, (_, i) =>
         `<button class="tc-dot${i === 0 ? ' active' : ''}" data-p="${i}"></button>`
       ).join('');
       tcDotsEl.querySelectorAll('.tc-dot').forEach(d =>
@@ -1825,9 +1830,7 @@
     function tcResetAuto() {
       clearInterval(tcAutoTimer);
       tcAutoTimer = setInterval(() => {
-        const pp    = tcPerPage();
-        const pages = Math.ceil(tcTotal / pp);
-        tcGoTo(tcPage < pages - 1 ? tcPage + 1 : 0);
+        tcGoTo(tcPage < tcMaxPage() ? tcPage + 1 : 0);
       }, 5000);
     }
 
@@ -1867,7 +1870,7 @@
 
     tcPrev.addEventListener('click', () => { tcGoTo(tcPage - 1); tcResetAuto(); });
     tcNext.addEventListener('click', () => { tcGoTo(tcPage + 1); tcResetAuto(); });
-    window.addEventListener('resize', () => { tcBuildDots(); tcGoTo(0); });
+    window.addEventListener('resize', () => { tcBuildDots(); tcGoTo(Math.min(tcPage, tcMaxPage())); });
 
     loadTestimonios();
 
