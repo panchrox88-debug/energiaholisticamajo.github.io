@@ -394,6 +394,18 @@
       font-size: 0.65rem; letter-spacing: 0.2em;
       text-transform: uppercase; color: var(--rose);
     }
+    .service-card-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 20px;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic; font-size: 0.95rem;
+      color: var(--rose);
+      opacity: 0.7;
+      transition: opacity 0.3s, gap 0.3s;
+    }
+    .service-card:hover .service-card-cta {
+      opacity: 1; gap: 10px;
+    }
 
     /* ── TESTIMONIALS ── */
     .testimonials {
@@ -1278,36 +1290,42 @@
         <h3>Psicoterapia Transpersonal</h3>
         <p>Un espacio de escucha profunda donde trabajamos tus emociones, miedos y bloqueos desde la raíz, integrando cuerpo y mente.</p>
         <span class="service-mode">Online & Presencial</span>
+        <div class="service-card-cta">Ver más →</div>
       </div>
       <div class="service-card reveal" data-service="limpieza">
         <div class="service-icon">✨</div>
         <h3>Limpieza Energética</h3>
         <p>Limpieza y armonización de tu campo energético para liberar cargas que ya no te pertenecen y restaurar tu flujo vital.</p>
         <span class="service-mode">Online & Presencial</span>
+        <div class="service-card-cta">Ver más →</div>
       </div>
       <div class="service-card reveal" data-service="reiki">
         <div class="service-icon">🌊</div>
         <h3>Reiki Usui</h3>
         <p>Canalización de energía universal para activar tu propio poder sanador, relajar el sistema nervioso y equilibrar tus chakras.</p>
         <span class="service-mode">Presencial</span>
+        <div class="service-card-cta">Ver más →</div>
       </div>
       <div class="service-card reveal" data-service="masaje">
         <div class="service-icon">💆</div>
         <h3>Masaje Terapéutico</h3>
         <p>Trabajo corporal que integra técnicas de masaje con conciencia energética para liberar tensiones físicas y emocionales.</p>
         <span class="service-mode">Presencial</span>
+        <div class="service-card-cta">Ver más →</div>
       </div>
       <div class="service-card reveal" data-service="utero">
         <div class="service-icon">🌺</div>
         <h3>Sanación de Útero</h3>
         <p>Proceso de reconexión con tu centro femenino, liberando memorias y heridas para recuperar tu poder y creatividad.</p>
         <span class="service-mode">Online & Presencial</span>
+        <div class="service-card-cta">Ver más →</div>
       </div>
       <div class="service-card reveal" data-service="circulo">
         <div class="service-icon">🌙</div>
         <h3>Círculos de Mujeres</h3>
         <p>Espacios de encuentro, sanación colectiva y comunidad donde nos acompañamos en el camino de reconocernos y crecer.</p>
         <span class="service-mode">Presencial</span>
+        <div class="service-card-cta">Ver más →</div>
       </div>
     </div>
 
