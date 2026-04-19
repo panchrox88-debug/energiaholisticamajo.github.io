@@ -962,9 +962,17 @@
       .detail-title { font-size: 1.5rem; }
       .carousel-stage { width: min(360px, 94%); max-height: 58vh; }
       .detail-title { white-space: normal; }
-      .carousel-arrow { width: 36px; height: 36px; font-size: 1.2rem; }
-      .carousel-arrow.prev { left: 6px; }
-      .carousel-arrow.next { right: 6px; }
+      .carousel-arrow {
+        width: 28px; height: 28px; font-size: 1rem;
+        background: rgba(255,255,255,0.35);
+        backdrop-filter: blur(3px);
+        box-shadow: none;
+        top: auto; bottom: 12px;
+        transform: none;
+      }
+      .carousel-arrow:hover:not(:disabled) { transform: none; }
+      .carousel-arrow.prev { left: 10px; }
+      .carousel-arrow.next { right: 10px; }
       .detail-cta-btn { padding: 12px 24px; font-size: 1rem; }
     }
 
