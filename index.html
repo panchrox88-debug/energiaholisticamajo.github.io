@@ -787,7 +787,7 @@
       position: relative; z-index: 1;
       background: var(--cream);
       border-radius: 28px;
-      padding: 28px 40px 32px;
+      padding: 22px 32px 24px;
       max-width: 560px; width: 100%;
       max-height: 92vh; overflow-y: auto;
       box-shadow: 0 24px 80px rgba(61, 43, 43, 0.22);
@@ -801,18 +801,15 @@
     .detail-inner { /* wrapper estructural */ }
 
     .detail-close {
-      position: absolute;
-      top: 20px; right: 20px;
-      width: 42px; height: 42px;
+      width: 38px; height: 38px;
       background: rgba(255,255,255,0.7);
       border: 1px solid rgba(212, 165, 165, 0.3);
       color: var(--dark);
       border-radius: 50%;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1rem;
+      font-size: 0.9rem; flex-shrink: 0;
       transition: all 0.25s;
-      z-index: 4;
     }
     .detail-close:hover {
       background: var(--rose-lt);
@@ -824,10 +821,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 14px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
     .detail-header-text { flex: 1; min-width: 0; }
+    .detail-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .detail-eyebrow {
       font-family: 'Cormorant Garamond', serif;
       font-style: italic;
@@ -850,13 +848,13 @@
     .detail-divider {
       width: 50px; height: 1px;
       background: var(--rose-lt);
-      margin: 0 0 14px;
+      margin: 0 auto 12px;
     }
 
     .carousel-stage {
       position: relative;
       width: min(460px, 94%);
-      max-height: 68vh;
+      max-height: 64vh;
       margin: 0 auto;
       aspect-ratio: 639 / 793;
       border-radius: 20px;
@@ -1317,14 +1315,16 @@
     <div class="service-modal" id="serviceDetail" aria-hidden="true">
       <div class="modal-backdrop" id="modalBackdrop"></div>
       <div class="service-detail" role="dialog" aria-modal="true">
-        <button class="detail-close" id="detailClose" aria-label="Cerrar">✕</button>
         <div class="detail-inner">
           <div class="detail-header">
             <div class="detail-header-text">
               <p class="detail-eyebrow">Conoce más</p>
               <h3 class="detail-title" id="detailTitle">—</h3>
             </div>
-            <button class="detail-cta-btn" id="detailReserve">Reservar →</button>
+            <div class="detail-header-actions">
+              <button class="detail-cta-btn" id="detailReserve">Reservar →</button>
+              <button class="detail-close" id="detailClose" aria-label="Cerrar">✕</button>
+            </div>
           </div>
           <div class="detail-divider"></div>
           <div class="carousel-stage">
