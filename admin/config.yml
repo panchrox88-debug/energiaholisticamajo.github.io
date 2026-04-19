@@ -20,7 +20,7 @@ collections:
           - label: Fotos
             name: fotos
             widget: list
-            hint: "Se muestran en carrusel detrás del texto principal. Recomendado: fotos verticales o cuadradas, ambientes cálidos."
+            hint: "Se muestran en carrusel detrás del texto principal. Tamaño recomendado: 1920×1080px, formato JPG, máximo 500 KB. Puedes comprimir gratis en squoosh.app antes de subir."
             field: { label: Foto, name: src, widget: image }
 
   # ── SERVICIOS ──────────────────────────────────────────────
