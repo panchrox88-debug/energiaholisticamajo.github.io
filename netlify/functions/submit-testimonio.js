@@ -24,6 +24,7 @@ exports.handler = async (event) => {
   const nombre = (payload.nombre || '').trim();
   const ciudad = (payload.ciudad || '').trim();
   const texto  = (payload.texto  || '').trim();
+  const rating = Math.min(5, Math.max(1, parseInt(payload.rating) || 5));
 
   if (!nombre || !texto) {
     return { statusCode: 400, body: 'Faltan campos obligatorios' };
@@ -63,6 +64,7 @@ exports.handler = async (event) => {
     ciudad,
     texto,
     emoji,
+    rating,
     visible: false,
   });
 

@@ -523,6 +523,14 @@
     }
     .tf-msg.ok  { color: #6a9e7f; }
     .tf-msg.err { color: #c0585e; }
+    .tf-stars { display: flex; gap: 4px; }
+    .tf-star {
+      background: none; border: none; font-size: 1.8rem; line-height: 1;
+      color: var(--gold-lt); cursor: pointer; padding: 0;
+      transition: color 0.15s, transform 0.1s;
+    }
+    .tf-star.lit, .tf-star.hover { color: var(--gold); }
+    .tf-star:hover { transform: scale(1.15); }
     @media (max-width: 600px) {
       .tf-row { grid-template-columns: 1fr; }
     }
@@ -1427,6 +1435,17 @@
           </div>
         </div>
         <div class="tf-field">
+          <label>Calificación *</label>
+          <div class="tf-stars" id="tfStars">
+            <button type="button" class="tf-star lit" data-v="1">★</button>
+            <button type="button" class="tf-star lit" data-v="2">★</button>
+            <button type="button" class="tf-star lit" data-v="3">★</button>
+            <button type="button" class="tf-star lit" data-v="4">★</button>
+            <button type="button" class="tf-star lit" data-v="5">★</button>
+          </div>
+          <input type="hidden" id="tf-rating" value="5"/>
+        </div>
+        <div class="tf-field">
           <label for="tf-texto">Tu testimonio *</label>
           <textarea id="tf-texto" name="texto" rows="4" placeholder="Cuéntanos tu experiencia con Majo…" required></textarea>
         </div>
@@ -1789,49 +1808,90 @@
 
     loadContacto();
 
-    // ── CARRUSEL TESTIMONIOS ───────────────────────────────────
+    // ── CARRUSEL TESTIMONIOS (infinite forward) ────────────────
     const tcTrack    = document.getElementById('testimoniosGrid');
     const tcViewport = document.getElementById('tcViewport');
     const tcPrev     = document.getElementById('tcPrev');
     const tcNext     = document.getElementById('tcNext');
     const tcDotsEl   = document.getElementById('tcDots');
-    let tcPage = 0, tcTotal = 0, tcAutoTimer = null;
+    let tcManualPage = 0, tcAbsPage = 0, tcTotal = 0, tcAutoTimer = null;
 
-    function tcPerPage() {
-      return window.innerWidth < 640 ? 1 : window.innerWidth < 1000 ? 2 : 3;
+    function tcPerPage() { return window.innerWidth < 640 ? 1 : window.innerWidth < 1000 ? 2 : 3; }
+    function tcRealMax() { return Math.max(0, tcTotal - tcPerPage()); }
+    function tcStep()    { const c = tcTrack.children[0]; return c ? c.offsetWidth + 24 : 0; }
+
+    function tcSetPos(page, animate = true) {
+      if (!animate) {
+        tcTrack.style.transition = 'none';
+        tcTrack.style.transform  = `translateX(-${page * tcStep()}px)`;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          tcTrack.style.transition = 'transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        }));
+      } else {
+        tcTrack.style.transform = `translateX(-${page * tcStep()}px)`;
+      }
     }
 
-    // Máximo índice: siempre quedan perPage tarjetas visibles al final
-    function tcMaxPage() {
-      return Math.max(0, tcTotal - tcPerPage());
+    function tcUpdateDots(active) {
+      tcDotsEl.querySelectorAll('.tc-dot').forEach((d, i) => d.classList.toggle('active', i === active));
     }
 
-    function tcGoTo(p) {
-      tcPage = Math.max(0, Math.min(tcMaxPage(), p));
-      // Desplazamiento de a 1 tarjeta (ancho real + gap)
-      const card = tcTrack.children[0];
-      const step = card ? card.offsetWidth + 24 : 0;
-      tcTrack.style.transform = `translateX(-${tcPage * step}px)`;
-      tcDotsEl.querySelectorAll('.tc-dot').forEach((d, i) => d.classList.toggle('active', i === tcPage));
-      tcPrev.disabled = tcPage === 0;
-      tcNext.disabled = tcPage >= tcMaxPage();
+    function tcUpdateArrows() {
+      tcPrev.disabled = tcManualPage <= 0;
+      tcNext.disabled = tcManualPage >= tcRealMax();
+    }
+
+    function tcManualGoTo(p) {
+      tcManualPage = Math.max(0, Math.min(tcRealMax(), p));
+      tcAbsPage    = tcManualPage;
+      tcSetPos(tcManualPage);
+      tcUpdateDots(tcManualPage);
+      tcUpdateArrows();
+    }
+
+    function tcAutoAdvance() {
+      tcAbsPage++;
+      tcSetPos(tcAbsPage);
+      tcUpdateDots(tcAbsPage % (tcRealMax() + 1));
+      // Si entramos en la zona de clones que replican la posición 0, reset invisible
+      if (tcAbsPage >= tcTotal) {
+        setTimeout(() => {
+          tcAbsPage    = 0;
+          tcManualPage = 0;
+          tcSetPos(0, false);
+          tcUpdateDots(0);
+          tcUpdateArrows();
+        }, 720);
+      } else {
+        tcManualPage = tcAbsPage;
+        tcUpdateArrows();
+      }
     }
 
     function tcBuildDots() {
-      const count = tcMaxPage() + 1;
+      const count = tcRealMax() + 1;
       tcDotsEl.innerHTML = Array.from({ length: count }, (_, i) =>
         `<button class="tc-dot${i === 0 ? ' active' : ''}" data-p="${i}"></button>`
       ).join('');
       tcDotsEl.querySelectorAll('.tc-dot').forEach(d =>
-        d.addEventListener('click', () => { tcGoTo(+d.dataset.p); tcResetAuto(); })
+        d.addEventListener('click', () => { tcManualGoTo(+d.dataset.p); tcResetAuto(); })
       );
+    }
+
+    function tcBuildClones() {
+      tcTrack.querySelectorAll('.tc-clone').forEach(c => c.remove());
+      const pp   = tcPerPage();
+      const real = [...tcTrack.querySelectorAll('.testimonial-card:not(.tc-clone)')];
+      real.slice(0, pp).forEach(c => {
+        const cl = c.cloneNode(true);
+        cl.classList.add('tc-clone');
+        tcTrack.appendChild(cl);
+      });
     }
 
     function tcResetAuto() {
       clearInterval(tcAutoTimer);
-      tcAutoTimer = setInterval(() => {
-        tcGoTo(tcPage < tcMaxPage() ? tcPage + 1 : 0);
-      }, 5000);
+      tcAutoTimer = setInterval(tcAutoAdvance, 5000);
     }
 
     async function loadTestimonios() {
@@ -1841,9 +1901,12 @@
         if (!tcTrack) return;
         const visibles = (data.lista || []).filter(t => t.visible).slice(-10);
         tcTotal = visibles.length;
-        tcTrack.innerHTML = visibles.map(t => `
+        tcTrack.innerHTML = visibles.map(t => {
+          const rating  = Math.min(5, Math.max(1, t.rating || 5));
+          const stars   = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+          return `
           <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
+            <div class="testimonial-stars">${stars}</div>
             <p class="testimonial-text">"${t.texto}"</p>
             <div class="testimonial-author">
               <div class="testimonial-avatar">${t.emoji || '🌸'}</div>
@@ -1852,25 +1915,31 @@
                 <div class="testimonial-loc">${t.ciudad || ''}</div>
               </div>
             </div>
-          </div>`).join('');
+          </div>`;
+        }).join('');
         tcBuildDots();
-        tcGoTo(0);
+        tcBuildClones();
+        tcSetPos(0, false);
+        tcUpdateArrows();
         tcResetAuto();
         // Swipe móvil
         let txStart = 0;
         tcViewport.addEventListener('touchstart', e => { txStart = e.changedTouches[0].clientX; }, { passive: true });
         tcViewport.addEventListener('touchend', e => {
           const dx = e.changedTouches[0].clientX - txStart;
-          if (Math.abs(dx) > 40) { tcGoTo(dx < 0 ? tcPage + 1 : tcPage - 1); tcResetAuto(); }
+          if (Math.abs(dx) > 40) { tcManualGoTo(dx < 0 ? tcManualPage + 1 : tcManualPage - 1); tcResetAuto(); }
         }, { passive: true });
       } catch(e) {
         console.warn('No se pudo cargar testimonios.json', e);
       }
     }
 
-    tcPrev.addEventListener('click', () => { tcGoTo(tcPage - 1); tcResetAuto(); });
-    tcNext.addEventListener('click', () => { tcGoTo(tcPage + 1); tcResetAuto(); });
-    window.addEventListener('resize', () => { tcBuildDots(); tcGoTo(Math.min(tcPage, tcMaxPage())); });
+    tcPrev.addEventListener('click', () => { tcManualGoTo(tcManualPage - 1); tcResetAuto(); });
+    tcNext.addEventListener('click', () => { tcManualGoTo(tcManualPage + 1); tcResetAuto(); });
+    window.addEventListener('resize', () => {
+      tcBuildClones(); tcBuildDots();
+      tcManualGoTo(Math.min(tcManualPage, tcRealMax()));
+    });
 
     loadTestimonios();
 
@@ -1878,12 +1947,31 @@
     const testimonioForm = document.getElementById('testimonioForm');
     const tfSubmit       = document.getElementById('tfSubmit');
     const tfMsg          = document.getElementById('tfMsg');
+    const tfRatingInput  = document.getElementById('tf-rating');
+    const tfStarsEl      = document.getElementById('tfStars');
+
+    // Interacción estrellas
+    tfStarsEl.querySelectorAll('.tf-star').forEach(star => {
+      star.addEventListener('click', () => {
+        const val = +star.dataset.v;
+        tfRatingInput.value = val;
+        tfStarsEl.querySelectorAll('.tf-star').forEach((s, i) => s.classList.toggle('lit', i < val));
+      });
+      star.addEventListener('mouseenter', () => {
+        const val = +star.dataset.v;
+        tfStarsEl.querySelectorAll('.tf-star').forEach((s, i) => s.classList.toggle('hover', i < val));
+      });
+      star.addEventListener('mouseleave', () => {
+        tfStarsEl.querySelectorAll('.tf-star').forEach(s => s.classList.remove('hover'));
+      });
+    });
 
     testimonioForm.addEventListener('submit', async e => {
       e.preventDefault();
-      const nombre = document.getElementById('tf-nombre').value.trim();
-      const ciudad = document.getElementById('tf-ciudad').value.trim();
-      const texto  = document.getElementById('tf-texto').value.trim();
+      const nombre  = document.getElementById('tf-nombre').value.trim();
+      const ciudad  = document.getElementById('tf-ciudad').value.trim();
+      const texto   = document.getElementById('tf-texto').value.trim();
+      const rating  = parseInt(tfRatingInput.value) || 5;
 
       if (!nombre || !texto) {
         tfMsg.textContent = 'Por favor completa nombre y testimonio.';
@@ -1899,7 +1987,7 @@
         const res = await fetch('/.netlify/functions/submit-testimonio', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, ciudad, texto }),
+          body: JSON.stringify({ nombre, ciudad, texto, rating }),
         });
         if (res.ok) {
           testimonioForm.reset();

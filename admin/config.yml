@@ -78,5 +78,7 @@ collections:
               - { label: Ciudad,              name: ciudad,    widget: string }
               - { label: Texto,               name: texto,     widget: text }
               - { label: Emoji,               name: emoji,     widget: string, default: "🌸" }
+              - { label: "Calificación (1-5 estrellas)", name: rating, widget: number,
+                  min: 1, max: 5, default: 5 }
               - { label: "Mostrar en el sitio", name: visible, widget: boolean, default: false,
                   hint: "Activa para que este testimonio aparezca públicamente en la página." }
