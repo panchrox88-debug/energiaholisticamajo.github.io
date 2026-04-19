@@ -20,6 +20,13 @@
       "texto": "Participé en el círculo de mujeres y fue una experiencia que cambió mi vida. Gracias por crear ese espacio tan sagrado y seguro.",
       "emoji": "🌙",
       "visible": true
+    },
+    {
+      "nombre": "Francisco",
+      "ciudad": "Santiago",
+      "texto": "Cote bonita <3",
+      "emoji": "✨",
+      "visible": false
     }
   ]
 }
