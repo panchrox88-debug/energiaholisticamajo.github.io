@@ -2054,9 +2054,7 @@
           <div class="service-card-cta">Ver más →</div>`;
         preloadSlides(s.slides).then(valid => {
           s.slides = valid;
-          if (valid.length > 0) {
-            card.addEventListener('click', () => openService(s.id));
-          }
+          card.addEventListener('click', () => openService(s.id));
         });
         grid.appendChild(card);
         obs.observe(card); // activar animación reveal
