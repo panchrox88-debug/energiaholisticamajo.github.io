@@ -1837,15 +1837,20 @@
     }
 
     function tcUpdateArrows() {
-      tcPrev.disabled = tcManualPage <= 0;
-      tcNext.disabled = tcManualPage >= tcRealMax();
+      // Siempre habilitadas — el carrusel es circular
+      tcPrev.disabled = false;
+      tcNext.disabled = false;
     }
 
     function tcManualGoTo(p) {
-      tcManualPage = Math.max(0, Math.min(tcRealMax(), p));
-      tcAbsPage    = tcManualPage;
-      tcSetPos(tcManualPage);
-      tcUpdateDots(tcManualPage);
+      const max = tcRealMax();
+      // Wrap circular
+      if (p < 0) p = max;
+      if (p > max) p = 0;
+      tcManualPage = p;
+      tcAbsPage    = p;
+      tcSetPos(p);
+      tcUpdateDots(p);
       tcUpdateArrows();
     }
 
