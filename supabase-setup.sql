@@ -154,3 +154,41 @@ ON CONFLICT DO NOTHING;
 -- Supabase → Authentication → Users → Add user
 -- y crea la cuenta de administrador (email + contraseña de Majo)
 -- ═══════════════════════════════════════════════════════════════
+
+-- ── SOBRE MÍ ─────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS sobre_mi (
+  id          int PRIMARY KEY DEFAULT 1,
+  titulo      text NOT NULL DEFAULT 'Un puente entre la psicología y el',
+  titulo_em   text NOT NULL DEFAULT 'alma',
+  parrafo1    text,
+  parrafo2    text,
+  lista       jsonb NOT NULL DEFAULT '[]',
+  badge_num   text DEFAULT '6.4K',
+  badge_texto text DEFAULT 'Personas que confían en mí'
+);
+
+CREATE TABLE IF NOT EXISTS sobre_mi_fotos (
+  id    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  src   text NOT NULL,
+  orden int  NOT NULL DEFAULT 0
+);
+
+ALTER TABLE sobre_mi       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sobre_mi_fotos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "public read sobre_mi"       ON sobre_mi       FOR SELECT USING (true);
+CREATE POLICY "public read sobre_mi_fotos" ON sobre_mi_fotos FOR SELECT USING (true);
+CREATE POLICY "admin all sobre_mi"         ON sobre_mi       FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "admin all sobre_mi_fotos"   ON sobre_mi_fotos FOR ALL USING (auth.role() = 'authenticated');
+
+INSERT INTO sobre_mi (id, titulo, titulo_em, parrafo1, parrafo2, lista, badge_num, badge_texto)
+VALUES (1,
+  'Un puente entre la psicología y el',
+  'alma',
+  'Soy María José Toro, psicóloga y terapeuta holística. Creo en que la sanación verdadera ocurre cuando integramos la mente, el cuerpo y el espíritu como una sola unidad.',
+  'Mi práctica combina la psicoterapia transpersonal con herramientas holísticas como Reiki, limpiezas energéticas y masajes terapéuticos para acompañarte en un proceso de transformación profunda.',
+  '["Psicóloga con enfoque transpersonal","Terapeuta Reiki certificada","Especialista en sanación del útero","Facilitadora de círculos de mujeres","Atención presencial en Providencia, Santiago"]',
+  '6.4K',
+  'Personas que confían en mí'
+) ON CONFLICT (id) DO NOTHING;

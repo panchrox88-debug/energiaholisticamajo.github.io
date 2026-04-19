@@ -322,6 +322,7 @@
       <div class="sidebar-link" data-tab="contacto">📱 Contacto</div>
       <div class="sidebar-link" data-tab="agenda">🗓️ Agenda</div>
       <div class="sidebar-link" data-tab="portada">🖼️ Portada</div>
+      <div class="sidebar-link" data-tab="sobremi">🌸 Sobre mí</div>
     </nav>
     <main class="content">
 
@@ -406,6 +407,57 @@
           </div>
           <button class="btn btn-primary" id="saveAgendaBtn">Guardar cambios</button>
         </div>
+      </div>
+
+      <!-- SOBRE MÍ -->
+      <div id="tab-sobremi" class="section">
+        <h2 class="section-title">Sobre mí</h2>
+        <div id="sobremiMsg" class="msg-banner"></div>
+
+        <div class="section-subtitle">Texto</div>
+        <div class="card">
+          <div class="field">
+            <label>Título (primera parte)</label>
+            <input type="text" id="sm-titulo" placeholder="Un puente entre la psicología y el"/>
+          </div>
+          <div class="field">
+            <label>Palabra en cursiva rosada (al final del título)</label>
+            <input type="text" id="sm-em" placeholder="alma"/>
+          </div>
+          <div class="field">
+            <label>Párrafo 1</label>
+            <textarea id="sm-p1" style="min-height:90px"></textarea>
+          </div>
+          <div class="field">
+            <label>Párrafo 2</label>
+            <textarea id="sm-p2" style="min-height:90px"></textarea>
+          </div>
+          <div class="field">
+            <label>Lista de credenciales (una por línea)</label>
+            <textarea id="sm-lista" style="min-height:110px" placeholder="Psicóloga con enfoque transpersonal&#10;Terapeuta Reiki certificada"></textarea>
+          </div>
+          <div style="display:flex;gap:16px">
+            <div class="field" style="flex:1">
+              <label>Número del badge (ej: 6.4K)</label>
+              <input type="text" id="sm-badge-num" placeholder="6.4K"/>
+            </div>
+            <div class="field" style="flex:2">
+              <label>Texto del badge</label>
+              <input type="text" id="sm-badge-txt" placeholder="Personas que confían en mí"/>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="saveSobreMiBtn">Guardar texto</button>
+        </div>
+
+        <div class="section-subtitle">Fotos del carrusel</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">
+          Las fotos reemplazan el emoji 🌸 de la tarjeta izquierda y rotan cada 6 segundos.
+        </p>
+        <div id="sobremifotos" style="margin-bottom:12px"></div>
+        <label class="upload-zone">
+          <input type="file" id="sobremiFileInput" accept="image/*" multiple/>
+          📁 Subir fotos
+        </label>
       </div>
 
       <!-- PORTADA -->
@@ -618,6 +670,7 @@
       if (link.dataset.tab === 'contacto')    loadContacto();
       if (link.dataset.tab === 'agenda')      loadAgenda();
       if (link.dataset.tab === 'portada')     loadPortada();
+      if (link.dataset.tab === 'sobremi')     loadSobreMiAdmin();
     });
   });
 
@@ -1091,6 +1144,83 @@
   [servicioModal, canalModal].forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
   });
+
+  // ── SOBRE MÍ ADMIN ────────────────────────────────────────
+  async function loadSobreMiAdmin() {
+    try {
+      const rows = await sbGet('/sobre_mi?id=eq.1&select=*');
+      const d = rows[0] || {};
+      document.getElementById('sm-titulo').value     = d.titulo     || '';
+      document.getElementById('sm-em').value         = d.titulo_em  || '';
+      document.getElementById('sm-p1').value         = d.parrafo1   || '';
+      document.getElementById('sm-p2').value         = d.parrafo2   || '';
+      document.getElementById('sm-lista').value      = (d.lista || []).join('\n');
+      document.getElementById('sm-badge-num').value  = d.badge_num  || '';
+      document.getElementById('sm-badge-txt').value  = d.badge_texto || '';
+    } catch(e) { showMsg('sobremiMsg', 'Error al cargar: ' + e.message, 'err'); }
+
+    try {
+      const fotos = await sbGet('/sobre_mi_fotos?select=*&order=orden.asc');
+      renderSobreMiniFotos(fotos);
+    } catch(e) { /* ignore */ }
+  }
+
+  function renderSobreMiniFotos(rows) {
+    const el = document.getElementById('sobremifotos');
+    if (!rows.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.82rem">Aún no hay fotos.</p>'; return; }
+    el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:12px">${rows.map(r => `
+      <div class="card" style="width:160px;padding:10px">
+        <div style="width:100%;height:100px;border-radius:8px;margin-bottom:8px;
+          background-image:url('${r.src}');background-size:cover;background-position:center;"></div>
+        <button class="btn btn-danger" style="width:100%;font-size:.75rem;padding:6px"
+          onclick="window._delSobreFoto('${r.id}')">Eliminar</button>
+      </div>`).join('')}</div>`;
+  }
+
+  document.getElementById('saveSobreMiBtn').addEventListener('click', async () => {
+    const body = {
+      titulo:      document.getElementById('sm-titulo').value.trim(),
+      titulo_em:   document.getElementById('sm-em').value.trim(),
+      parrafo1:    document.getElementById('sm-p1').value.trim(),
+      parrafo2:    document.getElementById('sm-p2').value.trim(),
+      lista:       document.getElementById('sm-lista').value.split('\n').map(s => s.trim()).filter(Boolean),
+      badge_num:   document.getElementById('sm-badge-num').value.trim(),
+      badge_texto: document.getElementById('sm-badge-txt').value.trim(),
+    };
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/sobre_mi?id=eq.1`, {
+        method: 'PATCH', headers: authHeaders({ 'Prefer': 'return=minimal' }),
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) await sbPost('/sobre_mi', { id: 1, ...body });
+      showMsg('sobremiMsg', 'Texto guardado ✓');
+    } catch(e) { showMsg('sobremiMsg', 'Error: ' + e.message, 'err'); }
+  });
+
+  document.getElementById('sobremiFileInput').addEventListener('change', async function() {
+    showMsg('sobremiMsg', 'Subiendo foto…');
+    try {
+      const all = await sbGet('/sobre_mi_fotos?select=orden&order=orden.desc&limit=1');
+      let orden = (all[0]?.orden || 0) + 1;
+      for (const file of this.files) {
+        const url = await uploadFile(file, 'sobremi');
+        await sbPost('/sobre_mi_fotos', { src: url, orden });
+        orden++;
+      }
+      showMsg('sobremiMsg', 'Foto(s) subida(s) ✓');
+      loadSobreMiAdmin();
+    } catch(e) { showMsg('sobremiMsg', 'Error: ' + e.message, 'err'); }
+    this.value = '';
+  });
+
+  window._delSobreFoto = async id => {
+    if (!confirm('¿Eliminar esta foto?')) return;
+    try {
+      await sbDelete(`/sobre_mi_fotos?id=eq.${id}`);
+      showMsg('sobremiMsg', 'Foto eliminada');
+      loadSobreMiAdmin();
+    } catch(e) { showMsg('sobremiMsg', 'Error: ' + e.message, 'err'); }
+  };
 </script>
 </body>
 </html>

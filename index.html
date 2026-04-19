@@ -355,6 +355,19 @@
       content: '✦'; color: var(--gold); font-size: 0.7rem; flex-shrink: 0;
     }
 
+    /* About card carousel */
+    .about-card-slide {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      opacity: 0; transition: opacity 1.8s ease-in-out;
+      border-radius: inherit;
+    }
+    .about-card-slide.active { opacity: 1; }
+    #aboutCardFallback {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+
     /* ── SERVICES ── */
     .services {
       padding: 120px 64px;
@@ -1361,23 +1374,25 @@
   <!-- ABOUT -->
   <section class="about" id="about">
     <div class="about-visual reveal">
-      <div class="about-card">
-        <div class="about-card-icon">🌸</div>
-        <div class="about-card-name">María José Toro</div>
-        <div class="about-card-title">Psicóloga & Terapeuta Holística</div>
+      <div class="about-card" id="aboutCard">
+        <div id="aboutCardFallback">
+          <div class="about-card-icon">🌸</div>
+          <div class="about-card-name">María José Toro</div>
+          <div class="about-card-title">Psicóloga &amp; Terapeuta Holística</div>
+        </div>
       </div>
       <div class="about-badge">
-        <div class="badge-num">6.4K</div>
-        <div class="badge-text">Personas que<br>confían en mí</div>
+        <div class="badge-num" id="aboutBadgeNum">6.4K</div>
+        <div class="badge-text" id="aboutBadgeText">Personas que<br>confían en mí</div>
       </div>
     </div>
 
     <div class="about-content reveal">
       <p class="section-eyebrow">Sobre mí</p>
-      <h2>Un puente entre la<br>psicología y el <em>alma</em></h2>
-      <p>Soy María José Toro, psicóloga y terapeuta holística. Creo en que la sanación verdadera ocurre cuando integramos la mente, el cuerpo y el espíritu como una sola unidad.</p>
-      <p>Mi práctica combina la psicoterapia transpersonal con herramientas holísticas como Reiki, limpiezas energéticas y masajes terapéuticos para acompañarte en un proceso de transformación profunda.</p>
-      <ul class="about-list">
+      <h2 id="aboutTitulo">Un puente entre la<br>psicología y el <em>alma</em></h2>
+      <p id="aboutP1">Soy María José Toro, psicóloga y terapeuta holística. Creo en que la sanación verdadera ocurre cuando integramos la mente, el cuerpo y el espíritu como una sola unidad.</p>
+      <p id="aboutP2">Mi práctica combina la psicoterapia transpersonal con herramientas holísticas como Reiki, limpiezas energéticas y masajes terapéuticos para acompañarte en un proceso de transformación profunda.</p>
+      <ul class="about-list" id="aboutLista">
         <li>Psicóloga con enfoque transpersonal</li>
         <li>Terapeuta Reiki certificada</li>
         <li>Especialista en sanación del útero</li>
@@ -1917,8 +1932,61 @@
       } catch(e) { console.warn('No se pudo cargar hero.json', e); }
     }
 
+    // ── SOBRE MÍ ──────────────────────────────────────────────
+    async function loadSobreMi() {
+      try {
+        // Texto
+        const rText = await sbFetch('/sobre_mi?id=eq.1&select=*');
+        const rows  = await rText.json();
+        const d     = rows && rows[0] ? rows[0] : {};
+
+        if (d.titulo || d.titulo_em) {
+          document.getElementById('aboutTitulo').innerHTML =
+            (d.titulo || 'Un puente entre la psicología y el') +
+            ' <em>' + (d.titulo_em || 'alma') + '</em>';
+        }
+        if (d.parrafo1) document.getElementById('aboutP1').textContent = d.parrafo1;
+        if (d.parrafo2) document.getElementById('aboutP2').textContent = d.parrafo2;
+        if (d.lista && d.lista.length) {
+          document.getElementById('aboutLista').innerHTML =
+            d.lista.map(item => `<li>${item}</li>`).join('');
+        }
+        if (d.badge_num)   document.getElementById('aboutBadgeNum').textContent = d.badge_num;
+        if (d.badge_texto) document.getElementById('aboutBadgeText').innerHTML  = d.badge_texto.replace(/\n/g, '<br>');
+
+        // Fotos carrusel
+        const rFotos = await sbFetch('/sobre_mi_fotos?select=*&order=orden.asc');
+        const fotos  = await rFotos.json();
+        const card   = document.getElementById('aboutCard');
+        const fallback = document.getElementById('aboutCardFallback');
+
+        if (fotos && fotos.length > 0) {
+          fallback.style.display = 'none';
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position:absolute;inset:0;z-index:1;background:rgba(61,43,43,0.08);border-radius:inherit;';
+          card.appendChild(overlay);
+          fotos.forEach((foto, i) => {
+            const slide = document.createElement('div');
+            slide.className = 'about-card-slide' + (i === 0 ? ' active' : '');
+            slide.style.backgroundImage = `url('${foto.src}')`;
+            card.insertBefore(slide, overlay);
+          });
+          if (fotos.length > 1) {
+            let cur = 0;
+            setInterval(() => {
+              const slides = card.querySelectorAll('.about-card-slide');
+              slides[cur].classList.remove('active');
+              cur = (cur + 1) % slides.length;
+              slides[cur].classList.add('active');
+            }, 6000);
+          }
+        }
+      } catch(e) { console.warn('No se pudo cargar sobre mí', e); }
+    }
+
     loadHeroBg();
     loadContacto();
+    loadSobreMi();
 
     // ── CARRUSEL TESTIMONIOS (infinite forward) ────────────────
     const tcTrack    = document.getElementById('testimoniosGrid');
