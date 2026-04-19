@@ -317,7 +317,8 @@
   </header>
   <div class="main-wrap">
     <nav class="sidebar">
-      <div class="sidebar-link active" data-tab="testimonios">💬 Testimonios</div>
+      <div class="sidebar-link active" data-tab="reservas">📅 Reservas</div>
+      <div class="sidebar-link" data-tab="testimonios">💬 Testimonios</div>
       <div class="sidebar-link" data-tab="servicios">✨ Servicios</div>
       <div class="sidebar-link" data-tab="contacto">📱 Contacto</div>
       <div class="sidebar-link" data-tab="agenda">🗓️ Agenda</div>
@@ -326,8 +327,18 @@
     </nav>
     <main class="content">
 
+      <!-- RESERVAS -->
+      <div id="tab-reservas" class="section active">
+        <h2 class="section-title">Reservas</h2>
+        <div id="reservasMsg" class="msg-banner"></div>
+        <div class="section-subtitle">Próximas</div>
+        <div id="reservasProximas"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+        <div class="section-subtitle">Historial</div>
+        <div id="reservasHistorial"></div>
+      </div>
+
       <!-- TESTIMONIOS -->
-      <div id="tab-testimonios" class="section active">
+      <div id="tab-testimonios" class="section">
         <h2 class="section-title">Testimonios</h2>
         <div id="testiMsg" class="msg-banner"></div>
         <div class="section-subtitle">Pendientes de revisión</div>
@@ -691,6 +702,7 @@
       link.classList.add('active');
       const tab = document.getElementById('tab-' + link.dataset.tab);
       if (tab) tab.classList.add('active');
+      if (link.dataset.tab === 'reservas')     loadReservas();
       if (link.dataset.tab === 'testimonios') loadTestimonios();
       if (link.dataset.tab === 'servicios')   loadServicios();
       if (link.dataset.tab === 'contacto')    loadContacto();
@@ -730,7 +742,7 @@
     loginScreen.style.display = 'none';
     adminScreen.style.display = 'block';
     userEmailEl.textContent = email || '';
-    loadTestimonios();
+    loadReservas();
   }
 
   // ── SHOW BANNER ───────────────────────────────────────────
@@ -740,6 +752,59 @@
     el.className = 'msg-banner ' + type;
     setTimeout(() => el.className = 'msg-banner', 4000);
   }
+
+  // ── RESERVAS ──────────────────────────────────────────────
+  async function loadReservas() {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const all   = await sbGet('/reservas?select=*&order=fecha.asc,hora_inicio.asc');
+      const proximas  = all.filter(r => r.fecha >= today && r.estado !== 'cancelada');
+      const historial = all.filter(r => r.fecha <  today || r.estado === 'cancelada');
+      renderReservasGroup('reservasProximas',  proximas,  true);
+      renderReservasGroup('reservasHistorial', historial, false);
+    } catch(e) {
+      document.getElementById('reservasProximas').innerHTML =
+        `<p style="color:var(--red);font-size:.8rem">Error: ${e.message}</p>`;
+    }
+  }
+
+  function renderReservasGroup(containerId, items, showCancel) {
+    const el = document.getElementById(containerId);
+    if (!items.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.8rem;padding:8px 0">— Ninguna —</p>'; return; }
+    el.innerHTML = items.map(r => {
+      const fecha = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+      const badge = r.estado === 'cancelada'
+        ? '<span class="badge" style="background:#fde8e8;color:var(--red)">Cancelada</span>'
+        : '<span class="badge green">Confirmada</span>';
+      return `
+      <div class="card" id="res-${r.id}">
+        <div class="card-row">
+          <div class="card-body">
+            <div class="card-name">${r.servicio_nombre} ${badge}</div>
+            <div class="card-sub">${r.modalidad} · ${fecha} · ${r.hora_inicio}–${r.hora_fin} hrs</div>
+            <div class="card-text">
+              👤 ${r.nombre_cliente}<br>
+              📧 ${r.email_cliente}${r.telefono_cliente ? '<br>📱 ' + r.telefono_cliente : ''}
+            </div>
+          </div>
+          ${showCancel ? `
+          <div class="card-actions">
+            <button class="btn btn-danger" style="font-size:.75rem;padding:6px 12px"
+              onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window._cancelarReserva = async id => {
+    if (!confirm('¿Cancelar esta reserva?')) return;
+    try {
+      await sbPatch(`/reservas?id=eq.${id}`, { estado: 'cancelada' });
+      showMsg('reservasMsg', 'Reserva cancelada');
+      loadReservas();
+    } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
+  };
 
   // ── TESTIMONIOS ───────────────────────────────────────────
   async function loadTestimonios() {

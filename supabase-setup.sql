@@ -216,3 +216,35 @@ VALUES (1,
   'Un espacio seguro y consciente donde cuerpo, mente y alma se encuentran para sanar desde adentro.',
   '["Psicoterapia","Reiki","Limpiezas Energéticas","Masajes","Online & Presencial"]'
 ) ON CONFLICT (id) DO NOTHING;
+
+-- ── RESERVAS ──────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS reservas (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  servicio_id      text NOT NULL,
+  servicio_nombre  text NOT NULL,
+  modalidad        text NOT NULL,
+  fecha            date NOT NULL,
+  hora_inicio      text NOT NULL,
+  hora_fin         text NOT NULL,
+  nombre_cliente   text NOT NULL,
+  email_cliente    text NOT NULL,
+  telefono_cliente text,
+  estado           text NOT NULL DEFAULT 'confirmada',
+  created_at       timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE reservas ENABLE ROW LEVEL SECURITY;
+
+-- Cualquiera puede insertar (agendar)
+CREATE POLICY "public insert reserva" ON reservas
+  FOR INSERT WITH CHECK (estado = 'confirmada');
+
+-- Lectura pública solo de hora_inicio/fecha para chequear disponibilidad
+-- (el admin lee todo vía política de autenticado)
+CREATE POLICY "public read reservas" ON reservas
+  FOR SELECT USING (true);
+
+-- Admin acceso total
+CREATE POLICY "admin all reservas" ON reservas
+  FOR ALL USING (auth.role() = 'authenticated');

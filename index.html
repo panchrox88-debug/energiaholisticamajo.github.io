@@ -863,6 +863,11 @@
       text-decoration: line-through;
       color: var(--muted);
     }
+    .bk-time.occupied {
+      opacity: 0.35; cursor: not-allowed;
+      text-decoration: line-through;
+      color: var(--muted); background: var(--beige);
+    }
 
     /* Summary & confirm */
     .bk-summary {
@@ -903,6 +908,55 @@
       transform: none;
       pointer-events: none;
     }
+
+    /* Client form (step 5) */
+    .bk-summary { flex-direction: column; align-items: stretch; }
+    .bk-client-title {
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--gold); margin-bottom: 16px;
+    }
+    .bk-field { margin-bottom: 14px; }
+    .bk-field label {
+      display: block; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 5px;
+    }
+    .bk-field input {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid rgba(201,133,138,0.25); border-radius: 12px;
+      font-size: 0.88rem; font-family: 'Nunito', sans-serif; font-weight: 300;
+      background: white; color: var(--dark); outline: none;
+      transition: border 0.2s;
+    }
+    .bk-field input:focus { border-color: var(--rose); }
+    .bk-form-msg {
+      padding: 10px 14px; border-radius: 10px;
+      font-size: 0.8rem; margin-bottom: 12px;
+    }
+    .bk-form-msg.err { background: #fde8e8; color: #c9585a; }
+    .bk-form-msg.ok  { background: #e0f0e8; color: #5a9a7a; }
+
+    /* Success screen */
+    .bk-success {
+      text-align: center; padding: 40px 20px;
+    }
+    .bk-success-icon { font-size: 3.5rem; margin-bottom: 16px; }
+    .bk-success-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 300; color: var(--dark); margin-bottom: 16px;
+    }
+    .bk-success-title em { font-style: italic; color: var(--rose); }
+    .bk-success-details {
+      font-size: 0.88rem; color: var(--muted); line-height: 2;
+      margin-bottom: 28px;
+    }
+    .bk-success-btn {
+      background: var(--rose); color: white; border: none;
+      padding: 14px 32px; border-radius: 40px; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-size: 0.78rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      transition: background 0.2s;
+    }
+    .bk-success-btn:hover { background: #b87278; }
 
     /* ── SERVICE MODAL ── */
     .service-card { cursor: pointer; }
@@ -1543,12 +1597,36 @@
         <div class="bk-times" id="bkTimes"></div>
       </div>
 
-      <!-- Summary -->
+      <!-- Step 5: Datos del cliente + confirmación -->
       <div class="bk-summary" id="stepSummary">
         <div class="bk-summary-details" id="bkSummary">
           <span class="bk-summary-empty">Completa los pasos para agendar tu sesión ✨</span>
         </div>
-        <a href="#" class="bk-confirm disabled" id="bkConfirm">Confirmar por WhatsApp ✨</a>
+        <form id="bkClientForm" style="display:none" onsubmit="return false">
+          <p class="bk-client-title"><span class="step-num">5 ·</span> Tus datos</p>
+          <div class="bk-field">
+            <label>Nombre completo *</label>
+            <input type="text" id="bkNombre" placeholder="Tu nombre" autocomplete="name"/>
+          </div>
+          <div class="bk-field">
+            <label>Email *</label>
+            <input type="email" id="bkEmail" placeholder="tu@email.com" autocomplete="email"/>
+          </div>
+          <div class="bk-field">
+            <label>Teléfono (opcional)</label>
+            <input type="tel" id="bkTelefono" placeholder="+56 9 1234 5678" autocomplete="tel"/>
+          </div>
+          <div id="bkFormMsg" class="bk-form-msg" style="display:none"></div>
+          <button type="button" class="bk-confirm" id="bkConfirmBtn">Confirmar reserva ✨</button>
+        </form>
+      </div>
+
+      <!-- Pantalla de éxito (oculta hasta confirmar) -->
+      <div class="bk-success" id="bkSuccess" style="display:none">
+        <div class="bk-success-icon">🌸</div>
+        <h3 class="bk-success-title">¡Reserva <em>confirmada</em>!</h3>
+        <p class="bk-success-details" id="bkSuccessDetails"></p>
+        <button type="button" class="bk-success-btn" id="bkSuccessBack">Hacer otra reserva</button>
       </div>
     </div>
   </section>
@@ -1749,7 +1827,7 @@
     const elDays     = document.getElementById('bkDays');
     const elTimes    = document.getElementById('bkTimes');
     const elSummary  = document.getElementById('bkSummary');
-    const elConfirm  = document.getElementById('bkConfirm');
+    let SLOTS_OCUPADOS = [];
 
     // Render services (llamado dinámicamente desde buildBookingServices)
 
@@ -1784,10 +1862,11 @@
       elTimes.innerHTML = '';
       generarHorarios().forEach(t => {
         const el = document.createElement('div');
-        el.className = 'bk-time';
+        const ocupado = SLOTS_OCUPADOS.includes(t);
+        el.className = 'bk-time' + (ocupado ? ' occupied' : '');
         el.dataset.time = t;
-        el.textContent = t;
-        el.addEventListener('click', () => selectTime(t));
+        el.textContent = t + (ocupado ? ' · Ocupado' : '');
+        if (!ocupado) el.addEventListener('click', () => selectTime(t));
         elTimes.appendChild(el);
       });
     }
@@ -1832,10 +1911,19 @@
       if (state.service && !state.day) setTimeout(() => scrollToStep('step3'), 200);
     }
 
-    function selectDay(idx) {
+    async function selectDay(idx) {
       state.day = idx;
       [...elDays.children].forEach((c, i) => c.classList.toggle('selected', i === idx));
       state.time = null;
+      SLOTS_OCUPADOS = [];
+      // Cargar slots ocupados desde Supabase
+      try {
+        const d = days[idx];
+        const fecha = d.toISOString().slice(0, 10);
+        const res = await sbFetch(`/reservas?fecha=eq.${fecha}&estado=neq.cancelada&select=hora_inicio`);
+        const rows = await res.json();
+        SLOTS_OCUPADOS = (rows || []).map(r => r.hora_inicio);
+      } catch(e) { SLOTS_OCUPADOS = []; }
       renderTimes();
       updateSummary();
       setTimeout(() => scrollToStep('step4'), 200);
@@ -1850,10 +1938,10 @@
 
     function updateSummary() {
       const complete = state.service && state.modality && state.day !== null && state.time;
+      const clientForm = document.getElementById('bkClientForm');
       if (!complete) {
         elSummary.innerHTML = '<span class="bk-summary-empty">Completa los pasos para agendar tu sesión ✨</span>';
-        elConfirm.classList.add('disabled');
-        elConfirm.removeAttribute('href');
+        if (clientForm) clientForm.style.display = 'none';
         return;
       }
       const svc = SERVICES.find(s => s.id === state.service);
@@ -1861,30 +1949,100 @@
       const modLabel = state.modality === 'online' ? 'Online' : 'Presencial';
       const dayLabel = `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
       elSummary.innerHTML = `
-        <span class="bk-summary-title">${svc.icon} ${svc.name}</span>
+        <span class="bk-summary-title">${svc.emoji} ${svc.titulo}</span>
         <span>${modLabel} · ${dayLabel} · ${state.time} hrs</span>
       `;
-      // Build WhatsApp message — strip anything outside safe ASCII range
-      const raw = [
-        'Hola Majo, quiero agendar una sesion:',
-        '',
-        'Servicio: ' + svc.name,
-        'Modalidad: ' + modLabel,
-        'Dia: ' + dayLabel,
-        'Hora: ' + state.time + ' hrs',
-        '',
-        'Me confirmas disponibilidad?'
-      ].join('\n');
-      // Keep only printable ASCII + newlines
-      const clean = raw.split('').filter(c => {
-        const code = c.charCodeAt(0);
-        return code === 10 || (code >= 32 && code <= 126);
-      }).join('');
-      elConfirm.href = 'https://api.whatsapp.com/send?phone=' + WHATSAPP + '&text=' + encodeURIComponent(clean);
-      elConfirm.target = '_blank';
-      elConfirm.rel = 'noopener';
-      elConfirm.classList.remove('disabled');
+      if (clientForm) clientForm.style.display = 'block';
+      setTimeout(() => scrollToStep('stepSummary'), 200);
     }
+
+    // ── CONFIRMACIÓN RESERVA ──────────────────────────────────
+    function calcHoraFin(inicio) {
+      const [h, m] = inicio.split(':').map(Number);
+      const fin = h * 60 + m + (AGENDA.duracion_sesion || 60);
+      return `${Math.floor(fin/60)}:${(fin%60).toString().padStart(2,'0')}`;
+    }
+
+    document.getElementById('bkConfirmBtn').addEventListener('click', async () => {
+      const nombre   = document.getElementById('bkNombre').value.trim();
+      const email    = document.getElementById('bkEmail').value.trim();
+      const telefono = document.getElementById('bkTelefono').value.trim();
+      const msgEl    = document.getElementById('bkFormMsg');
+
+      if (!nombre || !email) {
+        msgEl.textContent = 'Por favor completa nombre y email.';
+        msgEl.className = 'bk-form-msg err';
+        msgEl.style.display = 'block';
+        return;
+      }
+
+      const btn = document.getElementById('bkConfirmBtn');
+      btn.disabled = true;
+      btn.textContent = 'Confirmando…';
+      msgEl.style.display = 'none';
+
+      const svc = SERVICES.find(s => s.id === state.service);
+      const d   = days[state.day];
+      const fecha = d.toISOString().slice(0, 10);
+      const modLabel = state.modality === 'online' ? 'Online' : 'Presencial';
+      const dayLabel = `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
+
+      try {
+        const res = await sbFetch('/reservas', {
+          method: 'POST',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            servicio_id:      svc.id,
+            servicio_nombre:  svc.titulo,
+            modalidad:        modLabel,
+            fecha,
+            hora_inicio:      state.time,
+            hora_fin:         calcHoraFin(state.time),
+            nombre_cliente:   nombre,
+            email_cliente:    email,
+            telefono_cliente: telefono || null,
+            estado:           'confirmada',
+          }),
+        });
+        if (!res.ok && res.status !== 201) throw new Error('Error al guardar');
+
+        // Mostrar éxito
+        document.getElementById('stepSummary').style.display = 'none';
+        document.getElementById('bkSuccess').style.display = 'block';
+        document.getElementById('bkSuccessDetails').innerHTML =
+          `<strong>${svc.emoji} ${svc.titulo}</strong><br>` +
+          `${modLabel} · ${dayLabel}<br>` +
+          `Hora: ${state.time} hrs<br><br>` +
+          `Te esperamos, ${nombre} 🌸`;
+        scrollToStep('bkSuccess');
+      } catch(e) {
+        msgEl.textContent = 'Hubo un error al confirmar. Intenta de nuevo.';
+        msgEl.className = 'bk-form-msg err';
+        msgEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Confirmar reserva ✨';
+      }
+    });
+
+    document.getElementById('bkSuccessBack').addEventListener('click', () => {
+      // Resetear estado
+      state.service = null; state.modality = null; state.day = null; state.time = null;
+      SLOTS_OCUPADOS = [];
+      document.getElementById('bkSuccess').style.display = 'none';
+      document.getElementById('stepSummary').style.display = 'block';
+      document.getElementById('bkClientForm').style.display = 'none';
+      document.getElementById('bkNombre').value = '';
+      document.getElementById('bkEmail').value = '';
+      document.getElementById('bkTelefono').value = '';
+      document.getElementById('bkFormMsg').style.display = 'none';
+      document.getElementById('bkConfirmBtn').disabled = false;
+      document.getElementById('bkConfirmBtn').textContent = 'Confirmar reserva ✨';
+      elSummary.innerHTML = '<span class="bk-summary-empty">Completa los pasos para agendar tu sesión ✨</span>';
+      [...elServices.children].forEach(c => c.classList.remove('selected'));
+      elModality.querySelectorAll('.bk-mod').forEach(m => m.classList.remove('selected'));
+      [...elDays.children].forEach(c => c.classList.remove('selected'));
+      scrollToStep('step1');
+    });
 
     // ─────────── SERVICE DATA (cargado desde content/*.json) ───────────
     // SERVICE_IDS eliminado — servicios cargados dinámicamente desde content/servicios.json
