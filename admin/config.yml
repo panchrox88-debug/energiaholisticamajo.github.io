@@ -21,7 +21,18 @@ collections:
             name: fotos
             widget: list
             hint: "Se muestran en carrusel detrás del texto principal. Tamaño recomendado: 1920×1080px, formato JPG, máximo 500 KB. Puedes comprimir gratis en squoosh.app antes de subir."
-            field: { label: Foto, name: src, widget: image }
+            fields:
+              - { label: Foto, name: src, widget: image }
+              - label: "Encuadre (posición)"
+                name: posicion
+                widget: select
+                default: "center center"
+                options:
+                  - { label: "Centro (por defecto)", value: "center center" }
+                  - { label: "Arriba",               value: "center top"    }
+                  - { label: "Abajo",                value: "center bottom" }
+                  - { label: "Izquierda",            value: "left center"   }
+                  - { label: "Derecha",              value: "right center"  }
 
   # ── SERVICIOS ──────────────────────────────────────────────
   - name: servicios

@@ -1881,10 +1881,15 @@
         const bg = document.getElementById('heroBg');
         // Insertar slides antes del overlay
         const overlay = bg.querySelector('.hero-bg-overlay');
-        fotos.forEach((src, i) => {
+        fotos.forEach((foto, i) => {
+          // Soporte para string (legado) y objeto {src, posicion}
+          const src      = typeof foto === 'string' ? foto : (foto.src || '');
+          const posicion = typeof foto === 'string' ? 'center center' : (foto.posicion || 'center center');
+          const cleanSrc = src.startsWith('/') ? src.slice(1) : src;
           const slide = document.createElement('div');
           slide.className = 'hero-bg-slide' + (i === 0 ? ' active' : '');
-          slide.style.backgroundImage = `url('${src.startsWith('/') ? src.slice(1) : src}')`;
+          slide.style.backgroundImage    = `url('${cleanSrc}')`;
+          slide.style.backgroundPosition = posicion;
           bg.insertBefore(slide, overlay);
         });
         if (fotos.length < 2) return; // una sola foto → no rota

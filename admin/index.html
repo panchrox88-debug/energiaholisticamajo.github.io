@@ -7,5 +7,85 @@
 </head>
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script>
+    // ── Preview del Hero ────────────────────────────────────────
+    var HeroPreview = function(props) {
+      var h        = window.h;
+      var fotos    = props.entry.getIn(['data', 'fotos']);
+      var fotoUrl  = '';
+      var posicion = 'center center';
+
+      if (fotos && fotos.size > 0) {
+        var first = fotos.get(0);
+        // Soporte para string (src directo) y objeto {src, posicion}
+        if (typeof first === 'string') {
+          fotoUrl = props.getAsset(first) ? props.getAsset(first).toString() : first;
+        } else if (first && first.get) {
+          var src = first.get('src') || '';
+          fotoUrl  = props.getAsset(src) ? props.getAsset(src).toString() : src;
+          posicion = first.get('posicion') || 'center center';
+        }
+      }
+
+      return h('div', { style: { fontFamily: 'Georgia, serif', color: '#3d2b2b' } },
+        // Franja de preview
+        h('div', {
+          style: {
+            position: 'relative', height: '420px', overflow: 'hidden',
+            background: '#faf5f0', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+          }
+        },
+          // Foto de fondo
+          fotoUrl && h('div', {
+            style: {
+              position: 'absolute', inset: 0,
+              backgroundImage: 'url(' + fotoUrl + ')',
+              backgroundSize: 'cover',
+              backgroundPosition: posicion,
+            }
+          }),
+          // Overlay crema
+          h('div', {
+            style: {
+              position: 'absolute', inset: 0,
+              background: 'rgba(250,245,240,0.68)',
+            }
+          }),
+          // Contenido
+          h('div', { style: { position: 'relative', zIndex: 1, padding: '0 40px' } },
+            h('p', {
+              style: {
+                fontSize: '0.6rem', letterSpacing: '0.4em',
+                textTransform: 'uppercase', color: '#c9a96e', marginBottom: '12px',
+              }
+            }, 'Psicóloga · Terapeuta Holística · Chile'),
+            h('h1', {
+              style: {
+                fontSize: '2.6rem', fontWeight: 300,
+                lineHeight: 1.2, color: '#3d2b2b', margin: '0 0 16px',
+              }
+            },
+              'Acompaño tu proceso de ',
+              h('em', { style: { color: '#c9858a', fontStyle: 'italic' } }, 'sanación')
+            ),
+            !fotoUrl && h('p', {
+              style: { fontSize: '0.8rem', color: '#7a5c5c', marginTop: '24px' }
+            }, '← Sube una foto para ver el preview aquí')
+          )
+        ),
+        // Nota informativa
+        h('p', {
+          style: {
+            fontSize: '0.75rem', color: '#7a5c5c',
+            padding: '12px 16px', background: '#f0dada',
+            borderRadius: '8px', margin: '16px',
+          }
+        }, '✦ Este preview muestra la primera foto. En el sitio las fotos rotan cada 6 segundos.')
+      );
+    };
+
+    CMS.registerPreviewTemplate('hero', HeroPreview);
+  </script>
 </body>
 </html>
