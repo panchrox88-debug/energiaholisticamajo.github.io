@@ -425,25 +425,50 @@
     }
     .testimonials h2 em { font-style: italic; color: var(--rose); }
 
-    .testimonials-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 24px; max-width: 1100px; margin: 0 auto;
+    /* ── CARRUSEL TESTIMONIOS ── */
+    .tc-wrap {
+      position: relative; max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .tc-viewport { overflow: hidden; flex: 1; }
+    .tc-track {
+      display: flex; gap: 24px;
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .testimonial-card {
       background: linear-gradient(145deg, var(--blush), white);
       border-radius: 24px; padding: 40px 32px;
       text-align: left; position: relative;
       border: 1px solid rgba(201,133,138,0.1);
+      flex: 0 0 calc(33.333% - 16px);
+      box-sizing: border-box;
     }
+    .tc-arrow {
+      background: white; border: 1px solid rgba(201,133,138,0.25);
+      border-radius: 50%; width: 44px; height: 44px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; color: var(--rose); cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(201,133,138,0.1);
+    }
+    .tc-arrow:hover { background: var(--blush); box-shadow: 0 4px 16px rgba(201,133,138,0.2); }
+    .tc-arrow:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+    .tc-dots {
+      display: flex; justify-content: center; gap: 8px; margin-top: 28px;
+    }
+    .tc-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--gold-lt); border: none; cursor: pointer;
+      transition: background 0.3s, transform 0.3s; padding: 0;
+    }
+    .tc-dot.active { background: var(--rose); transform: scale(1.3); }
     .testimonial-stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 16px; }
     .testimonial-text {
       font-family: 'Cormorant Garamond', serif;
       font-size: 1.05rem; font-style: italic;
       line-height: 1.8; color: var(--dark); margin-bottom: 24px;
     }
-    .testimonial-author {
-      display: flex; align-items: center; gap: 12px;
-    }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
     .testimonial-avatar {
       width: 40px; height: 40px; border-radius: 50%;
       background: linear-gradient(135deg, var(--rose), var(--gold));
@@ -1083,7 +1108,8 @@
       .nav-links { gap: 24px; }
       .about, .contact { padding: 100px 32px; gap: 56px; }
       .services, .testimonials, .booking { padding: 100px 32px; }
-      .services-grid, .testimonials-grid { grid-template-columns: repeat(2, 1fr); }
+      .services-grid { grid-template-columns: repeat(2, 1fr); }
+      .testimonial-card { flex: 0 0 calc(50% - 12px); }
       .booking-wrap { padding: 48px 40px; }
       .bk-services { grid-template-columns: repeat(2, 1fr); }
       .bk-times { grid-template-columns: repeat(4, 1fr); }
@@ -1126,7 +1152,9 @@
       .badge-text { font-size: 0.66rem; }
 
       .services { padding: 80px 24px; }
-      .services-grid, .testimonials-grid { grid-template-columns: 1fr; gap: 16px; }
+      .services-grid { grid-template-columns: 1fr; gap: 16px; }
+      .testimonial-card { flex: 0 0 100%; }
+      .tc-arrow { display: none; }
       .service-card { padding: 36px 24px; }
       .services .section-sub { margin-bottom: 48px; }
 
@@ -1371,9 +1399,16 @@
   <section class="testimonials" id="testimonials">
     <p class="section-eyebrow reveal">Testimonios</p>
     <h2 class="reveal">Voces que han <em>sanado</em></h2>
-    <div class="testimonials-grid" id="testimoniosGrid">
-      <!-- cargado dinámicamente desde content/testimonios.json -->
+    <div class="tc-wrap">
+      <button class="tc-arrow" id="tcPrev">‹</button>
+      <div class="tc-viewport" id="tcViewport">
+        <div class="tc-track" id="testimoniosGrid">
+          <!-- cargado dinámicamente desde content/testimonios.json -->
+        </div>
+      </div>
+      <button class="tc-arrow" id="tcNext">›</button>
     </div>
+    <div class="tc-dots" id="tcDots"></div>
 
     <!-- Formulario de testimonio -->
     <div class="testimonio-form-wrap reveal">
@@ -1754,16 +1789,57 @@
 
     loadContacto();
 
-    // ── TESTIMONIOS DINÁMICOS ──────────────────────────────────
+    // ── CARRUSEL TESTIMONIOS ───────────────────────────────────
+    const tcTrack    = document.getElementById('testimoniosGrid');
+    const tcViewport = document.getElementById('tcViewport');
+    const tcPrev     = document.getElementById('tcPrev');
+    const tcNext     = document.getElementById('tcNext');
+    const tcDotsEl   = document.getElementById('tcDots');
+    let tcPage = 0, tcTotal = 0, tcAutoTimer = null;
+
+    function tcPerPage() {
+      return window.innerWidth < 640 ? 1 : window.innerWidth < 1000 ? 2 : 3;
+    }
+
+    function tcGoTo(p) {
+      const pp = tcPerPage();
+      const pages = Math.ceil(tcTotal / pp);
+      tcPage = Math.max(0, Math.min(pages - 1, p));
+      tcTrack.style.transform = `translateX(-${tcPage * tcViewport.offsetWidth}px)`;
+      tcDotsEl.querySelectorAll('.tc-dot').forEach((d, i) => d.classList.toggle('active', i === tcPage));
+      tcPrev.disabled = tcPage === 0;
+      tcNext.disabled = tcPage >= pages - 1;
+    }
+
+    function tcBuildDots() {
+      const pp    = tcPerPage();
+      const pages = Math.ceil(tcTotal / pp);
+      tcDotsEl.innerHTML = Array.from({ length: pages }, (_, i) =>
+        `<button class="tc-dot${i === 0 ? ' active' : ''}" data-p="${i}"></button>`
+      ).join('');
+      tcDotsEl.querySelectorAll('.tc-dot').forEach(d =>
+        d.addEventListener('click', () => { tcGoTo(+d.dataset.p); tcResetAuto(); })
+      );
+    }
+
+    function tcResetAuto() {
+      clearInterval(tcAutoTimer);
+      tcAutoTimer = setInterval(() => {
+        const pp    = tcPerPage();
+        const pages = Math.ceil(tcTotal / pp);
+        tcGoTo(tcPage < pages - 1 ? tcPage + 1 : 0);
+      }, 5000);
+    }
+
     async function loadTestimonios() {
       try {
         const res  = await fetch('content/testimonios.json');
         const data = await res.json();
-        const grid = document.getElementById('testimoniosGrid');
-        if (!grid) return;
-        const visibles = (data.lista || []).filter(t => t.visible);
-        grid.innerHTML = visibles.map(t => `
-          <div class="testimonial-card reveal">
+        if (!tcTrack) return;
+        const visibles = (data.lista || []).filter(t => t.visible).slice(-10);
+        tcTotal = visibles.length;
+        tcTrack.innerHTML = visibles.map(t => `
+          <div class="testimonial-card">
             <div class="testimonial-stars">★★★★★</div>
             <p class="testimonial-text">"${t.texto}"</p>
             <div class="testimonial-author">
@@ -1774,11 +1850,24 @@
               </div>
             </div>
           </div>`).join('');
-        grid.querySelectorAll('.testimonial-card').forEach(c => obs.observe(c));
+        tcBuildDots();
+        tcGoTo(0);
+        tcResetAuto();
+        // Swipe móvil
+        let txStart = 0;
+        tcViewport.addEventListener('touchstart', e => { txStart = e.changedTouches[0].clientX; }, { passive: true });
+        tcViewport.addEventListener('touchend', e => {
+          const dx = e.changedTouches[0].clientX - txStart;
+          if (Math.abs(dx) > 40) { tcGoTo(dx < 0 ? tcPage + 1 : tcPage - 1); tcResetAuto(); }
+        }, { passive: true });
       } catch(e) {
         console.warn('No se pudo cargar testimonios.json', e);
       }
     }
+
+    tcPrev.addEventListener('click', () => { tcGoTo(tcPage - 1); tcResetAuto(); });
+    tcNext.addEventListener('click', () => { tcGoTo(tcPage + 1); tcResetAuto(); });
+    window.addEventListener('resize', () => { tcBuildDots(); tcGoTo(0); });
 
     loadTestimonios();
 
