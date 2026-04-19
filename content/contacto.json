@@ -1,6 +1,8 @@
 {
-  "whatsapp": "+56 9 6663 8304",
-  "instagram": "@energiaholisticamajo",
-  "ubicacion": "Providencia, Santiago · Chile",
-  "modalidad": "Online & Presencial"
+  "canales": [
+    { "etiqueta": "Ubicación",  "valor": "Providencia, Santiago · Chile", "tipo": "ubicacion" },
+    { "etiqueta": "WhatsApp",   "valor": "+56 9 6663 8304",               "tipo": "whatsapp"  },
+    { "etiqueta": "Instagram",  "valor": "@energiaholisticamajo",          "tipo": "instagram" },
+    { "etiqueta": "Modalidad",  "valor": "Online & Presencial",            "tipo": "modalidad" }
+  ]
 }

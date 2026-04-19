@@ -107,10 +107,23 @@ collections:
         label: Datos de contacto
         file: content/contacto.json
         fields:
-          - { label: WhatsApp,    name: whatsapp,   widget: string }
-          - { label: Instagram,   name: instagram,  widget: string }
-          - { label: Ubicación,   name: ubicacion,  widget: string }
-          - { label: Modalidades, name: modalidad,  widget: string }
+          - label: Canales de contacto
+            name: canales
+            widget: list
+            fields:
+              - { label: Etiqueta, name: etiqueta, widget: string, hint: "Ej: WhatsApp, Instagram, Email, TikTok…" }
+              - { label: Valor,    name: valor,    widget: string, hint: "Ej: +56 9 1234 5678 / @usuario" }
+              - label: Tipo (ícono)
+                name: tipo
+                widget: select
+                options:
+                  - { label: "📱 WhatsApp",  value: whatsapp  }
+                  - { label: "📸 Instagram", value: instagram }
+                  - { label: "🎵 TikTok",    value: tiktok    }
+                  - { label: "📧 Email",     value: email     }
+                  - { label: "📍 Ubicación", value: ubicacion }
+                  - { label: "🌐 Modalidad", value: modalidad }
+                  - { label: "💬 Otro",      value: otro      }
 
   # ── TESTIMONIOS ────────────────────────────────────────────
   - name: testimonios

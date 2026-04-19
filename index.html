@@ -1460,35 +1460,8 @@
       <h2>Hablemos sobre<br>tu <em>proceso</em></h2>
       <p>Estoy aquí para acompañarte. Escríbeme y conversamos sobre qué servicio se adapta mejor a lo que necesitas en este momento.</p>
 
-      <div class="contact-info">
-        <div class="contact-info-item">
-          <div class="info-icon">📍</div>
-          <div>
-            <div class="info-label">Ubicación</div>
-            <div class="info-val">Providencia, Santiago · Chile</div>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <div class="info-icon">📱</div>
-          <div>
-            <div class="info-label">WhatsApp</div>
-            <div class="info-val">+56 9 6663 8304</div>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <div class="info-icon">📸</div>
-          <div>
-            <div class="info-label">Instagram</div>
-            <div class="info-val">@energiaholisticamajo</div>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <div class="info-icon">🌐</div>
-          <div>
-            <div class="info-label">Modalidad</div>
-            <div class="info-val">Online & Presencial</div>
-          </div>
-        </div>
+      <div class="contact-info" id="contactInfoGrid">
+        <!-- canales cargados dinámicamente desde content/contacto.json -->
       </div>
     </div>
 
@@ -1762,6 +1735,39 @@
 
     // ─────────── SERVICE DATA (cargado desde content/*.json) ───────────
     const SERVICE_IDS = ['reiki', 'psico', 'limpieza', 'masaje', 'utero', 'circulo'];
+    // ── CONTACTO DINÁMICO ──────────────────────────────────────
+    const CONTACT_ICONS = {
+      whatsapp:  '📱',
+      instagram: '📸',
+      tiktok:    '🎵',
+      email:     '📧',
+      ubicacion: '📍',
+      modalidad: '🌐',
+      otro:      '💬',
+    };
+
+    async function loadContacto() {
+      try {
+        const res  = await fetch('content/contacto.json');
+        const data = await res.json();
+        const grid = document.getElementById('contactInfoGrid');
+        if (!grid) return;
+        grid.innerHTML = (data.canales || []).map(c => `
+          <div class="contact-info-item">
+            <div class="info-icon">${CONTACT_ICONS[c.tipo] || '💬'}</div>
+            <div>
+              <div class="info-label">${c.etiqueta}</div>
+              <div class="info-val">${c.valor}</div>
+            </div>
+          </div>`).join('');
+      } catch (e) {
+        console.warn('No se pudo cargar contacto.json', e);
+      }
+    }
+
+    loadContacto();
+
+    // ── SERVICIOS ──────────────────────────────────────────────
     const SERVICE_DATA = {};
 
     async function loadServiceData() {
