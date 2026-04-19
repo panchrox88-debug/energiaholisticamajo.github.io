@@ -1286,49 +1286,8 @@
     <h2 class="reveal">Lo que ofrezco para <em>ti</em></h2>
     <p class="section-sub reveal">Cada servicio está diseñado para acompañarte en tu proceso único de sanación y transformación.</p>
 
-    <div class="services-grid">
-      <div class="service-card reveal" data-service="psico">
-        <div class="service-icon">🧠</div>
-        <h3>Psicoterapia Transpersonal</h3>
-        <p>Un espacio de escucha profunda donde trabajamos tus emociones, miedos y bloqueos desde la raíz, integrando cuerpo y mente.</p>
-        <span class="service-mode">Online & Presencial</span>
-        <div class="service-card-cta">Ver más →</div>
-      </div>
-      <div class="service-card reveal" data-service="limpieza">
-        <div class="service-icon">✨</div>
-        <h3>Limpieza Energética</h3>
-        <p>Limpieza y armonización de tu campo energético para liberar cargas que ya no te pertenecen y restaurar tu flujo vital.</p>
-        <span class="service-mode">Online & Presencial</span>
-        <div class="service-card-cta">Ver más →</div>
-      </div>
-      <div class="service-card reveal" data-service="reiki">
-        <div class="service-icon">🌊</div>
-        <h3>Reiki Usui</h3>
-        <p>Canalización de energía universal para activar tu propio poder sanador, relajar el sistema nervioso y equilibrar tus chakras.</p>
-        <span class="service-mode">Presencial</span>
-        <div class="service-card-cta">Ver más →</div>
-      </div>
-      <div class="service-card reveal" data-service="masaje">
-        <div class="service-icon">💆</div>
-        <h3>Masaje Terapéutico</h3>
-        <p>Trabajo corporal que integra técnicas de masaje con conciencia energética para liberar tensiones físicas y emocionales.</p>
-        <span class="service-mode">Presencial</span>
-        <div class="service-card-cta">Ver más →</div>
-      </div>
-      <div class="service-card reveal" data-service="utero">
-        <div class="service-icon">🌺</div>
-        <h3>Sanación de Útero</h3>
-        <p>Proceso de reconexión con tu centro femenino, liberando memorias y heridas para recuperar tu poder y creatividad.</p>
-        <span class="service-mode">Online & Presencial</span>
-        <div class="service-card-cta">Ver más →</div>
-      </div>
-      <div class="service-card reveal" data-service="circulo">
-        <div class="service-icon">🌙</div>
-        <h3>Círculos de Mujeres</h3>
-        <p>Espacios de encuentro, sanación colectiva y comunidad donde nos acompañamos en el camino de reconocernos y crecer.</p>
-        <span class="service-mode">Presencial</span>
-        <div class="service-card-cta">Ver más →</div>
-      </div>
+    <div class="services-grid" id="serviciosGrid">
+      <!-- tarjetas generadas dinámicamente desde content/servicios.json -->
     </div>
 
     <!-- Modal popup -->
@@ -1550,14 +1509,8 @@
     reveals.forEach(r => obs.observe(r));
 
     // ─────────── BOOKING AGENDA ───────────
-    const SERVICES = [
-      { id: 'psico',    name: 'Psicoterapia',         icon: '🧠', modes: ['online','presencial'] },
-      { id: 'limpieza', name: 'Limpieza Energetica',  icon: '✨', modes: ['online','presencial'] },
-      { id: 'reiki',    name: 'Reiki Usui',           icon: '🌊', modes: ['presencial'] },
-      { id: 'masaje',   name: 'Masaje Terapeutico',   icon: '💆', modes: ['presencial'] },
-      { id: 'utero',    name: 'Sanacion de Utero',    icon: '🌺', modes: ['online','presencial'] },
-      { id: 'circulo',  name: 'Circulo de Mujeres',   icon: '🌙', modes: ['presencial'] },
-    ];
+    // SERVICES se construye dinámicamente desde content/servicios.json
+    let SERVICES = [];
 
     const WHATSAPP = '56966638304';
     const DAY_NAMES = ['DOM','LUN','MAR','MIE','JUE','VIE','SAB'];
@@ -1593,15 +1546,7 @@
     const elSummary  = document.getElementById('bkSummary');
     const elConfirm  = document.getElementById('bkConfirm');
 
-    // Render services
-    SERVICES.forEach(s => {
-      const el = document.createElement('div');
-      el.className = 'bk-opt';
-      el.dataset.id = s.id;
-      el.innerHTML = `<span class="bk-opt-icon">${s.icon}</span><span class="bk-opt-name">${s.name}</span>`;
-      el.addEventListener('click', () => selectService(s.id));
-      elServices.appendChild(el);
-    });
+    // Render services (llamado dinámicamente desde buildBookingServices)
 
     // Build upcoming days (next 12 weekdays: Mon–Sat)
     const days = [];
@@ -1734,7 +1679,7 @@
     }
 
     // ─────────── SERVICE DATA (cargado desde content/*.json) ───────────
-    const SERVICE_IDS = ['reiki', 'psico', 'limpieza', 'masaje', 'utero', 'circulo'];
+    // SERVICE_IDS eliminado — servicios cargados dinámicamente desde content/servicios.json
     // ── CONTACTO DINÁMICO ──────────────────────────────────────
     const CONTACT_ICONS = {
       whatsapp:  '📱',
@@ -1767,25 +1712,80 @@
 
     loadContacto();
 
-    // ── SERVICIOS ──────────────────────────────────────────────
-    const SERVICE_DATA = {};
+    // ── SERVICIOS DINÁMICOS ────────────────────────────────────
+    let SERVICIOS_DATA = []; // poblado desde content/servicios.json
 
-    async function loadServiceData() {
-      await Promise.all(SERVICE_IDS.map(async id => {
-        try {
-          const res = await fetch(`content/${id}.json`);
-          const data = await res.json();
-          SERVICE_DATA[id] = {
-            title: data.titulo,
-            slides: (data.slides || []).map(s => s.startsWith('/') ? s.slice(1) : s),
-          };
-        } catch {
-          SERVICE_DATA[id] = { title: id, slides: [] };
-        }
-      }));
+    function modoToModes(modo) {
+      if (modo === 'Online & Presencial') return ['online', 'presencial'];
+      if (modo === 'Online') return ['online'];
+      return ['presencial'];
     }
 
-    const servicesGrid = document.querySelector('.services-grid');
+    async function loadServicios() {
+      try {
+        const res  = await fetch('content/servicios.json');
+        const data = await res.json();
+        SERVICIOS_DATA = (data.lista || []).map(s => ({
+          ...s,
+          slides: (s.slides || []).map(src => src.startsWith('/') ? src.slice(1) : src),
+          modes:  modoToModes(s.modo),
+        }));
+        SERVICES = SERVICIOS_DATA; // sincroniza con el array de booking
+      } catch (e) {
+        console.warn('No se pudo cargar servicios.json', e);
+      }
+    }
+
+    // Precarga imágenes y filtra las que no existen
+    function preloadSlides(paths) {
+      return Promise.all(paths.map(src => new Promise(resolve => {
+        const img = new Image();
+        img.onload  = () => resolve(src);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      }))).then(r => r.filter(Boolean));
+    }
+
+    // Genera las tarjetas de servicio en el grid
+    function buildServiceCards() {
+      const grid = document.getElementById('serviciosGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      SERVICIOS_DATA.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'service-card reveal';
+        card.dataset.serviceId = s.id;
+        card.innerHTML = `
+          <div class="service-icon">${s.emoji}</div>
+          <h3>${s.titulo}</h3>
+          <p>${s.descripcion}</p>
+          <span class="service-mode">${s.modo}</span>
+          <div class="service-card-cta">Ver más →</div>`;
+        preloadSlides(s.slides).then(valid => {
+          s.slides = valid;
+          if (valid.length > 0) {
+            card.addEventListener('click', () => openService(s.id));
+          }
+        });
+        grid.appendChild(card);
+        obs.observe(card); // activar animación reveal
+      });
+    }
+
+    // Genera las opciones de servicio en el booking
+    function buildBookingServices() {
+      elServices.innerHTML = '';
+      SERVICIOS_DATA.forEach(s => {
+        const el = document.createElement('div');
+        el.className = 'bk-opt';
+        el.dataset.id = s.id;
+        el.innerHTML = `<span class="bk-opt-icon">${s.emoji}</span><span class="bk-opt-name">${s.titulo}</span>`;
+        el.addEventListener('click', () => selectService(s.id));
+        elServices.appendChild(el);
+      });
+    }
+
+    const servicesGrid = document.getElementById('serviciosGrid');
     const detailPanel = document.getElementById('serviceDetail');
     const detailTitle = document.getElementById('detailTitle');
     const detailClose = document.getElementById('detailClose');
@@ -1803,7 +1803,7 @@
     };
 
     function openService(serviceId) {
-      const data = SERVICE_DATA[serviceId];
+      const data = SERVICIOS_DATA.find(s => s.id === serviceId);
       if (!data) return;
       const hasSlides = data.slides.length > 0;
 
@@ -1813,7 +1813,7 @@
       carousel.currentService = serviceId;
 
       // Título
-      detailTitle.textContent = data.title;
+      detailTitle.textContent = data.titulo;
 
       // Slides
       carousel.track.innerHTML = data.slides.map(src =>
@@ -1920,16 +1920,10 @@
       }))).then(r => r.filter(Boolean));
     }
 
-    // Inicializar tarjetas tras cargar los JSON
-    loadServiceData().then(() => {
-      document.querySelectorAll('.service-card[data-service]').forEach(card => {
-        const id = card.dataset.service;
-        const paths = SERVICE_DATA[id]?.slides || [];
-        preloadSlides(paths).then(valid => {
-          SERVICE_DATA[id].slides = valid;
-          card.addEventListener('click', () => openService(id));
-        });
-      });
+    // Inicializar servicios: cargar JSON → construir tarjetas y opciones de booking
+    loadServicios().then(() => {
+      buildServiceCards();
+      buildBookingServices();
     });
   </script>
   <script>

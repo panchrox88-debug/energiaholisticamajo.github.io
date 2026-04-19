@@ -1,0 +1,58 @@
+{
+  "lista": [
+    {
+      "id": "psico",
+      "emoji": "🧠",
+      "titulo": "Psicoterapia Transpersonal",
+      "descripcion": "Un espacio de escucha profunda donde trabajamos tus emociones, miedos y bloqueos desde la raíz, integrando cuerpo y mente.",
+      "modo": "Online & Presencial",
+      "slides": []
+    },
+    {
+      "id": "limpieza",
+      "emoji": "✨",
+      "titulo": "Limpieza Energética",
+      "descripcion": "Limpieza y armonización de tu campo energético para liberar cargas que ya no te pertenecen y restaurar tu flujo vital.",
+      "modo": "Online & Presencial",
+      "slides": []
+    },
+    {
+      "id": "reiki",
+      "emoji": "🌊",
+      "titulo": "Reiki Usui",
+      "descripcion": "Canalización de energía universal para activar tu propio poder sanador, relajar el sistema nervioso y equilibrar tus chakras.",
+      "modo": "Presencial",
+      "slides": [
+        "img/reiki/01-portada.png",
+        "img/reiki/02-frase.png",
+        "img/reiki/03-descripcion.png",
+        "img/reiki/04-beneficios.png",
+        "img/reiki/05-incluye.png"
+      ]
+    },
+    {
+      "id": "masaje",
+      "emoji": "💆",
+      "titulo": "Masaje Terapéutico",
+      "descripcion": "Trabajo corporal que integra técnicas de masaje con conciencia energética para liberar tensiones físicas y emocionales.",
+      "modo": "Presencial",
+      "slides": []
+    },
+    {
+      "id": "utero",
+      "emoji": "🌺",
+      "titulo": "Sanación de Útero",
+      "descripcion": "Proceso de reconexión con tu centro femenino, liberando memorias y heridas para recuperar tu poder y creatividad.",
+      "modo": "Online & Presencial",
+      "slides": []
+    },
+    {
+      "id": "circulo",
+      "emoji": "🌙",
+      "titulo": "Círculos de Mujeres",
+      "descripcion": "Espacios de encuentro, sanación colectiva y comunidad donde nos acompañamos en el camino de reconocernos y crecer.",
+      "modo": "Presencial",
+      "slides": []
+    }
+  ]
+}

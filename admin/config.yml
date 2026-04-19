@@ -12,92 +12,29 @@ collections:
   # ── SERVICIOS ──────────────────────────────────────────────
   - name: servicios
     label: Servicios
-    label_singular: Servicio
     files:
-
-      - name: reiki
-        label: "🌊 Reiki Usui"
-        file: content/reiki.json
+      - name: todos
+        label: Todos los servicios
+        file: content/servicios.json
         fields:
-          - { label: Título,       name: titulo,      widget: string }
-          - { label: Descripción,  name: descripcion, widget: text }
-          - { label: Modalidad,    name: modo,        widget: select,
-              options: ["Presencial", "Online", "Online & Presencial"] }
-          - label: Imágenes del carrusel
-            name: slides
+          - label: Servicios
+            name: lista
             widget: list
-            summary: "{{fields.src}}"
-            field: { label: Imagen, name: src, widget: image }
-
-      - name: psico
-        label: "🧠 Psicoterapia Transpersonal"
-        file: content/psico.json
-        fields:
-          - { label: Título,       name: titulo,      widget: string }
-          - { label: Descripción,  name: descripcion, widget: text }
-          - { label: Modalidad,    name: modo,        widget: select,
-              options: ["Presencial", "Online", "Online & Presencial"] }
-          - label: Imágenes del carrusel
-            name: slides
-            widget: list
-            summary: "{{fields.src}}"
-            field: { label: Imagen, name: src, widget: image }
-
-      - name: limpieza
-        label: "✨ Limpieza Energética"
-        file: content/limpieza.json
-        fields:
-          - { label: Título,       name: titulo,      widget: string }
-          - { label: Descripción,  name: descripcion, widget: text }
-          - { label: Modalidad,    name: modo,        widget: select,
-              options: ["Presencial", "Online", "Online & Presencial"] }
-          - label: Imágenes del carrusel
-            name: slides
-            widget: list
-            summary: "{{fields.src}}"
-            field: { label: Imagen, name: src, widget: image }
-
-      - name: masaje
-        label: "💆 Masaje Terapéutico"
-        file: content/masaje.json
-        fields:
-          - { label: Título,       name: titulo,      widget: string }
-          - { label: Descripción,  name: descripcion, widget: text }
-          - { label: Modalidad,    name: modo,        widget: select,
-              options: ["Presencial", "Online", "Online & Presencial"] }
-          - label: Imágenes del carrusel
-            name: slides
-            widget: list
-            summary: "{{fields.src}}"
-            field: { label: Imagen, name: src, widget: image }
-
-      - name: utero
-        label: "🌺 Sanación de Útero"
-        file: content/utero.json
-        fields:
-          - { label: Título,       name: titulo,      widget: string }
-          - { label: Descripción,  name: descripcion, widget: text }
-          - { label: Modalidad,    name: modo,        widget: select,
-              options: ["Presencial", "Online", "Online & Presencial"] }
-          - label: Imágenes del carrusel
-            name: slides
-            widget: list
-            summary: "{{fields.src}}"
-            field: { label: Imagen, name: src, widget: image }
-
-      - name: circulo
-        label: "🌙 Círculos de Mujeres"
-        file: content/circulo.json
-        fields:
-          - { label: Título,       name: titulo,      widget: string }
-          - { label: Descripción,  name: descripcion, widget: text }
-          - { label: Modalidad,    name: modo,        widget: select,
-              options: ["Presencial", "Online", "Online & Presencial"] }
-          - label: Imágenes del carrusel
-            name: slides
-            widget: list
-            summary: "{{fields.src}}"
-            field: { label: Imagen, name: src, widget: image }
+            summary: "{{fields.emoji}} {{fields.titulo}}"
+            fields:
+              - { label: "ID interno (no cambiar)",  name: id,          widget: string,
+                  hint: "Solo letras minúsculas y guiones. Ej: reiki, masaje-thai. No cambiar una vez creado." }
+              - { label: "Emoji (ícono)",            name: emoji,       widget: string, default: "✨" }
+              - { label: Título,                     name: titulo,      widget: string }
+              - { label: "Descripción (tarjeta)",    name: descripcion, widget: text }
+              - label: Modalidad
+                name: modo
+                widget: select
+                options: ["Presencial", "Online", "Online & Presencial"]
+              - label: Imágenes del carrusel
+                name: slides
+                widget: list
+                field: { label: Imagen, name: src, widget: image }
 
   # ── CONTACTO ───────────────────────────────────────────────
   - name: contacto
