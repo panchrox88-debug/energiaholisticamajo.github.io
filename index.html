@@ -1759,28 +1759,24 @@
       elConfirm.classList.remove('disabled');
     }
 
-    // ─────────── INLINE SERVICE EXPANSION ───────────
-    // Para agregar imágenes a un servicio: sube los archivos a img/<servicio>/
-    // con nombres 01.png, 02.png, 03.png... (hasta 10 por servicio).
-    // No hay que tocar el código — aparecen automáticamente.
-    const _imgs = id => Array.from({length: 10}, (_, i) => `img/${id}/${String(i+1).padStart(2,'0')}.png`);
-    const SERVICE_DATA = {
-      reiki: {
-        title: 'Reiki Usui',
-        slides: [
-          'img/reiki/01-portada.png',
-          'img/reiki/02-frase.png',
-          'img/reiki/03-descripcion.png',
-          'img/reiki/04-beneficios.png',
-          'img/reiki/05-incluye.png',
-        ],
-      },
-      psico:    { title: 'Psicoterapia Transpersonal', slides: _imgs('psico') },
-      limpieza: { title: 'Limpieza Energética',        slides: _imgs('limpieza') },
-      masaje:   { title: 'Masaje Terapéutico',         slides: _imgs('masaje') },
-      utero:    { title: 'Sanación de Útero',          slides: _imgs('utero') },
-      circulo:  { title: 'Círculos de Mujeres',        slides: _imgs('circulo') },
-    };
+    // ─────────── SERVICE DATA (cargado desde content/*.json) ───────────
+    const SERVICE_IDS = ['reiki', 'psico', 'limpieza', 'masaje', 'utero', 'circulo'];
+    const SERVICE_DATA = {};
+
+    async function loadServiceData() {
+      await Promise.all(SERVICE_IDS.map(async id => {
+        try {
+          const res = await fetch(`content/${id}.json`);
+          const data = await res.json();
+          SERVICE_DATA[id] = {
+            title: data.titulo,
+            slides: (data.slides || []).map(s => s.startsWith('/') ? s.slice(1) : s),
+          };
+        } catch {
+          SERVICE_DATA[id] = { title: id, slides: [] };
+        }
+      }));
+    }
 
     const servicesGrid = document.querySelector('.services-grid');
     const detailPanel = document.getElementById('serviceDetail');
@@ -1917,13 +1913,15 @@
       }))).then(r => r.filter(Boolean));
     }
 
-    document.querySelectorAll('.service-card[data-service]').forEach(card => {
-      const id = card.dataset.service;
-      const paths = SERVICE_DATA[id]?.slides || [];
-      // Precargar para filtrar imágenes que no existen, luego habilitar el click
-      preloadSlides(paths).then(valid => {
-        SERVICE_DATA[id].slides = valid;
-        card.addEventListener('click', () => openService(id));
+    // Inicializar tarjetas tras cargar los JSON
+    loadServiceData().then(() => {
+      document.querySelectorAll('.service-card[data-service]').forEach(card => {
+        const id = card.dataset.service;
+        const paths = SERVICE_DATA[id]?.slides || [];
+        preloadSlides(paths).then(valid => {
+          SERVICE_DATA[id].slides = valid;
+          card.addEventListener('click', () => openService(id));
+        });
       });
     });
   </script>

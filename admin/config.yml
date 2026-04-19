@@ -1,0 +1,127 @@
+backend:
+  name: git-gateway
+  branch: main
+
+locale: es
+
+media_folder: img/uploads
+public_folder: /img/uploads
+
+collections:
+
+  # ── SERVICIOS ──────────────────────────────────────────────
+  - name: servicios
+    label: Servicios
+    label_singular: Servicio
+    files:
+
+      - name: reiki
+        label: "🌊 Reiki Usui"
+        file: content/reiki.json
+        fields:
+          - { label: Título,       name: titulo,      widget: string }
+          - { label: Descripción,  name: descripcion, widget: text }
+          - { label: Modalidad,    name: modo,        widget: select,
+              options: ["Presencial", "Online", "Online & Presencial"] }
+          - label: Imágenes del carrusel
+            name: slides
+            widget: list
+            summary: "{{fields.src}}"
+            field: { label: Imagen, name: src, widget: image }
+
+      - name: psico
+        label: "🧠 Psicoterapia Transpersonal"
+        file: content/psico.json
+        fields:
+          - { label: Título,       name: titulo,      widget: string }
+          - { label: Descripción,  name: descripcion, widget: text }
+          - { label: Modalidad,    name: modo,        widget: select,
+              options: ["Presencial", "Online", "Online & Presencial"] }
+          - label: Imágenes del carrusel
+            name: slides
+            widget: list
+            summary: "{{fields.src}}"
+            field: { label: Imagen, name: src, widget: image }
+
+      - name: limpieza
+        label: "✨ Limpieza Energética"
+        file: content/limpieza.json
+        fields:
+          - { label: Título,       name: titulo,      widget: string }
+          - { label: Descripción,  name: descripcion, widget: text }
+          - { label: Modalidad,    name: modo,        widget: select,
+              options: ["Presencial", "Online", "Online & Presencial"] }
+          - label: Imágenes del carrusel
+            name: slides
+            widget: list
+            summary: "{{fields.src}}"
+            field: { label: Imagen, name: src, widget: image }
+
+      - name: masaje
+        label: "💆 Masaje Terapéutico"
+        file: content/masaje.json
+        fields:
+          - { label: Título,       name: titulo,      widget: string }
+          - { label: Descripción,  name: descripcion, widget: text }
+          - { label: Modalidad,    name: modo,        widget: select,
+              options: ["Presencial", "Online", "Online & Presencial"] }
+          - label: Imágenes del carrusel
+            name: slides
+            widget: list
+            summary: "{{fields.src}}"
+            field: { label: Imagen, name: src, widget: image }
+
+      - name: utero
+        label: "🌺 Sanación de Útero"
+        file: content/utero.json
+        fields:
+          - { label: Título,       name: titulo,      widget: string }
+          - { label: Descripción,  name: descripcion, widget: text }
+          - { label: Modalidad,    name: modo,        widget: select,
+              options: ["Presencial", "Online", "Online & Presencial"] }
+          - label: Imágenes del carrusel
+            name: slides
+            widget: list
+            summary: "{{fields.src}}"
+            field: { label: Imagen, name: src, widget: image }
+
+      - name: circulo
+        label: "🌙 Círculos de Mujeres"
+        file: content/circulo.json
+        fields:
+          - { label: Título,       name: titulo,      widget: string }
+          - { label: Descripción,  name: descripcion, widget: text }
+          - { label: Modalidad,    name: modo,        widget: select,
+              options: ["Presencial", "Online", "Online & Presencial"] }
+          - label: Imágenes del carrusel
+            name: slides
+            widget: list
+            summary: "{{fields.src}}"
+            field: { label: Imagen, name: src, widget: image }
+
+  # ── CONTACTO ───────────────────────────────────────────────
+  - name: contacto
+    label: Contacto
+    files:
+      - name: datos
+        label: Datos de contacto
+        file: content/contacto.json
+        fields:
+          - { label: WhatsApp,    name: whatsapp,   widget: string }
+          - { label: Instagram,   name: instagram,  widget: string }
+          - { label: Ubicación,   name: ubicacion,  widget: string }
+          - { label: Modalidades, name: modalidad,  widget: string }
+
+  # ── TESTIMONIOS ────────────────────────────────────────────
+  - name: testimonios
+    label: Testimonios
+    file: content/testimonios.json
+    fields:
+      - label: Testimonios
+        name: lista
+        widget: list
+        fields:
+          - { label: Nombre,     name: nombre,    widget: string }
+          - { label: Ciudad,     name: ciudad,    widget: string }
+          - { label: Texto,      name: texto,     widget: text }
+          - { label: Emoji,      name: emoji,     widget: string, default: "🌸" }

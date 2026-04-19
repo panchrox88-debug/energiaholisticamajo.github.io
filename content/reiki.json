@@ -1,0 +1,12 @@
+{
+  "titulo": "Reiki Usui",
+  "descripcion": "Canalización de energía universal para activar tu propio poder sanador, relajar el sistema nervioso y equilibrar tus chakras.",
+  "modo": "Presencial",
+  "slides": [
+    "/img/reiki/01-portada.png",
+    "/img/reiki/02-frase.png",
+    "/img/reiki/03-descripcion.png",
+    "/img/reiki/04-beneficios.png",
+    "/img/reiki/05-incluye.png"
+  ]
+}

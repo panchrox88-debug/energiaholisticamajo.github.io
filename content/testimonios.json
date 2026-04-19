@@ -1,0 +1,22 @@
+{
+  "lista": [
+    {
+      "nombre": "Valentina M.",
+      "ciudad": "Santiago, Chile",
+      "texto": "Majo me acompañó en uno de los momentos más difíciles de mi vida. Su enfoque integrador me ayudó a sanar desde un lugar que no sabía que existía.",
+      "emoji": "🌸"
+    },
+    {
+      "nombre": "Camila R.",
+      "ciudad": "Viña del Mar, Chile",
+      "texto": "Las sesiones de Reiki con Majo transformaron mi relación con mi cuerpo y mis emociones. Me siento más liviana, más yo.",
+      "emoji": "✨"
+    },
+    {
+      "nombre": "Catalina F.",
+      "ciudad": "Providencia, Santiago",
+      "texto": "Participé en el círculo de mujeres y fue una experiencia que cambió mi vida. Gracias por crear ese espacio tan sagrado y seguro.",
+      "emoji": "🌙"
+    }
+  ]
+}
