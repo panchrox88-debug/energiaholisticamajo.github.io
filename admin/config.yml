@@ -82,3 +82,59 @@ collections:
                   min: 1, max: 5, default: 5 }
               - { label: "Mostrar en el sitio", name: visible, widget: boolean, default: false,
                   hint: "Activa para que este testimonio aparezca públicamente en la página." }
+
+  # ── AGENDA ─────────────────────────────────────────────────
+  - name: agenda
+    label: Agenda
+    files:
+      - name: disponibilidad
+        label: Disponibilidad y horarios
+        file: content/agenda.json
+        fields:
+          - label: Hora de inicio del día
+            name: hora_inicio
+            widget: string
+            default: "9:00"
+            hint: "Formato 24h. Ej: 9:00"
+          - label: Hora de término del día
+            name: hora_fin
+            widget: string
+            default: "19:00"
+            hint: "La última sesión termina antes de esta hora. Ej: 19:00"
+          - label: Duración de sesión (minutos)
+            name: duracion_sesion
+            widget: number
+            default: 60
+          - label: Pausa entre sesiones (minutos)
+            name: pausa_minutos
+            widget: number
+            default: 15
+            hint: "Tiempo de descanso entre una sesión y la siguiente"
+          - label: Descanso diario — desde
+            name: descanso_desde
+            widget: string
+            required: false
+            hint: "Opcional. Ej: 13:00 — deja en blanco si no hay pausa de almuerzo"
+          - label: Descanso diario — hasta
+            name: descanso_hasta
+            widget: string
+            required: false
+            hint: "Opcional. Ej: 15:00"
+          - label: Días de atención
+            name: dias_habiles
+            widget: select
+            multiple: true
+            options:
+              - { label: Lunes,     value: 1 }
+              - { label: Martes,    value: 2 }
+              - { label: Miércoles, value: 3 }
+              - { label: Jueves,    value: 4 }
+              - { label: Viernes,   value: 5 }
+              - { label: Sábado,    value: 6 }
+              - { label: Domingo,   value: 0 }
+          - label: Fechas bloqueadas
+            name: fechas_bloqueadas
+            widget: list
+            hint: "Días puntuales cerrados: feriados, vacaciones, etc."
+            field: { label: Fecha, name: fecha, widget: datetime,
+                     format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false }

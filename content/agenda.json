@@ -1,0 +1,10 @@
+{
+  "hora_inicio": "9:00",
+  "hora_fin": "19:00",
+  "duracion_sesion": 60,
+  "pausa_minutos": 15,
+  "descanso_desde": "13:00",
+  "descanso_hasta": "15:00",
+  "dias_habiles": [1, 2, 3, 4, 5, 6],
+  "fechas_bloqueadas": []
+}

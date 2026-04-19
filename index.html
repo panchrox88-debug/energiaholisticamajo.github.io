@@ -1608,12 +1608,51 @@
     // SERVICES se construye dinámicamente desde content/servicios.json
     let SERVICES = [];
 
-    const WHATSAPP = '56966638304';
+    const WHATSAPP  = '56966638304';
     const DAY_NAMES = ['DOM','LUN','MAR','MIE','JUE','VIE','SAB'];
     const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-    const TIMES = ['9:00','10:00','11:00','12:00','15:00','16:00','17:00','18:00'];
+
+    // Agenda — se carga desde content/agenda.json
+    let AGENDA = {
+      hora_inicio: '9:00', hora_fin: '19:00',
+      duracion_sesion: 60, pausa_minutos: 15,
+      descanso_desde: '', descanso_hasta: '',
+      dias_habiles: [1,2,3,4,5,6], fechas_bloqueadas: [],
+    };
+
+    async function loadAgenda() {
+      try {
+        const res  = await fetch('content/agenda.json');
+        const data = await res.json();
+        AGENDA = { ...AGENDA, ...data };
+      } catch(e) { console.warn('No se pudo cargar agenda.json', e); }
+    }
+
+    // Genera slots de hora automáticamente según duración + pausa + descanso diario
+    function generarHorarios() {
+      const toMin = t => { const [h, m] = (t||'0:0').split(':').map(Number); return h * 60 + (m || 0); };
+      const toStr = m => { const h = Math.floor(m / 60); const min = m % 60; return `${h}:${min.toString().padStart(2, '0')}`; };
+      const inicio    = toMin(AGENDA.hora_inicio);
+      const fin       = toMin(AGENDA.hora_fin);
+      const dur       = AGENDA.duracion_sesion || 60;
+      const pausa     = AGENDA.pausa_minutos   || 0;
+      const breakFrom = AGENDA.descanso_desde  ? toMin(AGENDA.descanso_desde) : null;
+      const breakTo   = AGENDA.descanso_hasta  ? toMin(AGENDA.descanso_hasta) : null;
+      const slots = [];
+      let cursor = inicio;
+      while (cursor + dur <= fin) {
+        // Si la sesión entraría en el bloque de descanso, saltar al final del descanso
+        if (breakFrom !== null && cursor < breakTo && cursor + dur > breakFrom) {
+          cursor = breakTo; continue;
+        }
+        slots.push(toStr(cursor));
+        cursor += dur + pausa;
+      }
+      return slots;
+    }
 
     const state = { service: null, modality: null, day: null, time: null };
+    let days = [];
 
     // Smooth scroll to next step with offset for fixed nav
     function scrollToStep(id) {
@@ -1644,41 +1683,44 @@
 
     // Render services (llamado dinámicamente desde buildBookingServices)
 
-    // Build upcoming days (next 12 weekdays: Mon–Sat)
-    const days = [];
-    const today = new Date();
-    let cursor = new Date(today); cursor.setHours(0,0,0,0);
-    while (days.length < 12) {
-      cursor.setDate(cursor.getDate() + 1);
-      const dow = cursor.getDay();
-      if (dow !== 0) days.push(new Date(cursor)); // skip Sunday
+    // Construye el calendario según dias_habiles y fechas_bloqueadas
+    function buildCalendar() {
+      elDays.innerHTML = '';
+      days = [];
+      const today  = new Date();
+      const cursor = new Date(today); cursor.setHours(0,0,0,0);
+      const bloqueadas = new Set(AGENDA.fechas_bloqueadas || []);
+      const habiles    = AGENDA.dias_habiles || [1,2,3,4,5,6];
+      while (days.length < 12) {
+        cursor.setDate(cursor.getDate() + 1);
+        const dow     = cursor.getDay();
+        const dateStr = cursor.toISOString().slice(0, 10);
+        if (habiles.includes(dow) && !bloqueadas.has(dateStr)) {
+          days.push(new Date(cursor));
+        }
+      }
+      days.forEach((d, i) => {
+        const el = document.createElement('div');
+        el.className = 'bk-day';
+        el.dataset.idx = i;
+        el.innerHTML = `<span class="bk-day-name">${DAY_NAMES[d.getDay()]}</span><span class="bk-day-num">${d.getDate()}</span>`;
+        el.addEventListener('click', () => selectDay(i));
+        elDays.appendChild(el);
+      });
     }
-    days.forEach((d, i) => {
-      const el = document.createElement('div');
-      el.className = 'bk-day';
-      el.dataset.idx = i;
-      el.innerHTML = `<span class="bk-day-name">${DAY_NAMES[d.getDay()]}</span><span class="bk-day-num">${d.getDate()}</span>`;
-      el.addEventListener('click', () => selectDay(i));
-      elDays.appendChild(el);
-    });
 
-    // Render times (pseudo-busy: depends on selected day to feel real)
+    // Renderiza los horarios generados automáticamente
     function renderTimes() {
       elTimes.innerHTML = '';
-      const dayIdx = state.day ?? -1;
-      TIMES.forEach((t, i) => {
+      generarHorarios().forEach(t => {
         const el = document.createElement('div');
         el.className = 'bk-time';
-        // Pseudo-random busy slots seeded by day index
-        const busy = dayIdx >= 0 && ((i * 7 + dayIdx * 3) % 5 === 0);
-        if (busy) el.classList.add('disabled');
         el.dataset.time = t;
         el.textContent = t;
-        if (!busy) el.addEventListener('click', () => selectTime(t));
+        el.addEventListener('click', () => selectTime(t));
         elTimes.appendChild(el);
       });
     }
-    renderTimes();
 
     // Modality click
     elModality.querySelectorAll('.bk-mod').forEach(el => {
@@ -2214,10 +2256,12 @@
       }))).then(r => r.filter(Boolean));
     }
 
-    // Inicializar servicios: cargar JSON → construir tarjetas y opciones de booking
-    loadServicios().then(() => {
+    // Inicializar todo: servicios + agenda en paralelo
+    Promise.all([loadServicios(), loadAgenda()]).then(() => {
       buildServiceCards();
       buildBookingServices();
+      buildCalendar();
+      renderTimes();
     });
   </script>
   <script>
