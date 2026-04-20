@@ -366,6 +366,7 @@
       <div class="sidebar-link" data-tab="sobremi">🌸 Sobre mí</div>
       <div class="sidebar-link" data-tab="banner">🎯 Banner</div>
       <div class="sidebar-link" data-tab="cursos">📚 Cursos</div>
+      <div class="sidebar-link" data-tab="promociones">🎁 Promociones</div>
       <div class="sidebar-link" data-tab="blog">✍️ Blog</div>
     </nav>
     <main class="content">
@@ -585,6 +586,14 @@
         <div id="cursosList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
       </div>
 
+      <!-- PROMOCIONES -->
+      <div id="tab-promociones" class="section">
+        <h2 class="section-title">Promociones</h2>
+        <div id="promocionesMsg" class="msg-banner"></div>
+        <button class="btn btn-primary" id="addPromoBtn" style="margin-bottom:16px">+ Nueva promoción</button>
+        <div id="promocionesList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+      </div>
+
       <!-- BLOG -->
       <div id="tab-blog" class="section">
         <h2 class="section-title">Blog</h2>
@@ -777,6 +786,69 @@
   </div>
 </div>
 
+<!-- ── MODAL PROMOCIÓN ── -->
+<div class="modal-overlay" id="promoModal">
+  <div class="modal-box" style="max-width:640px">
+    <div class="modal-title" id="promoModalTitle">Promoción</div>
+    <input type="hidden" id="promo-id"/>
+    <div class="field">
+      <label>Título <span style="color:var(--rose)">*</span></label>
+      <input type="text" id="promo-titulo" placeholder="Combo Bienestar Integral"/>
+    </div>
+    <div class="field">
+      <label>Descripción</label>
+      <textarea id="promo-desc" style="min-height:80px" placeholder="Describe los beneficios del combo…"></textarea>
+    </div>
+    <div class="field">
+      <label>Imagen de portada</label>
+      <div id="promoImgPreview" style="margin-bottom:8px"></div>
+      <label class="upload-zone"><input type="file" id="promoImgInput" accept="image/*"/>📁 Subir imagen</label>
+    </div>
+    <div class="field">
+      <label>Color tema</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="color" id="promo-color-pick" value="#c9858a" style="width:40px;height:36px;border:none;background:none;cursor:pointer;padding:2px"/>
+        <input type="text"  id="promo-color-text" value="#c9858a" style="flex:1;font-family:monospace;font-size:.82rem"/>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="section-subtitle" style="margin-top:16px">Items del combo</div>
+    <div id="promoItemsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="promoItemTipo" style="padding:8px 12px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;background:var(--cream);color:var(--dark);outline:none">
+        <option value="servicio">Servicio</option>
+        <option value="curso">Curso</option>
+      </select>
+      <select id="promoItemSelect" style="flex:1;min-width:180px;padding:8px 12px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;background:var(--cream);color:var(--dark);outline:none">
+        <option value="">— Selecciona —</option>
+      </select>
+      <button type="button" class="btn btn-ghost" id="addPromoItemBtn" style="white-space:nowrap">+ Añadir</button>
+    </div>
+
+    <!-- Precios -->
+    <div style="display:flex;gap:16px;margin-top:16px">
+      <div class="field" style="flex:1">
+        <label>Precio referencial <span style="font-weight:300;color:var(--muted)">(suma automática, editable)</span></label>
+        <input type="number" id="promo-precio-ref" min="0" placeholder="0"/>
+      </div>
+      <div class="field" style="flex:1">
+        <label>Precio combo <span style="color:var(--rose)">*</span></label>
+        <input type="number" id="promo-precio-combo" min="0" placeholder="0"/>
+      </div>
+    </div>
+    <div class="field">
+      <label>Link de pago <span style="font-weight:300;color:var(--muted)">(opcional)</span></label>
+      <input type="text" id="promo-link-pago" placeholder="Se configura después"/>
+    </div>
+    <div id="promoModalMsg" class="msg-banner"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelPromoBtn">Cancelar</button>
+      <button class="btn btn-primary" id="savePromoBtn">Guardar promoción</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL BLOG ── -->
 <div class="modal-overlay" id="blogModal">
   <div class="modal-box" style="max-width:680px">
@@ -949,7 +1021,8 @@
       if (link.dataset.tab === 'portada')     { loadPortada(); loadHeroTextoAdmin(); }
       if (link.dataset.tab === 'sobremi')     loadSobreMiAdmin();
       if (link.dataset.tab === 'banner')      loadBannerAdmin();
-      if (link.dataset.tab === 'cursos')      loadCursosAdmin();
+      if (link.dataset.tab === 'cursos')       loadCursosAdmin();
+      if (link.dataset.tab === 'promociones') loadPromocionesAdmin();
       if (link.dataset.tab === 'blog')        loadBlogAdmin();
     });
   });
@@ -2099,6 +2172,231 @@
       syncBannerPreview();
     } catch(e) { showMsg('bannerMsg', 'Error al cargar: ' + e.message, 'err'); }
   }
+
+  // ── PROMOCIONES ───────────────────────────────────────────
+  let PROMO_ITEMS = [];       // items actuales en el modal
+  let promoImgUrl = '';       // URL de imagen subida
+  let PROMO_SERVICIOS = [];   // cache de servicios para el selector
+  let PROMO_CURSOS    = [];   // cache de cursos para el selector
+
+  const promoModal = document.getElementById('promoModal');
+
+  async function loadPromocionesAdmin() {
+    try {
+      const rows = await sbGet('/promociones?order=orden.asc,created_at.desc');
+      const el   = document.getElementById('promocionesList');
+      if (!rows.length) {
+        el.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No hay promociones todavía.</p>';
+        return;
+      }
+      el.innerHTML = rows.map(p => `
+        <div class="card" id="promo-card-${p.id}">
+          <div class="card-row">
+            <div class="card-body">
+              <div class="card-name">${p.titulo}</div>
+              <div class="card-sub">${(p.items||[]).length} item(s) · $${Number(p.precio_combo||0).toLocaleString('es-CL')}</div>
+              ${p.descripcion ? `<div class="card-text">${p.descripcion.slice(0,100)}…</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <label class="toggle-wrap" title="${p.activo ? 'Publicado' : 'Oculto'}">
+                <div class="toggle-switch">
+                  <input type="checkbox" ${p.activo ? 'checked' : ''} onchange="window._togglePromoActivo('${p.id}', this.checked, this)"/>
+                  <span class="toggle-slider"></span>
+                </div>
+                <span class="toggle-label" id="promo-toggle-label-${p.id}">${p.activo ? 'Publicado' : 'Oculto'}</span>
+              </label>
+              <button class="btn-icon" title="Vista previa" onclick="window.open('../promociones.html?id=${p.id}','_blank')">👁</button>
+              <button class="btn btn-ghost" onclick="window._editPromo(${JSON.stringify(p).replace(/"/g,'&quot;')})">Editar</button>
+              <button class="btn btn-danger" onclick="window._deletePromo('${p.id}')">×</button>
+            </div>
+          </div>
+        </div>`).join('');
+    } catch(e) { showMsg('promocionesMsg', 'Error: ' + e.message, 'err'); }
+  }
+
+  async function _loadPromoSelects() {
+    try {
+      if (!PROMO_SERVICIOS.length) PROMO_SERVICIOS = await sbGet('/servicios?select=id,titulo,emoji,precio&order=orden.asc');
+      if (!PROMO_CURSOS.length)    PROMO_CURSOS    = await sbGet('/cursos?select=id,titulo,precio,activo&order=orden.asc');
+    } catch(e) { /* ignore — selects will be empty */ }
+    _updatePromoSelect();
+  }
+
+  function _updatePromoSelect() {
+    const tipo  = document.getElementById('promoItemTipo').value;
+    const sel   = document.getElementById('promoItemSelect');
+    const lista = tipo === 'servicio' ? PROMO_SERVICIOS : PROMO_CURSOS;
+    sel.innerHTML = '<option value="">— Selecciona —</option>' +
+      lista.map(x => `<option value="${x.id}" data-nombre="${(x.titulo||'').replace(/"/g,'&quot;')}" data-emoji="${(x.emoji||'').replace(/"/g,'&quot;')}" data-precio="${x.precio||0}">${x.emoji ? x.emoji + ' ' : ''}${x.titulo}</option>`).join('');
+  }
+
+  document.getElementById('promoItemTipo').addEventListener('change', _updatePromoSelect);
+
+  document.getElementById('addPromoItemBtn').addEventListener('click', () => {
+    const tipo  = document.getElementById('promoItemTipo').value;
+    const sel   = document.getElementById('promoItemSelect');
+    const opt   = sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) return;
+    PROMO_ITEMS.push({
+      tipo,
+      id:        opt.value,
+      nombre:    opt.dataset.nombre,
+      emoji:     opt.dataset.emoji || '',
+      precio_ref: parseInt(opt.dataset.precio) || 0,
+    });
+    renderPromoItems();
+    _recalcPromoRef();
+  });
+
+  function renderPromoItems() {
+    const el = document.getElementById('promoItemsList');
+    if (!PROMO_ITEMS.length) {
+      el.innerHTML = '<p style="color:var(--muted);font-size:.82rem">Sin items. Añade servicios o cursos arriba.</p>';
+      return;
+    }
+    el.innerHTML = PROMO_ITEMS.map((item, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:10px;border:1.5px solid var(--beige)">
+        <span style="font-size:1.2rem">${item.emoji || (item.tipo === 'servicio' ? '✨' : '📚')}</span>
+        <span style="flex:1;font-size:.88rem;font-weight:400">${item.nombre}</span>
+        <span style="font-size:.72rem;padding:2px 8px;border-radius:10px;background:${item.tipo==='servicio'?'var(--blush)':'#e8f4ff'};color:${item.tipo==='servicio'?'var(--rose)':'#2563eb'}">${item.tipo}</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:.75rem;color:var(--muted)">$</span>
+          <input type="number" value="${item.precio_ref}" min="0"
+            style="width:90px;padding:5px 8px;border:1px solid var(--beige);border-radius:6px;font-family:'Nunito',sans-serif;font-size:.82rem;background:white"
+            oninput="window._updatePromoItemPrecio(${i}, this.value)"/>
+        </div>
+        <button style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;line-height:1;padding:2px 4px"
+          onclick="window._removePromoItem(${i})">×</button>
+      </div>`).join('');
+  }
+
+  window._updatePromoItemPrecio = (i, val) => {
+    PROMO_ITEMS[i].precio_ref = parseInt(val) || 0;
+    _recalcPromoRef();
+  };
+
+  window._removePromoItem = i => {
+    PROMO_ITEMS.splice(i, 1);
+    renderPromoItems();
+    _recalcPromoRef();
+  };
+
+  function _recalcPromoRef() {
+    const sum = PROMO_ITEMS.reduce((acc, x) => acc + (x.precio_ref || 0), 0);
+    const el  = document.getElementById('promo-precio-ref');
+    if (el && !el.dataset.userEdited) el.value = sum || '';
+  }
+
+  document.getElementById('promo-precio-ref').addEventListener('input', function() {
+    this.dataset.userEdited = '1';
+  });
+
+  async function openPromoModal(p = null) {
+    promoImgUrl   = p?.imagen || '';
+    PROMO_ITEMS   = JSON.parse(JSON.stringify(p?.items || []));
+    document.getElementById('promo-id').value            = p?.id || '';
+    document.getElementById('promo-titulo').value        = p?.titulo || '';
+    document.getElementById('promo-desc').value          = p?.descripcion || '';
+    document.getElementById('promo-precio-ref').value    = p?.precio_referencial || '';
+    document.getElementById('promo-precio-ref').dataset.userEdited = p?.precio_referencial ? '1' : '';
+    document.getElementById('promo-precio-combo').value  = p?.precio_combo || '';
+    document.getElementById('promo-link-pago').value     = p?.link_pago || '';
+    const color = p?.color_tema || '#c9858a';
+    document.getElementById('promo-color-pick').value = color;
+    document.getElementById('promo-color-text').value = color;
+    document.getElementById('promoModalTitle').textContent = p ? 'Editar promoción' : 'Nueva promoción';
+    document.getElementById('promoImgPreview').innerHTML = promoImgUrl
+      ? `<img src="${promoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
+      : '';
+    document.getElementById('promoModalMsg').className = 'msg-banner';
+    renderPromoItems();
+    await _loadPromoSelects();
+    promoModal.classList.add('open');
+  }
+
+  document.getElementById('addPromoBtn').addEventListener('click', () => openPromoModal());
+  document.getElementById('cancelPromoBtn').addEventListener('click', () => promoModal.classList.remove('open'));
+  promoModal.addEventListener('click', e => { if (e.target === promoModal) promoModal.classList.remove('open'); });
+
+  window._editPromo = p => {
+    if (typeof p === 'string') p = JSON.parse(p);
+    openPromoModal(p);
+  };
+
+  /* Sync color pickers */
+  document.getElementById('promo-color-pick').addEventListener('input', function() {
+    document.getElementById('promo-color-text').value = this.value;
+  });
+  document.getElementById('promo-color-text').addEventListener('input', function() {
+    if (/^#[0-9a-fA-F]{6}$/.test(this.value)) document.getElementById('promo-color-pick').value = this.value;
+  });
+
+  /* Upload imagen promo */
+  document.getElementById('promoImgInput').addEventListener('change', async function() {
+    const msgEl = document.getElementById('promoModalMsg');
+    msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
+    try {
+      promoImgUrl = await uploadFile(this.files[0], 'promociones');
+      document.getElementById('promoImgPreview').innerHTML =
+        `<img src="${promoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`;
+      msgEl.textContent = 'Imagen subida ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 2500);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    this.value = '';
+  });
+
+  document.getElementById('savePromoBtn').addEventListener('click', async () => {
+    const msgEl = document.getElementById('promoModalMsg');
+    const id    = document.getElementById('promo-id').value;
+    const titulo = document.getElementById('promo-titulo').value.trim();
+    if (!titulo) { msgEl.textContent = 'El título es obligatorio'; msgEl.className = 'msg-banner err'; return; }
+    const precioComboRaw = document.getElementById('promo-precio-combo').value;
+    if (!precioComboRaw) { msgEl.textContent = 'El precio combo es obligatorio'; msgEl.className = 'msg-banner err'; return; }
+
+    const body = {
+      titulo,
+      descripcion:       document.getElementById('promo-desc').value.trim() || null,
+      imagen:            promoImgUrl || null,
+      color_tema:        document.getElementById('promo-color-pick').value,
+      items:             PROMO_ITEMS,
+      precio_referencial: parseInt(document.getElementById('promo-precio-ref').value) || null,
+      precio_combo:      parseInt(precioComboRaw) || null,
+      link_pago:         document.getElementById('promo-link-pago').value.trim() || null,
+    };
+
+    try {
+      if (id) {
+        await sbPatch(`/promociones?id=eq.${id}`, body);
+      } else {
+        const all = await sbGet('/promociones?select=orden&order=orden.desc&limit=1');
+        body.orden = (all[0]?.orden || 0) + 1;
+        await sbPost('/promociones', body);
+      }
+      promoModal.classList.remove('open');
+      showMsg('promocionesMsg', 'Promoción guardada ✓');
+      loadPromocionesAdmin();
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+  });
+
+  window._togglePromoActivo = async (id, checked, input) => {
+    const label = document.getElementById(`promo-toggle-label-${id}`);
+    try {
+      await sbPatch(`/promociones?id=eq.${id}`, { activo: checked });
+      if (label) label.textContent = checked ? 'Publicado' : 'Oculto';
+    } catch(e) {
+      input.checked = !checked;
+      showMsg('promocionesMsg', 'Error al actualizar: ' + e.message, 'err');
+    }
+  };
+
+  window._deletePromo = async id => {
+    if (!confirm('¿Eliminar esta promoción?')) return;
+    try {
+      await sbDelete(`/promociones?id=eq.${id}`);
+      document.getElementById('promo-card-' + id)?.remove();
+      showMsg('promocionesMsg', 'Promoción eliminada');
+    } catch(e) { showMsg('promocionesMsg', 'Error: ' + e.message, 'err'); }
+  };
 
   document.getElementById('saveBannerBtn')?.addEventListener('click', async () => {
     const body = {

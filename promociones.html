@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Promociones &amp; Combos — Energía Holística Majo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --rose:    #c9858a;
+      --rose-lt: #dba8ac;
+      --blush:   #f0dada;
+      --cream:   #faf5f0;
+      --beige:   #ede0d4;
+      --gold:    #c9a96e;
+      --gold-lt: #e8d5b0;
+      --dark:    #3d2b2b;
+      --muted:   #7a5c5c;
+      --white:   #ffffff;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--dark); font-family: 'Nunito', sans-serif; font-weight: 300; overflow-x: hidden; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; width: 100%;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 22px 64px;
+      background: rgba(250,245,240,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(201,133,138,0.12);
+      z-index: 100;
+    }
+    .nav-logo { display: flex; flex-direction: column; line-height: 1.1; text-decoration: none; }
+    .nav-logo-main { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.12em; color: var(--rose); }
+    .nav-logo-sub  { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--rose); }
+    .nav-btn { background: var(--rose); color: white; border: none; padding: 10px 28px; font-family: 'Nunito', sans-serif; font-size: 0.72rem; font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase; border-radius: 40px; cursor: pointer; transition: background 0.3s; text-decoration: none; }
+    .nav-btn:hover { background: var(--dark); }
+    .nav-toggle { display: none; background: transparent; border: none; cursor: pointer; width: 40px; height: 40px; padding: 0; position: relative; z-index: 110; }
+    .nav-toggle span { display: block; position: absolute; left: 8px; right: 8px; height: 1.5px; background: var(--dark); transition: transform 0.3s, top 0.3s, opacity 0.3s; }
+    .nav-toggle span:nth-child(1) { top: 13px; }
+    .nav-toggle span:nth-child(2) { top: 19px; }
+    .nav-toggle span:nth-child(3) { top: 25px; }
+    .nav-toggle.open span:nth-child(1) { top: 19px; transform: rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; }
+    .nav-toggle.open span:nth-child(3) { top: 19px; transform: rotate(-45deg); }
+    .mobile-menu { display: none; position: fixed; inset: 0; background: rgba(250,245,240,0.98); backdrop-filter: blur(20px); z-index: 105; flex-direction: column; align-items: center; justify-content: center; gap: 32px; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
+    .mobile-menu.open { opacity: 1; pointer-events: auto; }
+    .mobile-menu ul { list-style: none; display: flex; flex-direction: column; gap: 28px; text-align: center; }
+    .mobile-menu a { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: var(--dark); text-decoration: none; transition: color 0.3s; }
+    .mobile-menu a:hover { color: var(--rose); }
+    .mobile-menu .mobile-cta { margin-top: 16px; background: var(--rose); color: white; padding: 14px 36px; border-radius: 40px; font-family: 'Nunito', sans-serif; font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase; }
+    body.menu-open { overflow: hidden; }
+
+    /* ── HEADER ── */
+    .page-header {
+      padding: 160px 64px 80px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%);
+    }
+    .page-header .eyebrow { font-size: 0.65rem; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 300; color: var(--dark); margin-bottom: 20px; }
+    .page-header h1 em { font-style: italic; color: var(--rose); }
+    .page-header p { font-size: 0.95rem; color: var(--muted); max-width: 560px; margin: 0 auto; line-height: 1.9; }
+
+    /* ── GRID PROMOS ── */
+    .promos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      padding: 60px 64px 120px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .promo-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(201,133,138,0.10);
+      transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s;
+      display: flex; flex-direction: column;
+      cursor: pointer;
+    }
+    .promo-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(201,133,138,0.18); }
+    .promo-img {
+      width: 100%; height: 200px;
+      object-fit: cover;
+      display: block;
+    }
+    .promo-img-placeholder {
+      width: 100%; height: 200px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .promo-body { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .promo-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .promo-chip {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.68rem; letter-spacing: 0.1em;
+      background: var(--blush); color: var(--rose);
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .promo-titulo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 400; color: var(--dark); line-height: 1.3; }
+    .promo-desc { font-size: 0.84rem; line-height: 1.85; color: var(--muted); flex: 1;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .promo-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 12px; flex-wrap: wrap; }
+    .promo-precios { display: flex; flex-direction: column; gap: 2px; }
+    .promo-ahorro { font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; background: #d4edda; color: #2d6a4f; font-weight: 400; align-self: flex-start; }
+    .promo-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--rose); color: white;
+      padding: 9px 20px; border-radius: 40px;
+      font-family: 'Nunito', sans-serif; font-size: 0.72rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      border: none; cursor: pointer; transition: background 0.3s;
+      white-space: nowrap;
+    }
+    .promo-cta:hover { background: var(--dark); }
+
+    /* ── EMPTY ── */
+    .empty-state { text-align: center; padding: 80px 24px; color: var(--muted); font-size: 0.9rem; line-height: 2; }
+    .empty-state .big { font-size: 3rem; margin-bottom: 16px; }
+
+    /* ── MODAL PREVIEW ── */
+    .preview-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(61,43,43,0.55); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    .preview-overlay.open { opacity: 1; pointer-events: auto; }
+    .preview-box {
+      background: var(--cream); border-radius: 24px;
+      max-width: 600px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 32px 80px rgba(61,43,43,0.22);
+      transform: translateY(24px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+      position: relative;
+    }
+    .preview-overlay.open .preview-box { transform: translateY(0) scale(1); }
+    .preview-close {
+      position: absolute; top: 16px; right: 16px; z-index: 10;
+      background: rgba(250,245,240,0.9); border: none; cursor: pointer;
+      width: 36px; height: 36px; border-radius: 50%;
+      font-size: 1rem; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .preview-close:hover { background: var(--dark); color: white; }
+    .preview-hero {
+      width: 100%; height: 220px; object-fit: cover;
+      border-radius: 24px 24px 0 0; display: block;
+    }
+    .preview-hero-placeholder {
+      width: 100%; height: 220px;
+      border-radius: 24px 24px 0 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 4rem;
+    }
+    .preview-body { padding: 32px 32px 28px; }
+    .preview-eyebrow { font-size: 0.62rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    .preview-titulo { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 400; color: var(--dark); line-height: 1.2; margin-bottom: 12px; }
+    .preview-intro { font-size: 0.88rem; line-height: 1.85; color: var(--muted); margin-bottom: 24px; }
+    .preview-items-titulo {
+      font-size: 0.65rem; letter-spacing: 0.4em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 14px;
+    }
+    .preview-items-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .preview-items-list li {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.88rem; line-height: 1.6; color: var(--dark);
+      padding: 10px 14px; background: white; border-radius: 12px;
+      border: 1.5px solid var(--beige);
+    }
+    .preview-item-emoji { font-size: 1.2rem; flex-shrink: 0; }
+    .preview-item-tipo {
+      font-size: 0.62rem; padding: 2px 8px; border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .tipo-servicio { background: var(--blush); color: var(--rose); }
+    .tipo-curso    { background: #e8f4ff; color: #2563eb; }
+    .preview-item-nombre { flex: 1; }
+    .preview-item-precio { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+    .preview-divider { height: 1px; background: var(--beige); margin-bottom: 24px; }
+    .preview-pricing {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .preview-precio-ref { color: var(--muted); font-size: 0.9rem; }
+    .preview-precio-combo { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 400; color: var(--dark); }
+    .preview-ahorro { font-size: 0.78rem; padding: 4px 12px; border-radius: 20px; background: #d4edda; color: #2d6a4f; }
+
+    /* ── CALENDARIO ── */
+    .cal-section { margin-top: 8px; }
+    .cal-section-titulo {
+      font-size: 0.65rem; letter-spacing: 0.4em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 16px;
+    }
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .cal-mes { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 400; color: var(--dark); text-transform: capitalize; }
+    .cal-nav {
+      background: none; border: 1.5px solid var(--beige); border-radius: 8px;
+      width: 32px; height: 32px; cursor: pointer; font-size: 1rem; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .cal-nav:hover { border-color: var(--rose); color: var(--rose); }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 4px; margin-bottom: 16px;
+    }
+    .cal-day-name {
+      font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted); text-align: center; padding: 4px 0;
+    }
+    .cal-day {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; font-size: 0.82rem; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      border: none; background: transparent; font-family: 'Nunito', sans-serif;
+    }
+    .cal-day.empty { cursor: default; }
+    .cal-day.disabled { color: var(--beige); cursor: default; pointer-events: none; }
+    .cal-day.available { color: var(--dark); }
+    .cal-day.available:hover { background: var(--blush); color: var(--rose); }
+    .cal-day.selected { background: var(--rose); color: white; font-weight: 400; }
+    .cal-day.today { border: 1.5px solid var(--gold); }
+
+    /* ── SLOTS ── */
+    .slots-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .slot-pill {
+      padding: 7px 16px; border-radius: 20px; font-size: 0.78rem;
+      border: 1.5px solid var(--beige); background: transparent;
+      color: var(--muted); cursor: pointer; font-family: 'Nunito', sans-serif;
+      transition: all 0.15s;
+    }
+    .slot-pill:hover { border-color: var(--rose); color: var(--rose); }
+    .slot-pill.selected { background: var(--rose); border-color: var(--rose); color: white; }
+
+    /* ── BTN COMPRAR ── */
+    .btn-comprar {
+      display: inline-flex; align-items: center;
+      background: var(--rose); color: white;
+      padding: 13px 28px; border-radius: 40px;
+      font-family: 'Nunito', sans-serif; font-size: 0.78rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      border: none; cursor: pointer; transition: background 0.3s; white-space: nowrap;
+      margin-top: 8px;
+    }
+    .btn-comprar:hover:not([disabled]) { background: var(--dark); }
+    .btn-comprar[disabled], .btn-comprar.disabled {
+      background: var(--beige); color: var(--muted); cursor: not-allowed;
+    }
+
+    /* ── FOOTER ── */
+    footer { background: var(--dark); color: rgba(255,255,255,0.6); text-align: center; padding: 40px 24px; font-size: 0.75rem; letter-spacing: 0.1em; }
+    footer strong { color: var(--rose-lt); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 18px 24px; }
+      .nav-links, .nav-btn { display: none; }
+      .nav-toggle { display: flex; flex-direction: column; justify-content: center; }
+      .mobile-menu { display: flex; }
+      .page-header { padding: 120px 24px 60px; }
+      .promos-grid { grid-template-columns: 1fr 1fr; gap: 20px; padding: 40px 24px 80px; }
+    }
+    @media (max-width: 600px) {
+      .promos-grid { grid-template-columns: 1fr; }
+      .preview-body { padding: 24px 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <ul>
+    <li><a href="index.html#about">Sobre mí</a></li>
+    <li><a href="index.html#services">Servicios</a></li>
+    <li><a href="cursos.html">Cursos</a></li>
+    <li><a href="promociones.html">Promociones</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="index.html#contact">Contacto</a></li>
+  </ul>
+  <a href="index.html#booking" class="mobile-cta">Agendar sesión</a>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="nav-logo-main">Energía Holística Majo</span>
+    <span class="nav-logo-sub">Psicóloga &amp; Terapeuta</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html#about">Sobre mí</a></li>
+    <li><a href="index.html#services">Servicios</a></li>
+    <li><a href="cursos.html">Cursos</a></li>
+    <li><a href="promociones.html" class="active">Promociones</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="index.html#contact">Contacto</a></li>
+  </ul>
+  <a href="index.html#booking" class="nav-btn">Agendar sesión</a>
+  <button class="nav-toggle" id="navToggle" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Header -->
+<header class="page-header">
+  <p class="eyebrow">Ofertas especiales</p>
+  <h1>Promociones &amp; <em>combos</em></h1>
+  <p>Combina servicios y formaciones a un precio especial.</p>
+</header>
+
+<!-- Grid -->
+<main class="promos-grid" id="promosGrid">
+  <div class="empty-state" style="grid-column:1/-1">
+    <div class="big">🎁</div>
+    Cargando promociones…
+  </div>
+</main>
+
+<!-- Modal preview promo -->
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-box" id="previewBox">
+    <button class="preview-close" id="previewClose" aria-label="Cerrar">✕</button>
+    <div id="previewContent"></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <strong>Energía Holística Majo</strong> · Psicóloga &amp; Terapeuta Holística · Santiago, Chile
+</footer>
+
+<script>
+  const SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
+  const SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
+
+  async function sbFetch(path) {
+    const r = await fetch(SB_URL + '/rest/v1' + path, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  let todasLasPromos = [];
+  let agendaData     = null;
+
+  // ── CARGAR AGENDA ─────────────────────────────────────────
+  async function loadAgenda() {
+    try {
+      const rows = await sbFetch('/agenda?id=eq.1&select=*');
+      agendaData = rows[0] || null;
+    } catch(e) { agendaData = null; }
+  }
+
+  // ── CARGAR PROMOS ─────────────────────────────────────────
+  async function loadPromos() {
+    await loadAgenda();
+    try {
+      const rows = await sbFetch('/promociones?activo=eq.true&order=orden.asc,created_at.desc');
+      todasLasPromos = rows || [];
+
+      // Si hay ?id=X en la URL, abrir el detalle directo
+      const urlId = new URLSearchParams(location.search).get('id');
+
+      renderPromos();
+
+      if (urlId) {
+        const p = todasLasPromos.find(x => String(x.id) === urlId);
+        if (p) openPreview(p.id);
+      }
+    } catch(e) {
+      document.getElementById('promosGrid').innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="big">🌸</div>
+          No se pudieron cargar las promociones.<br>Intenta recargar la página.
+        </div>`;
+    }
+  }
+
+  function renderPromos() {
+    const grid = document.getElementById('promosGrid');
+
+    if (!todasLasPromos.length) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="big">🌸</div>
+          Próximamente nuevas promociones.<br>¡Vuelve pronto!
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = todasLasPromos.map(p => {
+      const color = p.color_tema || 'var(--rose)';
+      const imgHTML = p.imagen
+        ? `<img class="promo-img" src="${p.imagen}" alt="${esc(p.titulo)}" loading="lazy"/>`
+        : `<div class="promo-img-placeholder" style="background:linear-gradient(135deg,${color}33,${color}66)">🎁</div>`;
+
+      const items = Array.isArray(p.items) ? p.items : [];
+      const chipsHTML = items.slice(0, 4).map(item =>
+        `<span class="promo-chip">${item.emoji || (item.tipo==='servicio'?'✨':'📚')} ${esc(item.nombre)}</span>`
+      ).join('') + (items.length > 4 ? `<span class="promo-chip">+${items.length - 4} más</span>` : '');
+
+      const ref   = p.precio_referencial;
+      const combo = p.precio_combo;
+      const ahorro = ref && combo && ref > combo ? ref - combo : 0;
+
+      const precioHTML = `
+        <div class="promo-precios">
+          ${ref ? `<s style="color:var(--muted);font-size:0.9rem">$${Number(ref).toLocaleString('es-CL')}</s>` : ''}
+          <strong style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--rose)">
+            $${Number(combo||0).toLocaleString('es-CL')}
+          </strong>
+          ${ahorro ? `<span class="promo-ahorro">Ahorro: $${Number(ahorro).toLocaleString('es-CL')}</span>` : ''}
+        </div>`;
+
+      return `
+        <article class="promo-card" onclick="openPreview('${p.id}')">
+          ${imgHTML}
+          <div class="promo-body">
+            ${chipsHTML ? `<div class="promo-chips">${chipsHTML}</div>` : ''}
+            <h2 class="promo-titulo">${esc(p.titulo)}</h2>
+            ${p.descripcion ? `<p class="promo-desc">${esc(p.descripcion)}</p>` : ''}
+            <div class="promo-footer">
+              ${precioHTML}
+              <button class="promo-cta" onclick="event.stopPropagation();openPreview('${p.id}')">Ver detalles →</button>
+            </div>
+          </div>
+        </article>`;
+    }).join('');
+  }
+
+  // ── MODAL PREVIEW ─────────────────────────────────────────
+  const overlay    = document.getElementById('previewOverlay');
+  const previewBox = document.getElementById('previewBox');
+  let calState = { year: 0, month: 0, selectedDate: '', selectedSlot: '', promoId: '' };
+
+  function openPreview(id) {
+    const p = todasLasPromos.find(x => String(x.id) === String(id));
+    if (!p) return;
+
+    const color = p.color_tema || '#c9858a';
+    const items = Array.isArray(p.items) ? p.items : [];
+    const ref   = p.precio_referencial;
+    const combo = p.precio_combo;
+    const ahorro = ref && combo && ref > combo ? ref - combo : 0;
+    const hasServicios = items.some(x => x.tipo === 'servicio');
+
+    const heroHTML = p.imagen
+      ? `<img class="preview-hero" src="${p.imagen}" alt="${esc(p.titulo)}"/>`
+      : `<div class="preview-hero-placeholder" style="background:linear-gradient(135deg,${color}33,${color}66)">🎁</div>`;
+
+    const itemsHTML = items.length
+      ? `<p class="preview-items-titulo">Incluye</p>
+         <ul class="preview-items-list">
+           ${items.map(item => `
+             <li>
+               <span class="preview-item-emoji">${item.emoji || (item.tipo==='servicio'?'✨':'📚')}</span>
+               <span class="preview-item-nombre">${esc(item.nombre)}</span>
+               <span class="preview-item-tipo ${item.tipo==='servicio'?'tipo-servicio':'tipo-curso'}">${item.tipo==='servicio'?'Servicio':'Curso'}</span>
+               ${item.precio_ref ? `<span class="preview-item-precio">$${Number(item.precio_ref).toLocaleString('es-CL')}</span>` : ''}
+             </li>`).join('')}
+         </ul>`
+      : '';
+
+    const pricingHTML = `
+      <div class="preview-pricing">
+        ${ref ? `<s class="preview-precio-ref">$${Number(ref).toLocaleString('es-CL')}</s> →` : ''}
+        <span class="preview-precio-combo" style="color:${color}">$${Number(combo||0).toLocaleString('es-CL')}</span>
+        ${ahorro ? `<span class="preview-ahorro">Ahorras $${Number(ahorro).toLocaleString('es-CL')}</span>` : ''}
+      </div>`;
+
+    // Calendar section (solo si hay servicios)
+    const calHTML = hasServicios && agendaData ? `
+      <div class="cal-section">
+        <p class="cal-section-titulo">Elige tu fecha</p>
+        <div class="cal-header">
+          <button class="cal-nav" id="calPrev" onclick="calNavMonth(-1)">‹</button>
+          <span class="cal-mes" id="calMesLabel"></span>
+          <button class="cal-nav" id="calNext" onclick="calNavMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div id="slotsSection" style="margin-top:4px"></div>
+      </div>` : '';
+
+    const pagarBtn = p.link_pago
+      ? `<a href="${p.link_pago}" target="_blank" rel="noopener" class="btn-comprar" style="background:${color}">Pagar →</a>`
+      : `<button class="btn-comprar disabled" disabled title="Próximamente">Pagar →</button>`;
+
+    document.getElementById('previewContent').innerHTML = `
+      ${heroHTML}
+      <div class="preview-body">
+        <p class="preview-eyebrow">Promoción especial</p>
+        <h2 class="preview-titulo">${esc(p.titulo)}</h2>
+        ${p.descripcion ? `<p class="preview-intro">${esc(p.descripcion)}</p>` : ''}
+        ${itemsHTML}
+        <div class="preview-divider"></div>
+        ${pricingHTML}
+        ${calHTML}
+        ${pagarBtn}
+      </div>`;
+
+    // Init calendar state
+    if (hasServicios && agendaData) {
+      const now = new Date();
+      calState = { year: now.getFullYear(), month: now.getMonth(), selectedDate: '', selectedSlot: '', promoId: id };
+      renderCalendar();
+    }
+
+    previewBox.scrollTop = 0;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePreview() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    calState = { year: 0, month: 0, selectedDate: '', selectedSlot: '', promoId: '' };
+  }
+
+  document.getElementById('previewClose').addEventListener('click', closePreview);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePreview(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+  // ── CALENDAR ─────────────────────────────────────────────
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const DIAS_SEMANA = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+
+  function calNavMonth(dir) {
+    calState.month += dir;
+    if (calState.month > 11) { calState.month = 0; calState.year++; }
+    if (calState.month < 0)  { calState.month = 11; calState.year--; }
+    calState.selectedDate = '';
+    calState.selectedSlot = '';
+    renderCalendar();
+    const ss = document.getElementById('slotsSection');
+    if (ss) ss.innerHTML = '';
+  }
+
+  window.calNavMonth = calNavMonth;
+
+  function renderCalendar() {
+    const label = document.getElementById('calMesLabel');
+    const grid  = document.getElementById('calGrid');
+    if (!label || !grid) return;
+
+    label.textContent = MESES[calState.month] + ' ' + calState.year;
+
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+    const firstDay = new Date(calState.year, calState.month, 1).getDay(); // 0=Dom
+    const daysInMonth = new Date(calState.year, calState.month + 1, 0).getDate();
+    const diasHabiles = agendaData?.dias_habiles || [1,2,3,4,5,6];
+    const fechasBloqueadas = agendaData?.fechas_bloqueadas || [];
+
+    let html = DIAS_SEMANA.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+
+    // Blank cells before first day
+    for (let i = 0; i < firstDay; i++) {
+      html += `<div class="cal-day empty"></div>`;
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const fecha = new Date(calState.year, calState.month, d);
+      fecha.setHours(0,0,0,0);
+      const fechaStr = `${calState.year}-${String(calState.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dayOfWeek = fecha.getDay();
+      const isPast = fecha < hoy;
+      const isBlocked = fechasBloqueadas.includes(fechaStr);
+      const isHabil = diasHabiles.includes(dayOfWeek);
+      const isToday = fecha.getTime() === hoy.getTime();
+      const isSelected = fechaStr === calState.selectedDate;
+
+      const available = !isPast && !isBlocked && isHabil;
+      const cls = ['cal-day',
+        isSelected ? 'selected' : (available ? 'available' : 'disabled'),
+        isToday && !isSelected ? 'today' : '',
+      ].filter(Boolean).join(' ');
+
+      html += `<button class="${cls}" ${available ? `onclick="selectDate('${fechaStr}')"` : ''}>${d}</button>`;
+    }
+
+    grid.innerHTML = html;
+  }
+
+  window.selectDate = function(fecha) {
+    calState.selectedDate = fecha;
+    calState.selectedSlot = '';
+    renderCalendar();
+    renderSlots(fecha);
+  };
+
+  function renderSlots(fecha) {
+    const ss = document.getElementById('slotsSection');
+    if (!ss || !agendaData) return;
+    const slots = generarSlots(agendaData, fecha);
+    if (!slots.length) {
+      ss.innerHTML = `<p style="font-size:.82rem;color:var(--muted);margin-top:8px">Sin horarios disponibles para este día.</p>`;
+      return;
+    }
+    ss.innerHTML = `
+      <p style="font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Hora disponible</p>
+      <div class="slots-grid">
+        ${slots.map(s => `
+          <button class="slot-pill ${s === calState.selectedSlot ? 'selected' : ''}"
+            onclick="selectSlot('${s}')">${s}</button>`).join('')}
+      </div>`;
+  }
+
+  window.selectSlot = function(slot) {
+    calState.selectedSlot = slot;
+    // Re-render slots to update selected state
+    if (calState.selectedDate) renderSlots(calState.selectedDate);
+  };
+
+  // ── SLOT GENERATION ──────────────────────────────────────
+  function generarSlots(agenda, fecha) {
+    const dayNum = new Date(fecha + 'T12:00:00').getDay(); // 0=Sun
+    const override = agenda.horarios_por_dia?.[String(dayNum)] || {};
+    const inicio = override.hora_inicio || agenda.hora_inicio || '9:00';
+    const fin    = override.hora_fin    || agenda.hora_fin    || '19:00';
+    const dur    = (agenda.duracion_sesion || 60) + (agenda.pausa_minutos || 15);
+    const breakDesde = agenda.descanso_desde || null;
+    const breakHasta = agenda.descanso_hasta || null;
+
+    const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+(m||0); };
+    const toStr = m => `${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;
+
+    let cur    = toMin(inicio);
+    const end  = toMin(fin);
+    const bD   = breakDesde ? toMin(breakDesde) : null;
+    const bH   = breakHasta ? toMin(breakHasta) : null;
+    const slots = [];
+    while (cur + (agenda.duracion_sesion||60) <= end) {
+      if (bD !== null && bH !== null && cur >= bD && cur < bH) { cur = bH; continue; }
+      slots.push(toStr(cur));
+      cur += dur;
+    }
+    return slots;
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── MOBILE MENU ───────────────────────────────────────────
+  const toggle     = document.getElementById('navToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+  toggle.addEventListener('click', () => {
+    const open = toggle.classList.toggle('open');
+    mobileMenu.classList.toggle('open', open);
+    document.body.classList.toggle('menu-open', open);
+    toggle.setAttribute('aria-expanded', open);
+  });
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      toggle.classList.remove('open');
+      mobileMenu.classList.remove('open');
+      document.body.classList.remove('menu-open');
+    });
+  });
+
+  loadPromos();
+</script>
+</body>
+</html>
