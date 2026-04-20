@@ -157,18 +157,13 @@
     if (!nombre || !email || !pass) { _setMsg(msg, 'Completa todos los campos.', 'err'); return; }
     if (pass.length < 6) { _setMsg(msg, 'La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
     btn.textContent = 'Creando cuenta…'; btn.disabled = true;
-    const { data, error } = await _sb.auth.signUp({ email, password: pass, options: { data: { nombre } } });
+    const { error } = await _sb.auth.signUp({ email, password: pass, options: { data: { nombre } } });
     if (error) {
       _setMsg(msg, error.message, 'err');
       btn.textContent = 'Crear cuenta →'; btn.disabled = false;
     } else {
-      // Si la sesión ya viene en la respuesta (sin confirmación), cerrar modal
-      if (data?.session) {
-        closeLogin();
-      } else {
-        _setMsg(msg, '¡Cuenta creada! Ya puedes ingresar.', 'ok');
-        btn.textContent = 'Crear cuenta →'; btn.disabled = false;
-      }
+      _setMsg(msg, '¡Bienvenida! Cargando…', 'ok');
+      setTimeout(() => closeLogin(), 1200);
     }
   };
 
