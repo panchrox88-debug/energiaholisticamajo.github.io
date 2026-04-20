@@ -1660,12 +1660,12 @@
               <input type="text" value="${_esc(s.color||'#c9858a')}" oninput="updateSeccion(${i},'color',this.value);if(/^#[0-9a-fA-F]{6}$/.test(this.value))this.previousElementSibling.value=this.value" style="flex:1;font-family:monospace;font-size:.8rem"/>
             </div>
           </div>
-          <div class="field"><label>Título</label><input type="text" value="${_esc(s.titulo||'')}" oninput="updateSeccion(${i},'titulo',this.value)" placeholder="Chakra Raíz"/></div>
-          <div class="field"><label>Subtítulo (nombre sánscrito, etc.)</label><input type="text" value="${_esc(s.subtitulo||'')}" oninput="updateSeccion(${i},'subtitulo',this.value)" placeholder="Muladhara"/></div>
-          <div class="field"><label>Ubicación / Elemento</label><input type="text" value="${_esc(s.ubicacion||'')}" oninput="updateSeccion(${i},'ubicacion',this.value)" placeholder="Base de la columna · Tierra"/></div>
-          <div class="field"><label>Tags (separados por coma)</label><input type="text" value="${_esc((s.tags||[]).join(', '))}" oninput="updateSeccion(${i},'tags',this.value.split(',').map(t=>t.trim()).filter(Boolean))" placeholder="Seguridad, Estabilidad, Raíces"/></div>
+          <div class="field"><label>Título</label><input type="text" value="${_esc(s.titulo||'')}" oninput="updateSeccion(${i},'titulo',this.value)" placeholder="Ej: Módulo 1, Introducción…"/></div>
+          <div class="field"><label>Subtítulo</label><input type="text" value="${_esc(s.subtitulo||'')}" oninput="updateSeccion(${i},'subtitulo',this.value)" placeholder="Ej: nombre técnico, subtema…"/></div>
+          <div class="field"><label>Ubicación / Dato extra</label><input type="text" value="${_esc(s.ubicacion||'')}" oninput="updateSeccion(${i},'ubicacion',this.value)" placeholder="Ej: Duración · Online"/></div>
+          <div class="field"><label>Tags (separados por coma)</label><input type="text" value="${_esc((s.tags||[]).join(', '))}" oninput="updateSeccion(${i},'tags',this.value.split(',').map(t=>t.trim()).filter(Boolean))" placeholder="Ej: Meditación, Respiración"/></div>
           <div class="field field-full"><label>Descripción</label><textarea oninput="updateSeccion(${i},'descripcion',this.value)" style="min-height:70px">${_esc(s.descripcion||'')}</textarea></div>
-          <div class="field field-full"><label>Afirmación</label><input type="text" value="${_esc(s.afirmacion||'')}" oninput="updateSeccion(${i},'afirmacion',this.value)" placeholder="Estoy segura, arraigada y en paz…"/></div>
+          <div class="field field-full"><label>Afirmación / Frase cierre</label><input type="text" value="${_esc(s.afirmacion||'')}" oninput="updateSeccion(${i},'afirmacion',this.value)" placeholder="Ej: Frase inspiradora para cerrar esta sección…"/></div>
           <div class="field field-full">
             <label>Imagen de la sección (opcional)</label>
             ${s.imagen ? `<div style="margin-bottom:8px"><img src="${_esc(s.imagen)}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px"/><button type="button" onclick="updateSeccion(${i},'imagen','');renderSeccionesList()" style="margin-top:4px;font-size:.72rem;background:none;border:none;color:var(--red);cursor:pointer">✕ Quitar imagen</button></div>` : ''}
