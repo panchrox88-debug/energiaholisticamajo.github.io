@@ -275,9 +275,12 @@
           ? `<span class="curso-precio">$${Number(c.precio).toLocaleString('es-CL')}</span>`
           : '';
 
-      const cta = c.link_pago
-        ? `<a href="${c.link_pago}" target="_blank" rel="noopener" class="curso-cta">${c.gratuito ? 'Acceder gratis' : 'Inscribirme'} →</a>`
-        : `<span class="curso-cta ghost" style="cursor:default">Próximamente</span>`;
+      const hasSecciones = Array.isArray(c.secciones) && c.secciones.length > 0;
+      const cta = hasSecciones
+        ? `<a href="curso.html?id=${c.id}" class="curso-cta">${c.gratuito ? 'Ver gratis →' : 'Ver curso →'}</a>`
+        : c.link_pago
+          ? `<a href="${c.link_pago}" target="_blank" rel="noopener" class="curso-cta">${c.gratuito ? 'Acceder gratis' : 'Inscribirme'} →</a>`
+          : `<span class="curso-cta ghost" style="cursor:default">Próximamente</span>`;
 
       return `
         <article class="curso-card">

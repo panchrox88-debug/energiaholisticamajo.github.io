@@ -293,6 +293,24 @@
     }
     .upload-zone:hover { border-color: var(--rose); }
     .upload-zone input[type=file] { display: none; }
+
+    /* Curso modal tabs */
+    .curso-tab {
+      background: none; border: none; padding: 10px 20px; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-size: .82rem; font-weight: 400;
+      color: var(--muted); border-bottom: 2px solid transparent;
+      margin-bottom: -1.5px; transition: color .2s, border-color .2s;
+    }
+    .curso-tab:hover { color: var(--rose); }
+    .curso-tab.active { color: var(--rose); border-bottom-color: var(--rose); font-weight: 600; }
+
+    /* Secciones editor */
+    .seccion-row { background: var(--cream); border: 1.5px solid var(--beige); border-radius: 12px; padding: 14px 16px; }
+    .seccion-row-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .seccion-row-num { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); flex: 1; }
+    .seccion-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+    .seccion-fields .field { margin-bottom: 0; }
+    .seccion-fields .field-full { grid-column: 1 / -1; }
   </style>
 </head>
 <body>
@@ -661,32 +679,76 @@
 
 <!-- ── MODAL CURSO ── -->
 <div class="modal-overlay" id="cursoModal">
-  <div class="modal-box">
-    <div class="modal-title" id="cursoModalTitle">Curso</div>
-    <input type="hidden" id="curso-id"/>
-    <div class="field"><label>Título</label><input type="text" id="curso-titulo"/></div>
-    <div class="field"><label>Descripción</label><textarea id="curso-desc" style="min-height:80px"></textarea></div>
-    <div class="field"><label>Categoría (ej: Reiki, Meditación, Círculos)</label><input type="text" id="curso-cat"/></div>
-    <div style="display:flex;gap:16px">
-      <div class="field" style="flex:1"><label>Precio (dejar vacío si es gratuito)</label><input type="number" id="curso-precio" min="0"/></div>
-      <div class="field" style="flex:1;display:flex;align-items:flex-end;padding-bottom:2px">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem">
-          <input type="checkbox" id="curso-gratuito" style="width:16px;height:16px;accent-color:var(--rose)"/> Gratuito
-        </label>
+  <div class="modal-box" style="max-width:800px;padding:0;overflow:hidden;display:flex;flex-direction:column;height:90vh">
+
+    <!-- Header fijo -->
+    <div style="padding:24px 28px 0;flex-shrink:0">
+      <div class="modal-title" id="cursoModalTitle" style="margin-bottom:16px">Curso</div>
+      <input type="hidden" id="curso-id"/>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border-bottom:1.5px solid var(--beige);margin:0 -28px;padding:0 28px">
+        <button class="curso-tab active" data-tab="info" type="button">📋 Información</button>
+        <button class="curso-tab" data-tab="secciones" type="button">🧩 Secciones <span id="seccionesBadge" style="background:var(--rose);color:white;border-radius:20px;font-size:.65rem;padding:1px 7px;margin-left:4px;display:none">0</span></button>
       </div>
     </div>
-    <div class="field"><label>Link de inscripción / pago</label><input type="text" id="curso-link" placeholder="https://..."/></div>
-    <div class="field">
-      <label>Imagen de portada</label>
-      <div id="cursoImgPreview" style="margin-bottom:8px"></div>
-      <label class="upload-zone"><input type="file" id="cursoImgInput" accept="image/*"/>📁 Subir imagen</label>
+
+    <!-- Contenido scrolleable -->
+    <div style="flex:1;overflow-y:auto;padding:20px 28px 0">
+
+      <!-- TAB: Información -->
+      <div id="cursoTabInfo" class="curso-tab-panel">
+        <div class="field"><label>Título</label><input type="text" id="curso-titulo"/></div>
+        <div class="field"><label>Descripción breve (aparece en la tarjeta de cursos)</label><textarea id="curso-desc" style="min-height:70px"></textarea></div>
+        <div class="field"><label>Introducción (texto de bienvenida en la página del curso · doble salto de línea = párrafo nuevo)</label><textarea id="curso-intro" style="min-height:90px" placeholder="Escribe aquí una introducción al curso…"></textarea></div>
+        <div style="display:flex;gap:16px">
+          <div class="field" style="flex:2"><label>Categoría</label><input type="text" id="curso-cat" placeholder="Chakras, Meditación, Círculos…"/></div>
+          <div class="field" style="flex:1">
+            <label>Color del curso</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="color" id="curso-color-pick" value="#c9858a" style="width:40px;height:36px;border:none;background:none;cursor:pointer;padding:2px"/>
+              <input type="text"  id="curso-color-text" value="#c9858a" style="flex:1;font-family:monospace;font-size:.82rem"/>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px">
+          <div class="field" style="flex:1"><label>Precio (dejar vacío si es gratuito)</label><input type="number" id="curso-precio" min="0"/></div>
+          <div class="field" style="flex:1;display:flex;align-items:flex-end;padding-bottom:2px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem">
+              <input type="checkbox" id="curso-gratuito" style="width:16px;height:16px;accent-color:var(--rose)"/> Gratuito
+            </label>
+          </div>
+        </div>
+        <div class="field"><label>Link de pago (opcional · solo si no tiene secciones)</label><input type="text" id="curso-link" placeholder="https://..."/></div>
+        <div class="field">
+          <label>Imagen de portada</label>
+          <div id="cursoImgPreview" style="margin-bottom:8px"></div>
+          <label class="upload-zone"><input type="file" id="cursoImgInput" accept="image/*"/>📁 Subir imagen</label>
+        </div>
+        <div class="field" style="margin-bottom:4px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="curso-activo" style="width:16px;height:16px;accent-color:var(--rose)" checked/> Visible en el sitio</label></div>
+      </div>
+
+      <!-- TAB: Secciones -->
+      <div id="cursoTabSecciones" class="curso-tab-panel" style="display:none">
+        <div style="background:var(--blush);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;color:var(--muted);line-height:1.7">
+          Cada sección es un módulo, tema o chakra del curso. Se mostrará con su propio color, ícono y contenido en la página del curso.
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="btn btn-ghost" id="addSeccionBtn" type="button">+ Añadir sección</button>
+        </div>
+        <div id="seccionesList" style="display:flex;flex-direction:column;gap:12px;padding-bottom:8px"></div>
+      </div>
+
     </div>
-    <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="curso-activo" style="width:16px;height:16px;accent-color:var(--rose)" checked/> Visible en el sitio</label></div>
-    <div id="cursoModalMsg" class="msg-banner"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="cancelCursoBtn">Cancelar</button>
-      <button class="btn btn-primary" id="saveCursoBtn">Guardar</button>
+
+    <!-- Footer fijo -->
+    <div style="padding:16px 28px;border-top:1.5px solid var(--beige);flex-shrink:0">
+      <div id="cursoModalMsg" class="msg-banner" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost" id="cancelCursoBtn">Cancelar</button>
+        <button class="btn btn-primary" id="saveCursoBtn">Guardar curso</button>
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -1554,17 +1616,103 @@
 
   const cursoModal = document.getElementById('cursoModal');
   let cursoImgUrl  = '';
+  let CURSO_SECCIONES = [];
+
+  /* ── Helpers secciones ── */
+  function _esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  window.updateSeccion = function(i, key, val) { CURSO_SECCIONES[i][key] = val; };
+  window.deleteSeccion = function(i) { CURSO_SECCIONES.splice(i, 1); renderSeccionesList(); updateSeccionesBadge(); };
+
+  function renderSeccionesList() {
+    const el = document.getElementById('seccionesList');
+    if (!CURSO_SECCIONES.length) {
+      el.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:.82rem;padding:20px 0">Sin secciones. Haz click en "+ Añadir sección".</p>';
+      return;
+    }
+    el.innerHTML = CURSO_SECCIONES.map((s, i) => `
+      <div class="seccion-row">
+        <div class="seccion-row-header">
+          <span style="font-size:1.4rem;line-height:1">${s.icono || '✨'}</span>
+          <span class="seccion-row-num">Sección ${i + 1}${s.titulo ? ' — ' + _esc(s.titulo) : ''}</span>
+          <button class="btn btn-danger" onclick="deleteSeccion(${i})" type="button" style="padding:4px 10px;font-size:.72rem;min-width:32px">✕</button>
+        </div>
+        <div class="seccion-fields">
+          <div class="field"><label>Ícono (emoji)</label>
+            <input type="text" value="${_esc(s.icono||'')}" oninput="updateSeccion(${i},'icono',this.value);this.closest('.seccion-row').querySelector('.seccion-row-num').previousElementSibling.textContent=this.value||'✨'" placeholder="✨" style="font-size:1.1rem"/>
+          </div>
+          <div class="field"><label>Color de sección</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="color" value="${_esc(s.color||'#c9858a')}" oninput="updateSeccion(${i},'color',this.value);this.nextElementSibling.value=this.value" style="width:36px;height:32px;border:none;background:none;cursor:pointer;padding:2px"/>
+              <input type="text" value="${_esc(s.color||'#c9858a')}" oninput="updateSeccion(${i},'color',this.value);if(/^#[0-9a-fA-F]{6}$/.test(this.value))this.previousElementSibling.value=this.value" style="flex:1;font-family:monospace;font-size:.8rem"/>
+            </div>
+          </div>
+          <div class="field"><label>Título</label><input type="text" value="${_esc(s.titulo||'')}" oninput="updateSeccion(${i},'titulo',this.value)" placeholder="Chakra Raíz"/></div>
+          <div class="field"><label>Subtítulo (nombre sánscrito, etc.)</label><input type="text" value="${_esc(s.subtitulo||'')}" oninput="updateSeccion(${i},'subtitulo',this.value)" placeholder="Muladhara"/></div>
+          <div class="field"><label>Ubicación / Elemento</label><input type="text" value="${_esc(s.ubicacion||'')}" oninput="updateSeccion(${i},'ubicacion',this.value)" placeholder="Base de la columna · Tierra"/></div>
+          <div class="field"><label>Tags (separados por coma)</label><input type="text" value="${_esc((s.tags||[]).join(', '))}" oninput="updateSeccion(${i},'tags',this.value.split(',').map(t=>t.trim()).filter(Boolean))" placeholder="Seguridad, Estabilidad, Raíces"/></div>
+          <div class="field field-full"><label>Descripción</label><textarea oninput="updateSeccion(${i},'descripcion',this.value)" style="min-height:70px">${_esc(s.descripcion||'')}</textarea></div>
+          <div class="field field-full"><label>Afirmación</label><input type="text" value="${_esc(s.afirmacion||'')}" oninput="updateSeccion(${i},'afirmacion',this.value)" placeholder="Estoy segura, arraigada y en paz…"/></div>
+        </div>
+      </div>`).join('');
+  }
+
+  /* Tabs del modal de cursos */
+  document.querySelectorAll('.curso-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.curso-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const which = tab.dataset.tab;
+      document.getElementById('cursoTabInfo').style.display      = which === 'info'      ? '' : 'none';
+      document.getElementById('cursoTabSecciones').style.display = which === 'secciones' ? '' : 'none';
+    });
+  });
+
+  function updateSeccionesBadge() {
+    const b = document.getElementById('seccionesBadge');
+    const n = CURSO_SECCIONES.length;
+    b.textContent = n;
+    b.style.display = n ? 'inline' : 'none';
+  }
+
+  document.getElementById('addSeccionBtn').addEventListener('click', () => {
+    CURSO_SECCIONES.push({ icono: '✨', color: '#c9858a', titulo: '', subtitulo: '', ubicacion: '', tags: [], descripcion: '', afirmacion: '' });
+    renderSeccionesList();
+    updateSeccionesBadge();
+    document.getElementById('seccionesList').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  /* Sync color pickers */
+  document.getElementById('curso-color-pick').addEventListener('input', function() {
+    document.getElementById('curso-color-text').value = this.value;
+  });
+  document.getElementById('curso-color-text').addEventListener('input', function() {
+    if (/^#[0-9a-fA-F]{6}$/.test(this.value)) document.getElementById('curso-color-pick').value = this.value;
+  });
 
   function openCursoModal(c = null) {
     cursoImgUrl = c?.imagen || '';
     document.getElementById('curso-id').value      = c?.id || '';
     document.getElementById('curso-titulo').value  = c?.titulo || '';
     document.getElementById('curso-desc').value    = c?.descripcion || '';
+    document.getElementById('curso-intro').value   = c?.intro || '';
     document.getElementById('curso-cat').value     = c?.categoria || '';
     document.getElementById('curso-precio').value  = c?.precio || '';
     document.getElementById('curso-gratuito').checked = !!c?.gratuito;
     document.getElementById('curso-link').value    = c?.link_pago || '';
     document.getElementById('curso-activo').checked = c ? !!c.activo : true;
+    const color = c?.color_tema || '#c9858a';
+    document.getElementById('curso-color-pick').value = color;
+    document.getElementById('curso-color-text').value = color;
+    CURSO_SECCIONES = JSON.parse(JSON.stringify(c?.secciones || []));
+    renderSeccionesList();
+    updateSeccionesBadge();
+    /* Siempre abrir en tab Información */
+    document.querySelectorAll('.curso-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.curso-tab[data-tab="info"]').classList.add('active');
+    document.getElementById('cursoTabInfo').style.display      = '';
+    document.getElementById('cursoTabSecciones').style.display = 'none';
     document.getElementById('cursoModalTitle').textContent = c ? 'Editar curso' : 'Nuevo curso';
     document.getElementById('cursoImgPreview').innerHTML = cursoImgUrl
       ? `<img src="${cursoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
@@ -1601,12 +1749,15 @@
     const body  = {
       titulo:      document.getElementById('curso-titulo').value.trim(),
       descripcion: document.getElementById('curso-desc').value.trim(),
+      intro:       document.getElementById('curso-intro').value.trim() || null,
       categoria:   document.getElementById('curso-cat').value.trim() || null,
+      color_tema:  document.getElementById('curso-color-pick').value,
       precio:      parseInt(document.getElementById('curso-precio').value) || null,
       gratuito:    document.getElementById('curso-gratuito').checked,
       link_pago:   document.getElementById('curso-link').value.trim() || null,
       activo:      document.getElementById('curso-activo').checked,
       imagen:      cursoImgUrl || null,
+      secciones:   CURSO_SECCIONES,
     };
     if (!body.titulo) { msgEl.textContent = 'El título es obligatorio'; msgEl.className = 'msg-banner err'; return; }
     try {
