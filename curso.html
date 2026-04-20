@@ -97,7 +97,8 @@
     .seccion-lateral .seccion-img-wrap { width: 42%; flex-shrink: 0; min-height: 240px; align-self: stretch; }
     .seccion-lateral-text { flex: 1; min-width: 0; }
     @media (max-width: 700px) {
-      .seccion-lateral { flex-direction: column !important; }
+      .seccion-lateral-izq { flex-direction: column !important; }
+      .seccion-lateral-der { flex-direction: column-reverse !important; }
       .seccion-lateral .seccion-img-wrap { width: 100%; min-height: 180px; max-height: 260px; }
     }
 
@@ -373,7 +374,8 @@
       } else {
         // izquierda / derecha
         const dir = pos === 'izquierda' ? 'row' : 'row-reverse';
-        bodyHTML = `<div class="seccion-lateral" style="flex-direction:${dir}">
+        const lateralClass = pos === 'izquierda' ? 'seccion-lateral seccion-lateral-izq' : 'seccion-lateral seccion-lateral-der';
+        bodyHTML = `<div class="${lateralClass}" style="flex-direction:${dir}">
           ${imgEl}
           <div class="seccion-lateral-text">${descEl}${afirEl}</div>
         </div>`;
