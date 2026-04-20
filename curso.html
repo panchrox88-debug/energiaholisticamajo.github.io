@@ -465,11 +465,19 @@
     }
   }
 </script>
+<script>
+  // Cargar inmediatamente (sin auth) para que la página no quede en blanco
+  load(null);
+</script>
 <script src="js/auth.js"></script>
 <script>
+  // Cuando auth esté lista, re-verificar acceso con el usuario real
   initAuth(async (user, perfil) => {
     updateNavAuth(user, perfil);
-    await load(user);
+    if (user) {
+      _cursoCache = null; // forzar re-check de acceso
+      await load(user);
+    }
   });
 </script>
 </body>
