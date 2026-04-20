@@ -99,6 +99,27 @@
       .seccion-lateral .seccion-img-wrap { width: 100%; min-height: 180px; max-height: 260px; }
     }
 
+    /* PAYWALL */
+    .paywall { display: flex; align-items: center; justify-content: center; padding: 60px 24px 120px; }
+    .paywall-inner { max-width: 460px; width: 100%; text-align: center; }
+    .paywall-lock { font-size: 2.8rem; margin-bottom: 16px; }
+    .paywall-title { font-family: 'Cormorant Garamond', serif; font-size: 1.9rem; font-weight: 300; color: var(--dark); margin-bottom: 10px; }
+    .paywall-title em { font-style: italic; color: var(--tema); }
+    .paywall-sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 28px; line-height: 1.9; }
+    .paywall-precio { font-family: 'Cormorant Garamond', serif; font-size: 2.6rem; font-weight: 300; color: var(--dark); margin-bottom: 20px; }
+    .paywall-buy { display: inline-flex; align-items: center; gap: 10px; background: var(--tema); color: white; padding: 14px 36px; border-radius: 40px; font-family: 'Nunito', sans-serif; font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; transition: all 0.3s; margin-bottom: 40px; }
+    .paywall-buy:hover { filter: brightness(0.88); transform: translateY(-2px); }
+    .paywall-divider { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; color: var(--muted); font-size: 0.78rem; }
+    .paywall-divider::before, .paywall-divider::after { content: ''; flex: 1; height: 1px; background: var(--beige); }
+    .paywall-form { display: flex; gap: 8px; margin-bottom: 12px; }
+    .paywall-form input { flex: 1; padding: 12px 16px; border: 1.5px solid var(--beige); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.88rem; background: white; outline: none; transition: border 0.2s; }
+    .paywall-form input:focus { border-color: var(--tema); }
+    .paywall-form button { padding: 12px 18px; background: var(--dark); color: white; border: none; border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.82rem; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
+    .paywall-form button:disabled { opacity: 0.5; cursor: default; }
+    .paywall-msg { font-size: 0.82rem; min-height: 20px; line-height: 1.6; }
+    .paywall-msg.err { color: #c9585a; }
+    .paywall-msg.ok  { color: #2d6a4f; }
+
     /* CIERRE */
     .cierre { text-align: center; padding: 100px 64px; background: linear-gradient(180deg, var(--cream) 0%, var(--blush) 100%); }
     .cierre .eyebrow { font-size: 0.65rem; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
@@ -159,17 +180,104 @@
 
   const id = new URLSearchParams(location.search).get('id');
 
+  async function sbFetch(path) {
+    return fetch(SB_URL + '/rest/v1' + path, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+  }
+
   async function load() {
     if (!id) { render404(); return; }
     try {
-      const res  = await fetch(`${SB_URL}/rest/v1/cursos?id=eq.${id}&activo=eq.true`, {
-        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-      });
+      const res  = await sbFetch(`/cursos?id=eq.${id}&activo=eq.true`);
       const rows = await res.json();
       const c = rows && rows[0];
       if (!c) { render404(); return; }
-      renderCurso(c);
+
+      const isPaid = !c.gratuito && c.precio;
+      if (isPaid) {
+        const cached = localStorage.getItem(`acceso_${id}`);
+        cached ? renderCurso(c) : renderPaywall(c);
+      } else {
+        renderCurso(c);
+      }
     } catch(e) { render404(); }
+  }
+
+  function renderPaywall(c) {
+    const tema = c.color_tema || '#c9858a';
+    document.title = c.titulo + ' — Energía Holística Majo';
+    document.documentElement.style.setProperty('--tema', tema);
+    document.getElementById('progressBar').style.background = tema;
+
+    const introHTML = c.intro ? `
+      <section class="intro">
+        ${c.intro.split(/\n\n+/).map(p => `<p>${p}</p>`).join('')}
+        <div class="intro-divider"></div>
+      </section>` : '';
+
+    document.getElementById('main').innerHTML = `
+      <section class="hero" style="background:radial-gradient(ellipse at 50% 60%, ${hex2rgba(tema,0.15)} 0%, transparent 70%), linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%)">
+        <div class="hero-inner">
+          ${c.categoria ? `<div class="hero-cat">${c.categoria}</div>` : ''}
+          <div class="hero-badge" style="background:var(--blush);color:var(--rose)">$${Number(c.precio).toLocaleString('es-CL')}</div>
+          <h1>${c.titulo.replace(/(\S+)\s*$/, '<em>$1</em>')}</h1>
+          ${c.descripcion ? `<p class="hero-desc">${c.descripcion}</p>` : ''}
+          ${c.link_pago ? `<a href="${c.link_pago}" target="_blank" class="hero-cta">Comprar acceso →</a>` : ''}
+        </div>
+      </section>
+      ${introHTML}
+      <section class="paywall">
+        <div class="paywall-inner">
+          <div class="paywall-lock">🔒</div>
+          <h2 class="paywall-title">Contenido <em>exclusivo</em></h2>
+          <p class="paywall-sub">Este curso es de acceso exclusivo para alumnas que lo han adquirido.<br>Si ya compraste el curso, ingresa el correo con el que lo adquiriste.</p>
+          <div class="paywall-divider"><span>¿Ya adquiriste el curso?</span></div>
+          <div class="paywall-form">
+            <input type="email" id="paywallEmail" placeholder="tu@correo.com"/>
+            <button id="paywallBtn">Acceder →</button>
+          </div>
+          <p class="paywall-msg" id="paywallMsg"></p>
+        </div>
+      </section>`;
+
+    document.getElementById('paywallBtn').addEventListener('click', () => checkAcceso(id, c));
+    document.getElementById('paywallEmail').addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkAcceso(id, c);
+    });
+  }
+
+  async function checkAcceso(cursoId, c) {
+    const emailInput = document.getElementById('paywallEmail');
+    const msgEl      = document.getElementById('paywallMsg');
+    const btn        = document.getElementById('paywallBtn');
+    const email      = emailInput.value.trim().toLowerCase();
+
+    if (!email || !email.includes('@')) {
+      msgEl.textContent = 'Ingresa un correo válido.';
+      msgEl.className = 'paywall-msg err';
+      return;
+    }
+    btn.textContent = 'Verificando…'; btn.disabled = true;
+
+    try {
+      const res  = await sbFetch(`/accesos?curso_id=eq.${cursoId}&email=eq.${encodeURIComponent(email)}&activo=eq.true`);
+      const rows = await res.json();
+      if (rows && rows.length > 0) {
+        localStorage.setItem(`acceso_${cursoId}`, email);
+        msgEl.textContent = '¡Acceso verificado! Cargando curso…';
+        msgEl.className = 'paywall-msg ok';
+        setTimeout(() => renderCurso(c), 900);
+      } else {
+        msgEl.textContent = 'No encontramos acceso para este correo. Verifica que sea el mismo con que adquiriste el curso.';
+        msgEl.className = 'paywall-msg err';
+        btn.textContent = 'Acceder →'; btn.disabled = false;
+      }
+    } catch(e) {
+      msgEl.textContent = 'Error de conexión. Intenta de nuevo.';
+      msgEl.className = 'paywall-msg err';
+      btn.textContent = 'Acceder →'; btn.disabled = false;
+    }
   }
 
   function hex2rgba(hex, a) {

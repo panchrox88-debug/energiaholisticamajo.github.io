@@ -689,6 +689,7 @@
       <div style="display:flex;gap:0;border-bottom:1.5px solid var(--beige);margin:0 -28px;padding:0 28px">
         <button class="curso-tab active" data-tab="info" type="button">📋 Información</button>
         <button class="curso-tab" data-tab="secciones" type="button">🧩 Secciones <span id="seccionesBadge" style="background:var(--rose);color:white;border-radius:20px;font-size:.65rem;padding:1px 7px;margin-left:4px;display:none">0</span></button>
+        <button class="curso-tab" data-tab="accesos" type="button" id="tabAccesos" style="display:none">🔑 Accesos</button>
       </div>
     </div>
 
@@ -736,6 +737,18 @@
           <button class="btn btn-ghost" id="addSeccionBtn" type="button">+ Añadir sección</button>
         </div>
         <div id="seccionesList" style="display:flex;flex-direction:column;gap:12px;padding-bottom:8px"></div>
+      </div>
+
+      <!-- TAB: Accesos -->
+      <div id="cursoTabAccesos" class="curso-tab-panel" style="display:none">
+        <div style="background:var(--blush);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;color:var(--muted);line-height:1.7">
+          Agrega el correo del alumno después de confirmar su pago. Con ese correo podrá desbloquear el curso desde cualquier dispositivo.
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <input type="email" id="accesoEmailInput" placeholder="correo@alumna.com" style="flex:1;padding:10px 14px;border:1.5px solid var(--beige);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.88rem;background:var(--cream);color:var(--dark);outline:none"/>
+          <button class="btn btn-green" id="addAccesoBtn" type="button">+ Añadir</button>
+        </div>
+        <div id="accesosList" style="display:flex;flex-direction:column;gap:8px;padding-bottom:8px"></div>
       </div>
 
     </div>
@@ -1700,8 +1713,57 @@
       const which = tab.dataset.tab;
       document.getElementById('cursoTabInfo').style.display      = which === 'info'      ? '' : 'none';
       document.getElementById('cursoTabSecciones').style.display = which === 'secciones' ? '' : 'none';
+      document.getElementById('cursoTabAccesos').style.display   = which === 'accesos'   ? '' : 'none';
+      if (which === 'accesos') loadAccesosTab();
     });
   });
+
+  /* ── Accesos ── */
+  async function loadAccesosTab() {
+    const cursoId = document.getElementById('curso-id').value;
+    const el = document.getElementById('accesosList');
+    if (!cursoId) { el.innerHTML = '<p style="font-size:.82rem;color:var(--muted);text-align:center;padding:16px 0">Guarda el curso primero para gestionar accesos.</p>'; return; }
+    el.innerHTML = '<p style="font-size:.82rem;color:var(--muted)">Cargando…</p>';
+    try {
+      const rows = await sbGet(`/accesos?curso_id=eq.${cursoId}&order=created_at.desc`);
+      if (!rows.length) {
+        el.innerHTML = '<p style="font-size:.82rem;color:var(--muted);text-align:center;padding:16px 0">Sin accesos registrados. Agrega el correo de cada alumna que haya pagado.</p>';
+        return;
+      }
+      el.innerHTML = rows.map(a => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--cream);border-radius:10px;border:1.5px solid var(--beige)" id="acceso-row-${a.id}">
+          <span style="font-size:.88rem;flex:1;word-break:break-all">${a.email}</span>
+          <span style="font-size:.7rem;color:var(--muted)">${new Date(a.created_at).toLocaleDateString('es-CL')}</span>
+          <button class="btn btn-danger" onclick="_deleteAcceso('${a.id}')" type="button" style="padding:4px 10px;font-size:.72rem">✕</button>
+        </div>`).join('');
+    } catch(e) { el.innerHTML = `<p style="color:var(--red);font-size:.82rem">${e.message}</p>`; }
+  }
+
+  document.getElementById('addAccesoBtn').addEventListener('click', async () => {
+    const cursoId = document.getElementById('curso-id').value;
+    const input   = document.getElementById('accesoEmailInput');
+    const email   = input.value.trim().toLowerCase();
+    const msgEl   = document.getElementById('cursoModalMsg');
+    if (!cursoId) { showMsg('cursoModalMsg','Guarda el curso primero','err'); return; }
+    if (!email || !email.includes('@')) { showMsg('cursoModalMsg','Ingresa un correo válido','err'); return; }
+    try {
+      await sbPost('/accesos', { curso_id: cursoId, email, activo: true });
+      input.value = '';
+      loadAccesosTab();
+      msgEl.textContent = 'Acceso añadido ✓'; msgEl.className = 'msg-banner ok';
+      setTimeout(() => msgEl.className = 'msg-banner', 2500);
+    } catch(e) { showMsg('cursoModalMsg', 'Error: ' + e.message, 'err'); }
+  });
+
+  document.getElementById('accesoEmailInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('addAccesoBtn').click();
+  });
+
+  window._deleteAcceso = async id => {
+    if (!confirm('¿Quitar acceso a esta alumna?')) return;
+    await sbDelete(`/accesos?id=eq.${id}`);
+    document.getElementById('acceso-row-' + id)?.remove();
+  };
 
   function updateSeccionesBadge() {
     const b = document.getElementById('seccionesBadge');
@@ -1742,11 +1804,15 @@
     CURSO_SECCIONES = JSON.parse(JSON.stringify(c?.secciones || []));
     renderSeccionesList();
     updateSeccionesBadge();
+    /* Mostrar tab Accesos solo si es curso de pago guardado */
+    const isPaid = c && !c.gratuito && c.precio;
+    document.getElementById('tabAccesos').style.display = (isPaid && c?.id) ? '' : 'none';
     /* Siempre abrir en tab Información */
     document.querySelectorAll('.curso-tab').forEach(t => t.classList.remove('active'));
     document.querySelector('.curso-tab[data-tab="info"]').classList.add('active');
     document.getElementById('cursoTabInfo').style.display      = '';
     document.getElementById('cursoTabSecciones').style.display = 'none';
+    document.getElementById('cursoTabAccesos').style.display   = 'none';
     document.getElementById('cursoModalTitle').textContent = c ? 'Editar curso' : 'Nuevo curso';
     document.getElementById('cursoImgPreview').innerHTML = cursoImgUrl
       ? `<img src="${cursoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
