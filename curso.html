@@ -171,7 +171,9 @@
     <span class="nav-logo-sub">Psicóloga & Terapeuta</span>
   </a>
   <a href="cursos.html" class="nav-back">← Volver a cursos</a>
-  <div id="navUserArea" style="display:flex;align-items:center;gap:14px"></div>
+  <div id="navUserArea" style="display:flex;align-items:center;gap:14px">
+    <button id="navLoginBtn" onclick="typeof openLogin!=='undefined'?openLogin():document.getElementById('authFallback').style.display='flex'" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>
+  </div>
   <a href="index.html#booking" class="nav-btn">Agendar sesión</a>
 </nav>
 
@@ -460,8 +462,6 @@
         <a href="mis-cursos.html" style="font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);text-decoration:none;font-family:'Nunito',sans-serif">Mis Cursos</a>
         <span style="font-size:0.72rem;color:var(--muted);font-family:'Nunito',sans-serif">${nombre}</span>
         <button onclick="doLogout().then(()=>location.reload())" style="background:none;border:1.5px solid var(--beige);padding:6px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);cursor:pointer">Salir</button>`;
-    } else {
-      area.innerHTML = `<button onclick="openLogin()" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>`;
     }
   }
 </script>

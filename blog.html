@@ -190,7 +190,9 @@
     <li><a href="blog.html" class="active">Blog</a></li>
     <li><a href="index.html#contact">Contacto</a></li>
   </ul>
-  <div id="navUserArea" style="display:flex;align-items:center;gap:14px"></div>
+  <div id="navUserArea" style="display:flex;align-items:center;gap:14px">
+    <button id="navLoginBtn" onclick="typeof openLogin!=='undefined'?openLogin():document.getElementById('authFallback').style.display='flex'" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>
+  </div>
   <a href="index.html#booking" class="nav-btn">Agendar sesión</a>
   <button class="nav-toggle" id="navToggle" aria-label="Menú">
     <span></span><span></span><span></span>
@@ -522,9 +524,8 @@
       // Auto-fill nombre en el form de comentarios
       const comNombreEl = document.getElementById('comNombre');
       if (comNombreEl && !comNombreEl.value) comNombreEl.value = nombre;
-    } else {
-      area.innerHTML = `<button onclick="openLogin()" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>`;
     }
+    // Si no hay usuario, el botón "Ingresar" ya está en el HTML
   }
 
   // Iniciar
