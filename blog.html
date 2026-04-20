@@ -371,7 +371,7 @@
     const lista = document.getElementById('comentarioLista');
     if (!lista) return;
     try {
-      const res  = await sbFetch(`/comentarios?post_id=eq.${postId}&order=created_at.asc`);
+      const res  = await sbFetch(`/comentarios?post_id=eq.${postId}&order=created_at.asc&select=*`);
       const rows = await res.json();
       if (!rows.length) {
         lista.innerHTML = `<p class="comentario-empty">Sé la primera en comentar ✨</p>`;
