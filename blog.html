@@ -92,6 +92,44 @@
     .share-btn:hover { border-color: var(--rose); color: var(--rose); }
     .share-btn.copied { background: var(--rose); color: white; border-color: var(--rose); }
 
+    /* ── COMENTARIOS ── */
+    .comentarios-section { margin-top: 56px; padding-top: 40px; border-top: 1px solid var(--beige); }
+    .comentarios-titulo { font-size: 0.62rem; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; }
+    .comentario-lista { display: flex; flex-direction: column; gap: 16px; margin-bottom: 40px; }
+    .comentario-card {
+      background: white; border-radius: 16px;
+      border: 1.5px solid var(--beige); padding: 18px 20px;
+    }
+    .comentario-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .comentario-nombre { font-size: 0.85rem; font-weight: 400; color: var(--dark); }
+    .comentario-fecha { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; }
+    .comentario-msg { font-size: 0.88rem; line-height: 1.85; color: var(--muted); }
+    .comentario-empty { font-size: 0.88rem; color: var(--muted); font-style: italic; margin-bottom: 32px; }
+    .comentario-form { background: white; border-radius: 16px; border: 1.5px solid var(--beige); padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+    .comentario-form-titulo { font-size: 0.85rem; font-weight: 400; color: var(--dark); margin-bottom: 2px; }
+    .comentario-form input,
+    .comentario-form textarea {
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--beige);
+      border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.88rem;
+      font-weight: 300; color: var(--dark); background: var(--cream);
+      transition: border-color 0.2s; outline: none; resize: none;
+    }
+    .comentario-form input:focus,
+    .comentario-form textarea:focus { border-color: var(--rose); }
+    .comentario-form textarea { min-height: 90px; }
+    .comentario-submit {
+      align-self: flex-end;
+      background: var(--rose); color: white; border: none;
+      border-radius: 40px; padding: 10px 28px;
+      font-family: 'Nunito', sans-serif; font-size: 0.72rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .comentario-submit:hover { background: var(--dark); }
+    .comentario-submit:disabled { background: var(--beige); color: var(--muted); cursor: not-allowed; }
+    .comentario-msg-ok { font-size: 0.82rem; color: #2d6a4f; }
+    .comentario-msg-err { font-size: 0.82rem; color: var(--red, #c9585a); }
+
     /* ── EMPTY ── */
     .empty-state { text-align: center; padding: 80px 24px; color: var(--muted); font-size: 0.9rem; line-height: 2; }
     .empty-state .big { font-size: 3rem; margin-bottom: 16px; }
@@ -261,6 +299,21 @@
           🔗 Copiar link
         </button>
       </div>
+      <div class="comentarios-section" id="comentariosSection">
+        <p class="comentarios-titulo">Conversación</p>
+        <div class="comentario-lista" id="comentarioLista">
+          <p class="comentario-empty">Cargando comentarios…</p>
+        </div>
+        <div class="comentario-form">
+          <p class="comentario-form-titulo">Deja tu comentario</p>
+          <input type="text" id="comNombre" placeholder="Tu nombre" maxlength="60"/>
+          <textarea id="comMensaje" placeholder="Escribe tu mensaje…" maxlength="800"></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <span id="comFeedback"></span>
+            <button class="comentario-submit" id="comSubmit" onclick="enviarComentario('${p.id}')">Publicar →</button>
+          </div>
+        </div>
+      </div>
       <div style="margin-top:40px">
         <button class="post-back" onclick="volverLista()" style="font-size:.82rem;padding:12px 28px;border:1.5px solid var(--beige);border-radius:40px;background:white;">
           ← Volver al blog
@@ -268,6 +321,7 @@
       </div>`;
     postEl.style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'instant' });
+    loadComentarios(p.id);
   }
 
   function volverLista() {
@@ -299,6 +353,62 @@
       btn.classList.add('copied');
       setTimeout(() => { btn.textContent = '🔗 Copiar link'; btn.classList.remove('copied'); }, 2500);
     });
+  }
+
+  // ── COMENTARIOS ──────────────────────────────────────────
+  async function loadComentarios(postId) {
+    const lista = document.getElementById('comentarioLista');
+    if (!lista) return;
+    try {
+      const res  = await sbFetch(`/comentarios?post_id=eq.${postId}&order=created_at.asc`);
+      const rows = await res.json();
+      if (!rows.length) {
+        lista.innerHTML = `<p class="comentario-empty">Sé la primera en comentar ✨</p>`;
+        return;
+      }
+      lista.innerHTML = rows.map(c => `
+        <div class="comentario-card" id="com-${c.id}">
+          <div class="comentario-header">
+            <span class="comentario-nombre">${esc(c.nombre)}</span>
+            <span class="comentario-fecha">${formatFecha(c.created_at)}</span>
+          </div>
+          <p class="comentario-msg">${esc(c.mensaje)}</p>
+        </div>`).join('');
+    } catch(e) {
+      lista.innerHTML = `<p class="comentario-empty">No se pudieron cargar los comentarios.</p>`;
+    }
+  }
+
+  window.enviarComentario = async function(postId) {
+    const nombre  = document.getElementById('comNombre')?.value.trim();
+    const mensaje = document.getElementById('comMensaje')?.value.trim();
+    const btn     = document.getElementById('comSubmit');
+    const fb      = document.getElementById('comFeedback');
+    if (!nombre) { fb.textContent = 'Escribe tu nombre.'; fb.className = 'comentario-msg-err'; return; }
+    if (!mensaje) { fb.textContent = 'Escribe un mensaje.'; fb.className = 'comentario-msg-err'; return; }
+    btn.disabled = true; btn.textContent = 'Publicando…';
+    try {
+      const res = await fetch(SB_URL + '/rest/v1/comentarios', {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ post_id: postId, nombre, mensaje })
+      });
+      if (!res.ok) throw new Error();
+      document.getElementById('comNombre').value  = '';
+      document.getElementById('comMensaje').value = '';
+      fb.textContent = '¡Comentario publicado! 🌸';
+      fb.className = 'comentario-msg-ok';
+      await loadComentarios(postId);
+      setTimeout(() => { fb.textContent = ''; }, 3000);
+    } catch(e) {
+      fb.textContent = 'Error al publicar. Intenta de nuevo.';
+      fb.className = 'comentario-msg-err';
+    }
+    btn.disabled = false; btn.textContent = 'Publicar →';
+  };
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   // Mobile menu

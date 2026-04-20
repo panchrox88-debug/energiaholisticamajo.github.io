@@ -2023,11 +2023,20 @@
       const rows = await sbGet('/blog_posts?order=created_at.desc');
       const el   = document.getElementById('blogList');
       if (!rows.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No hay entradas todavía.</p>'; return; }
+      // Cargar conteo de comentarios para cada post
+      const counts = {};
+      try {
+        const cRows = await sbGet('/comentarios?select=post_id');
+        cRows.forEach(c => { counts[c.post_id] = (counts[c.post_id] || 0) + 1; });
+      } catch(e) { /* tabla puede no existir aún */ }
+
       el.innerHTML = rows.map(p => `
         <div class="card" id="blog-card-${p.id}">
           <div class="card-row">
             <div class="card-body">
-              <div class="card-name">${p.titulo} ${p.publicado ? '<span style="background:#d4edda;color:#2d6a4f;padding:2px 8px;border-radius:10px;font-size:.65rem">Publicado</span>' : '<span style="background:var(--beige);color:var(--muted);padding:2px 8px;border-radius:10px;font-size:.65rem">Borrador</span>'}</div>
+              <div class="card-name">${p.titulo} ${p.publicado ? '<span style="background:#d4edda;color:#2d6a4f;padding:2px 8px;border-radius:10px;font-size:.65rem">Publicado</span>' : '<span style="background:var(--beige);color:var(--muted);padding:2px 8px;border-radius:10px;font-size:.65rem">Borrador</span>'}
+                ${counts[p.id] ? `<span style="background:var(--blush);color:var(--rose);padding:2px 8px;border-radius:10px;font-size:.65rem;cursor:pointer" onclick="toggleComentariosAdmin('${p.id}')">💬 ${counts[p.id]}</span>` : ''}
+              </div>
               <div class="card-sub">${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
               ${p.resumen ? `<div class="card-text">${p.resumen.slice(0,100)}…</div>` : ''}
             </div>
@@ -2036,9 +2045,38 @@
               <button class="btn btn-danger" onclick="window._deletePost('${p.id}')">×</button>
             </div>
           </div>
+          <div id="coms-${p.id}" style="display:none;padding:12px 16px 16px;border-top:1px solid var(--beige)"></div>
         </div>`).join('');
     } catch(e) { showMsg('blogMsg', 'Error: ' + e.message, 'err'); }
   }
+
+  window.toggleComentariosAdmin = async function(postId) {
+    const el = document.getElementById(`coms-${postId}`);
+    if (!el) return;
+    if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = '<p style="font-size:.8rem;color:var(--muted)">Cargando…</p>';
+    try {
+      const rows = await sbGet(`/comentarios?post_id=eq.${postId}&order=created_at.asc`);
+      if (!rows.length) { el.innerHTML = '<p style="font-size:.8rem;color:var(--muted)">Sin comentarios.</p>'; return; }
+      el.innerHTML = rows.map(c => `
+        <div id="com-admin-${c.id}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--beige)">
+          <div style="flex:1">
+            <div style="font-size:.78rem;font-weight:400;color:var(--dark)">${c.nombre} <span style="color:var(--muted);font-weight:300;font-size:.7rem;margin-left:6px">${new Date(c.created_at).toLocaleDateString('es-CL')}</span></div>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:3px">${c.mensaje}</div>
+          </div>
+          <button class="btn btn-danger" style="flex-shrink:0;padding:4px 10px;font-size:.7rem" onclick="window._deleteCom('${c.id}')">×</button>
+        </div>`).join('');
+    } catch(e) { el.innerHTML = '<p style="font-size:.8rem;color:var(--red)">Error al cargar.</p>'; }
+  };
+
+  window._deleteCom = async function(id) {
+    if (!confirm('¿Eliminar este comentario?')) return;
+    try {
+      await sbDelete(`/comentarios?id=eq.${id}`);
+      document.getElementById(`com-admin-${id}`)?.remove();
+    } catch(e) { alert('Error al eliminar: ' + e.message); }
+  };
 
   const blogModal = document.getElementById('blogModal');
   let blogImgUrl  = '';
