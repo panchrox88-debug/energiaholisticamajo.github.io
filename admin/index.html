@@ -336,6 +336,8 @@
       <div class="sidebar-link" data-tab="portada">🖼️ Portada</div>
       <div class="sidebar-link" data-tab="sobremi">🌸 Sobre mí</div>
       <div class="sidebar-link" data-tab="banner">🎯 Banner</div>
+      <div class="sidebar-link" data-tab="cursos">📚 Cursos</div>
+      <div class="sidebar-link" data-tab="blog">✍️ Blog</div>
     </nav>
     <main class="content">
 
@@ -546,6 +548,22 @@
         </div>
       </div>
 
+      <!-- CURSOS -->
+      <div id="tab-cursos" class="section">
+        <h2 class="section-title">Cursos</h2>
+        <div id="cursosMsg" class="msg-banner"></div>
+        <button class="btn btn-primary" id="addCursoBtn" style="margin-bottom:16px">+ Nuevo curso</button>
+        <div id="cursosList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+      </div>
+
+      <!-- BLOG -->
+      <div id="tab-blog" class="section">
+        <h2 class="section-title">Blog</h2>
+        <div id="blogMsg" class="msg-banner"></div>
+        <button class="btn btn-primary" id="addPostBtn" style="margin-bottom:16px">+ Nueva entrada</button>
+        <div id="blogList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+      </div>
+
       <!-- PORTADA -->
       <div id="tab-portada" class="section">
         <h2 class="section-title">Fotos de portada</h2>
@@ -637,6 +655,59 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" id="cancelServicioBtn">Cancelar</button>
       <button class="btn btn-primary" id="saveServicioBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL CURSO ── -->
+<div class="modal-overlay" id="cursoModal">
+  <div class="modal-box">
+    <div class="modal-title" id="cursoModalTitle">Curso</div>
+    <input type="hidden" id="curso-id"/>
+    <div class="field"><label>Título</label><input type="text" id="curso-titulo"/></div>
+    <div class="field"><label>Descripción</label><textarea id="curso-desc" style="min-height:80px"></textarea></div>
+    <div class="field"><label>Categoría (ej: Reiki, Meditación, Círculos)</label><input type="text" id="curso-cat"/></div>
+    <div style="display:flex;gap:16px">
+      <div class="field" style="flex:1"><label>Precio (dejar vacío si es gratuito)</label><input type="number" id="curso-precio" min="0"/></div>
+      <div class="field" style="flex:1;display:flex;align-items:flex-end;padding-bottom:2px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem">
+          <input type="checkbox" id="curso-gratuito" style="width:16px;height:16px;accent-color:var(--rose)"/> Gratuito
+        </label>
+      </div>
+    </div>
+    <div class="field"><label>Link de inscripción / pago</label><input type="text" id="curso-link" placeholder="https://..."/></div>
+    <div class="field">
+      <label>Imagen de portada</label>
+      <div id="cursoImgPreview" style="margin-bottom:8px"></div>
+      <label class="upload-zone"><input type="file" id="cursoImgInput" accept="image/*"/>📁 Subir imagen</label>
+    </div>
+    <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="curso-activo" style="width:16px;height:16px;accent-color:var(--rose)" checked/> Visible en el sitio</label></div>
+    <div id="cursoModalMsg" class="msg-banner"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelCursoBtn">Cancelar</button>
+      <button class="btn btn-primary" id="saveCursoBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL BLOG ── -->
+<div class="modal-overlay" id="blogModal">
+  <div class="modal-box" style="max-width:680px">
+    <div class="modal-title" id="blogModalTitle">Entrada de blog</div>
+    <input type="hidden" id="blog-id"/>
+    <div class="field"><label>Título</label><input type="text" id="blog-titulo"/></div>
+    <div class="field"><label>Resumen (se muestra en la lista, opcional)</label><textarea id="blog-resumen" style="min-height:60px"></textarea></div>
+    <div class="field"><label>Contenido (usa doble salto de línea para separar párrafos)</label><textarea id="blog-contenido" style="min-height:200px"></textarea></div>
+    <div class="field">
+      <label>Imagen destacada</label>
+      <div id="blogImgPreview" style="margin-bottom:8px"></div>
+      <label class="upload-zone"><input type="file" id="blogImgInput" accept="image/*"/>📁 Subir imagen</label>
+    </div>
+    <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="blog-publicado" style="width:16px;height:16px;accent-color:var(--rose)"/> Publicado (visible en el sitio)</label></div>
+    <div id="blogModalMsg" class="msg-banner"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelBlogBtn">Cancelar</button>
+      <button class="btn btn-primary" id="saveBlogBtn">Guardar</button>
     </div>
   </div>
 </div>
@@ -791,6 +862,8 @@
       if (link.dataset.tab === 'portada')     { loadPortada(); loadHeroTextoAdmin(); }
       if (link.dataset.tab === 'sobremi')     loadSobreMiAdmin();
       if (link.dataset.tab === 'banner')      loadBannerAdmin();
+      if (link.dataset.tab === 'cursos')      loadCursosAdmin();
+      if (link.dataset.tab === 'blog')        loadBlogAdmin();
     });
   });
 
@@ -1454,6 +1527,192 @@
       loadSobreMiAdmin();
     } catch(e) { showMsg('sobremiMsg', 'Error: ' + e.message, 'err'); }
     this.value = '';
+  });
+
+  // ── CURSOS ────────────────────────────────────────────────
+  async function loadCursosAdmin() {
+    try {
+      const rows = await sbGet('/cursos?order=orden.asc,created_at.desc');
+      const el   = document.getElementById('cursosList');
+      if (!rows.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No hay cursos todavía.</p>'; return; }
+      el.innerHTML = rows.map(c => `
+        <div class="card" id="curso-card-${c.id}">
+          <div class="card-row">
+            <div class="card-body">
+              <div class="card-name">${c.titulo} ${c.gratuito ? '<span style="background:#d4edda;color:#2d6a4f;padding:2px 8px;border-radius:10px;font-size:.65rem">Gratuito</span>' : (c.precio ? '<span style="background:var(--beige);color:var(--muted);padding:2px 8px;border-radius:10px;font-size:.65rem">$' + Number(c.precio).toLocaleString('es-CL') + '</span>' : '')}</div>
+              <div class="card-sub">${c.categoria || 'Sin categoría'} · ${c.activo ? 'Visible' : 'Oculto'}</div>
+              ${c.descripcion ? `<div class="card-text">${c.descripcion.slice(0,120)}…</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-ghost" onclick="window._editCurso(${JSON.stringify(c).replace(/"/g,'&quot;')})">Editar</button>
+              <button class="btn btn-danger" onclick="window._deleteCurso('${c.id}')">×</button>
+            </div>
+          </div>
+        </div>`).join('');
+    } catch(e) { showMsg('cursosMsg', 'Error: ' + e.message, 'err'); }
+  }
+
+  const cursoModal = document.getElementById('cursoModal');
+  let cursoImgUrl  = '';
+
+  function openCursoModal(c = null) {
+    cursoImgUrl = c?.imagen || '';
+    document.getElementById('curso-id').value      = c?.id || '';
+    document.getElementById('curso-titulo').value  = c?.titulo || '';
+    document.getElementById('curso-desc').value    = c?.descripcion || '';
+    document.getElementById('curso-cat').value     = c?.categoria || '';
+    document.getElementById('curso-precio').value  = c?.precio || '';
+    document.getElementById('curso-gratuito').checked = !!c?.gratuito;
+    document.getElementById('curso-link').value    = c?.link_pago || '';
+    document.getElementById('curso-activo').checked = c ? !!c.activo : true;
+    document.getElementById('cursoModalTitle').textContent = c ? 'Editar curso' : 'Nuevo curso';
+    document.getElementById('cursoImgPreview').innerHTML = cursoImgUrl
+      ? `<img src="${cursoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
+      : '';
+    document.getElementById('cursoModalMsg').className = 'msg-banner';
+    cursoModal.classList.add('open');
+  }
+
+  document.getElementById('addCursoBtn').addEventListener('click', () => openCursoModal());
+  document.getElementById('cancelCursoBtn').addEventListener('click', () => cursoModal.classList.remove('open'));
+  window._editCurso = c => openCursoModal(c);
+  window._deleteCurso = async id => {
+    if (!confirm('¿Eliminar este curso?')) return;
+    await sbDelete(`/cursos?id=eq.${id}`);
+    document.getElementById('curso-card-' + id)?.remove();
+    showMsg('cursosMsg', 'Curso eliminado');
+  };
+
+  document.getElementById('cursoImgInput').addEventListener('change', async function() {
+    const msgEl = document.getElementById('cursoModalMsg');
+    msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
+    try {
+      cursoImgUrl = await uploadFile(this.files[0], 'cursos');
+      document.getElementById('cursoImgPreview').innerHTML = `<img src="${cursoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`;
+      msgEl.textContent = 'Imagen subida ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 2500);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    this.value = '';
+  });
+
+  document.getElementById('saveCursoBtn').addEventListener('click', async () => {
+    const msgEl = document.getElementById('cursoModalMsg');
+    const id    = document.getElementById('curso-id').value;
+    const body  = {
+      titulo:      document.getElementById('curso-titulo').value.trim(),
+      descripcion: document.getElementById('curso-desc').value.trim(),
+      categoria:   document.getElementById('curso-cat').value.trim() || null,
+      precio:      parseInt(document.getElementById('curso-precio').value) || null,
+      gratuito:    document.getElementById('curso-gratuito').checked,
+      link_pago:   document.getElementById('curso-link').value.trim() || null,
+      activo:      document.getElementById('curso-activo').checked,
+      imagen:      cursoImgUrl || null,
+    };
+    if (!body.titulo) { msgEl.textContent = 'El título es obligatorio'; msgEl.className = 'msg-banner err'; return; }
+    try {
+      if (id) {
+        await sbPatch(`/cursos?id=eq.${id}`, body);
+      } else {
+        const all = await sbGet('/cursos?select=orden&order=orden.desc&limit=1');
+        body.orden = (all[0]?.orden || 0) + 1;
+        await sbPost('/cursos', body);
+      }
+      cursoModal.classList.remove('open');
+      showMsg('cursosMsg', 'Curso guardado ✓');
+      loadCursosAdmin();
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+  });
+
+  // ── BLOG ──────────────────────────────────────────────────
+  async function loadBlogAdmin() {
+    try {
+      const rows = await sbGet('/blog_posts?order=created_at.desc');
+      const el   = document.getElementById('blogList');
+      if (!rows.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No hay entradas todavía.</p>'; return; }
+      el.innerHTML = rows.map(p => `
+        <div class="card" id="blog-card-${p.id}">
+          <div class="card-row">
+            <div class="card-body">
+              <div class="card-name">${p.titulo} ${p.publicado ? '<span style="background:#d4edda;color:#2d6a4f;padding:2px 8px;border-radius:10px;font-size:.65rem">Publicado</span>' : '<span style="background:var(--beige);color:var(--muted);padding:2px 8px;border-radius:10px;font-size:.65rem">Borrador</span>'}</div>
+              <div class="card-sub">${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
+              ${p.resumen ? `<div class="card-text">${p.resumen.slice(0,100)}…</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-ghost" onclick="window._editPost(${JSON.stringify(p).replace(/"/g,'&quot;')})">Editar</button>
+              <button class="btn btn-danger" onclick="window._deletePost('${p.id}')">×</button>
+            </div>
+          </div>
+        </div>`).join('');
+    } catch(e) { showMsg('blogMsg', 'Error: ' + e.message, 'err'); }
+  }
+
+  const blogModal = document.getElementById('blogModal');
+  let blogImgUrl  = '';
+
+  function openBlogModal(p = null) {
+    blogImgUrl = p?.imagen || '';
+    document.getElementById('blog-id').value        = p?.id || '';
+    document.getElementById('blog-titulo').value    = p?.titulo || '';
+    document.getElementById('blog-resumen').value   = p?.resumen || '';
+    document.getElementById('blog-contenido').value = p?.contenido || '';
+    document.getElementById('blog-publicado').checked = !!p?.publicado;
+    document.getElementById('blogModalTitle').textContent = p ? 'Editar entrada' : 'Nueva entrada';
+    document.getElementById('blogImgPreview').innerHTML = blogImgUrl
+      ? `<img src="${blogImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
+      : '';
+    document.getElementById('blogModalMsg').className = 'msg-banner';
+    blogModal.classList.add('open');
+  }
+
+  document.getElementById('addPostBtn').addEventListener('click', () => openBlogModal());
+  document.getElementById('cancelBlogBtn').addEventListener('click', () => blogModal.classList.remove('open'));
+  window._editPost = p => openBlogModal(p);
+  window._deletePost = async id => {
+    if (!confirm('¿Eliminar esta entrada?')) return;
+    await sbDelete(`/blog_posts?id=eq.${id}`);
+    document.getElementById('blog-card-' + id)?.remove();
+    showMsg('blogMsg', 'Entrada eliminada');
+  };
+
+  document.getElementById('blogImgInput').addEventListener('change', async function() {
+    const msgEl = document.getElementById('blogModalMsg');
+    msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
+    try {
+      blogImgUrl = await uploadFile(this.files[0], 'blog');
+      document.getElementById('blogImgPreview').innerHTML = `<img src="${blogImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`;
+      msgEl.textContent = 'Imagen subida ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 2500);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    this.value = '';
+  });
+
+  document.getElementById('saveBlogBtn').addEventListener('click', async () => {
+    const msgEl = document.getElementById('blogModalMsg');
+    const id    = document.getElementById('blog-id').value;
+    const titulo = document.getElementById('blog-titulo').value.trim();
+    const contenido = document.getElementById('blog-contenido').value.trim();
+    if (!titulo || !contenido) { msgEl.textContent = 'Título y contenido son obligatorios'; msgEl.className = 'msg-banner err'; return; }
+    // Auto-slug desde título
+    const slug = titulo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + Date.now();
+    const body = {
+      titulo,
+      resumen:   document.getElementById('blog-resumen').value.trim() || null,
+      contenido,
+      imagen:    blogImgUrl || null,
+      publicado: document.getElementById('blog-publicado').checked,
+      slug:      id ? undefined : slug, // solo en creación
+    };
+    if (id) delete body.slug;
+    try {
+      if (id) {
+        await sbPatch(`/blog_posts?id=eq.${id}`, body);
+      } else {
+        await sbPost('/blog_posts', body);
+      }
+      blogModal.classList.remove('open');
+      showMsg('blogMsg', 'Entrada guardada ✓');
+      loadBlogAdmin();
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
   });
 
   window._delSobreFoto = async id => {
