@@ -471,7 +471,7 @@
     grid.innerHTML = todasLasPromos.map(p => {
       const color = p.color_tema || 'var(--rose)';
       const imgHTML = p.imagen
-        ? `<img class="promo-img" src="${p.imagen}" alt="${esc(p.titulo)}" loading="lazy"/>`
+        ? `<img class="promo-img" src="${p.imagen}" alt="${esc(p.titulo)}" loading="lazy" style="object-position:${p.imagen_posicion||'50% 50%'}"/>`
         : `<div class="promo-img-placeholder" style="background:linear-gradient(135deg,${color}33,${color}66)">🎁</div>`;
 
       const items = Array.isArray(p.items) ? p.items : [];
@@ -529,7 +529,7 @@
     serviceIdxs = items.map((item,i) => item.tipo === 'servicio' ? i : -1).filter(i => i >= 0);
 
     const heroHTML = p.imagen
-      ? `<img class="preview-hero" src="${p.imagen}" alt="${esc(p.titulo)}"/>`
+      ? `<img class="preview-hero" src="${p.imagen}" alt="${esc(p.titulo)}" style="object-position:${p.imagen_posicion||'50% 50%'}"/>`
       : `<div class="preview-hero-placeholder" style="background:linear-gradient(135deg,${color}33,${color}66)">🎁</div>`;
 
     const itemsHTML = items.length ? `

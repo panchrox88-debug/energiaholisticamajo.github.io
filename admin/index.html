@@ -756,7 +756,15 @@
         <div class="field"><label>Link de pago (opcional · solo si no tiene secciones)</label><input type="text" id="curso-link" placeholder="https://..."/></div>
         <div class="field">
           <label>Imagen de portada</label>
-          <div id="cursoImgPreview" style="margin-bottom:8px"></div>
+          <div id="cursoImgPositioner" style="display:none;margin-bottom:8px">
+            <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">↔ Arrastra para reposicionar</div>
+            <div id="cursoPosDrag" style="width:100%;height:160px;overflow:hidden;position:relative;cursor:grab;user-select:none;border-radius:10px;border:1.5px solid var(--beige)">
+              <img id="cursoPosPrev" src="" style="width:100%;height:100%;object-fit:cover;object-position:50% 50%;pointer-events:none;display:block"/>
+              <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
+                <div style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.85);box-shadow:0 0 0 1px rgba(0,0,0,0.3)"></div>
+              </div>
+            </div>
+          </div>
           <label class="upload-zone"><input type="file" id="cursoImgInput" accept="image/*"/>📁 Subir imagen</label>
         </div>
         <div class="field" style="margin-bottom:4px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="curso-activo" style="width:16px;height:16px;accent-color:var(--rose)" checked/> Visible en el sitio</label></div>
@@ -819,7 +827,15 @@
     </div>
     <div class="field">
       <label>Imagen de portada</label>
-      <div id="promoImgPreview" style="margin-bottom:8px"></div>
+      <div id="promoImgPositioner" style="display:none;margin-bottom:8px">
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">↔ Arrastra para reposicionar</div>
+        <div id="promoPosDrag" style="width:100%;height:160px;overflow:hidden;position:relative;cursor:grab;user-select:none;border-radius:10px;border:1.5px solid var(--beige)">
+          <img id="promoPosPrev" src="" style="width:100%;height:100%;object-fit:cover;object-position:50% 50%;pointer-events:none;display:block"/>
+          <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
+            <div style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.85);box-shadow:0 0 0 1px rgba(0,0,0,0.3)"></div>
+          </div>
+        </div>
+      </div>
       <label class="upload-zone"><input type="file" id="promoImgInput" accept="image/*"/>📁 Subir imagen</label>
     </div>
     <div class="field">
@@ -1781,7 +1797,48 @@
 
   const cursoModal = document.getElementById('cursoModal');
   let cursoImgUrl  = '';
+  let cursoImgPos  = '50% 50%';
   let CURSO_SECCIONES = [];
+
+  // ── Drag para reposicionar imagen ────────────────────────
+  function _showPosDrag(posId, imgId, url, pos) {
+    const wrap = document.getElementById(posId);
+    const img  = document.getElementById(imgId);
+    if (!wrap || !img) return;
+    if (url) { wrap.style.display = ''; img.src = url; img.style.objectPosition = pos; }
+    else      { wrap.style.display = 'none'; }
+  }
+
+  function _initDrag(boxId, imgId, onUpdate) {
+    const box = document.getElementById(boxId);
+    const img = document.getElementById(imgId);
+    if (!box || !img) return;
+    let down = false, sx, sy, spx, spy;
+    function start(cx, cy) {
+      down = true; sx = cx; sy = cy;
+      const p = img.style.objectPosition.split(' ');
+      spx = parseFloat(p[0])||50; spy = parseFloat(p[1])||50;
+      box.style.cursor = 'grabbing';
+    }
+    function move(cx, cy) {
+      if (!down) return;
+      const r = box.getBoundingClientRect();
+      const nx = Math.max(0, Math.min(100, spx - (cx-sx)/r.width*150));
+      const ny = Math.max(0, Math.min(100, spy - (cy-sy)/r.height*150));
+      const pos = `${Math.round(nx)}% ${Math.round(ny)}%`;
+      img.style.objectPosition = pos;
+      onUpdate(pos);
+    }
+    function end() { down = false; box.style.cursor = 'grab'; }
+    box.addEventListener('mousedown', e => { start(e.clientX, e.clientY); e.preventDefault(); });
+    document.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+    document.addEventListener('mouseup', end);
+    box.addEventListener('touchstart', e => { start(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, { passive:false });
+    document.addEventListener('touchmove', e => { if(down){ move(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); } }, { passive:false });
+    document.addEventListener('touchend', end);
+  }
+  _initDrag('cursoPosDrag', 'cursoPosPrev', v => { cursoImgPos = v; });
+  _initDrag('promoPosDrag', 'promoPosPrev', v => { promoImgPos = v; });
 
   /* ── Helpers secciones ── */
   function _esc(s) {
@@ -1938,6 +1995,7 @@
 
   function openCursoModal(c = null) {
     cursoImgUrl = c?.imagen || '';
+    cursoImgPos = c?.imagen_posicion || '50% 50%';
     document.getElementById('curso-id').value      = c?.id || '';
     document.getElementById('curso-titulo').value  = c?.titulo || '';
     document.getElementById('curso-desc').value    = c?.descripcion || '';
@@ -1964,9 +2022,7 @@
     document.getElementById('cursoTabSecciones').style.display = 'none';
     document.getElementById('cursoTabAccesos').style.display   = 'none';
     document.getElementById('cursoModalTitle').textContent = c ? 'Editar curso' : 'Nuevo curso';
-    document.getElementById('cursoImgPreview').innerHTML = cursoImgUrl
-      ? `<img src="${cursoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
-      : '';
+    _showPosDrag('cursoImgPositioner', 'cursoPosPrev', cursoImgUrl, cursoImgPos);
     document.getElementById('cursoModalMsg').className = 'msg-banner';
     cursoModal.classList.add('open');
   }
@@ -1997,7 +2053,8 @@
     msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
     try {
       cursoImgUrl = await uploadFile(this.files[0], 'cursos');
-      document.getElementById('cursoImgPreview').innerHTML = `<img src="${cursoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`;
+      cursoImgPos = '50% 50%';
+      _showPosDrag('cursoImgPositioner', 'cursoPosPrev', cursoImgUrl, cursoImgPos);
       msgEl.textContent = 'Imagen subida ✓';
       setTimeout(() => msgEl.className = 'msg-banner', 2500);
     } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
@@ -2019,6 +2076,7 @@
       link_pago:        document.getElementById('curso-link').value.trim() || null,
       activo:           document.getElementById('curso-activo').checked,
       imagen:           cursoImgUrl || null,
+      imagen_posicion:  cursoImgPos,
       secciones:        CURSO_SECCIONES,
     };
     if (!body.titulo) {
@@ -2424,6 +2482,7 @@
   // ── PROMOCIONES ───────────────────────────────────────────
   let PROMO_ITEMS = [];       // items actuales en el modal
   let promoImgUrl = '';       // URL de imagen subida
+  let promoImgPos = '50% 50%'; // Posición de la imagen
   let PROMO_SERVICIOS = [];   // cache de servicios para el selector
   let PROMO_CURSOS    = [];   // cache de cursos para el selector
 
@@ -2540,7 +2599,8 @@
   });
 
   async function openPromoModal(p = null) {
-    promoImgUrl   = p?.imagen || '';
+    promoImgUrl = p?.imagen || '';
+    promoImgPos = p?.imagen_posicion || '50% 50%';
     PROMO_ITEMS   = JSON.parse(JSON.stringify(p?.items || []));
     document.getElementById('promo-id').value            = p?.id || '';
     document.getElementById('promo-titulo').value        = p?.titulo || '';
@@ -2553,9 +2613,7 @@
     document.getElementById('promo-color-pick').value = color;
     document.getElementById('promo-color-text').value = color;
     document.getElementById('promoModalTitle').textContent = p ? 'Editar promoción' : 'Nueva promoción';
-    document.getElementById('promoImgPreview').innerHTML = promoImgUrl
-      ? `<img src="${promoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
-      : '';
+    _showPosDrag('promoImgPositioner', 'promoPosPrev', promoImgUrl, promoImgPos);
     document.getElementById('promoModalMsg').className = 'msg-banner';
     renderPromoItems();
     await _loadPromoSelects();
@@ -2585,8 +2643,8 @@
     msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
     try {
       promoImgUrl = await uploadFile(this.files[0], 'promociones');
-      document.getElementById('promoImgPreview').innerHTML =
-        `<img src="${promoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`;
+      promoImgPos = '50% 50%';
+      _showPosDrag('promoImgPositioner', 'promoPosPrev', promoImgUrl, promoImgPos);
       msgEl.textContent = 'Imagen subida ✓';
       setTimeout(() => msgEl.className = 'msg-banner', 2500);
     } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
@@ -2605,6 +2663,7 @@
       titulo,
       descripcion:       document.getElementById('promo-desc').value.trim() || null,
       imagen:            promoImgUrl || null,
+      imagen_posicion:   promoImgPos,
       color_tema:        document.getElementById('promo-color-pick').value,
       items:             PROMO_ITEMS,
       precio_referencial: parseInt(document.getElementById('promo-precio-ref').value) || null,

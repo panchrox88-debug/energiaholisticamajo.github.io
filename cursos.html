@@ -389,7 +389,7 @@
 
     grid.innerHTML = pagina.map(c => {
       const imgHTML = c.imagen
-        ? `<img class="curso-img" src="${c.imagen}" alt="${c.titulo}" loading="lazy"/>`
+        ? `<img class="curso-img" src="${c.imagen}" alt="${c.titulo}" loading="lazy" style="object-position:${c.imagen_posicion||'50% 50%'}"/>`
         : `<div class="curso-img-placeholder">✨</div>`;
 
       const tags = [
