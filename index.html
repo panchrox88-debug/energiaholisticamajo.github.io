@@ -1072,13 +1072,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .detail-precio {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.35rem; font-weight: 400; color: var(--dark);
-      display: none; align-items: baseline; gap: 8px;
-    }
-    .detail-precio.visible { display: flex; }
-    .detail-precio s { opacity: 0.45; font-size: 0.85em; }
     .detail-divider {
       width: 50px; height: 1px;
       background: var(--rose-lt);
@@ -1164,18 +1157,31 @@
     .service-modal.no-slides .service-detail { padding: 36px 40px; }
 
     .detail-cta-btn {
-      display: inline-flex; align-items: center; gap: 8px;
+      display: inline-flex; align-items: center; gap: 0;
       background: var(--rose); color: white;
-      padding: 10px 20px; border-radius: 100px;
+      padding: 10px 22px; border-radius: 100px;
       text-decoration: none; white-space: nowrap; flex-shrink: 0;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1rem; letter-spacing: 0.04em;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.82rem; font-weight: 400; letter-spacing: 0.12em;
+      text-transform: uppercase;
       transition: all 0.3s; border: none; cursor: pointer;
     }
     .detail-cta-btn:hover {
       background: var(--dark); transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(122, 84, 84, 0.2);
     }
+    .detail-btn-sep {
+      display: inline-block;
+      width: 1px; height: 14px;
+      background: rgba(255,255,255,0.4);
+      margin: 0 12px;
+    }
+    .detail-btn-precio {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: none;
+    }
+    .detail-btn-precio s { opacity: 0.55; font-weight: 300; margin-right: 5px; }
 
     @media (max-width: 900px) {
       .service-modal { padding: 16px; }
@@ -1540,7 +1546,6 @@
               <h3 class="detail-title" id="detailTitle">—</h3>
             </div>
             <div class="detail-header-actions">
-              <span class="detail-precio" id="detailPrecio"></span>
               <button class="detail-cta-btn" id="detailReserve">Reservar →</button>
               <button class="detail-close" id="detailClose" aria-label="Cerrar">✕</button>
             </div>
@@ -2581,21 +2586,21 @@
       // Título
       detailTitle.textContent = data.titulo;
 
-      // Precio en el panel
-      const precioEl = document.getElementById('detailPrecio');
+      // Precio dentro del botón Reservar
+      const btn = document.getElementById('detailReserve');
       if (data.precio) {
         const original  = Number(data.precio);
         const descuento = BANNER_DESCUENTO || 0;
+        let precioHTML;
         if (descuento > 0) {
           const final = Math.round(original * (1 - descuento / 100) / 1000) * 1000;
-          precioEl.innerHTML = `<s>$${original.toLocaleString('es-CL')}</s> $${final.toLocaleString('es-CL')}`;
+          precioHTML = `<s>$${original.toLocaleString('es-CL')}</s> $${final.toLocaleString('es-CL')}`;
         } else {
-          precioEl.innerHTML = `$${original.toLocaleString('es-CL')}`;
+          precioHTML = `$${original.toLocaleString('es-CL')}`;
         }
-        precioEl.classList.add('visible');
+        btn.innerHTML = `Reservar <span class="detail-btn-sep"></span><span class="detail-btn-precio">${precioHTML}</span>`;
       } else {
-        precioEl.innerHTML = '';
-        precioEl.classList.remove('visible');
+        btn.textContent = 'Reservar →';
       }
 
       // Slides
