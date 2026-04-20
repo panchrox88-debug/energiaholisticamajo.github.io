@@ -398,8 +398,8 @@
         const lateralClass = pos === 'izquierda' ? 'seccion-lateral seccion-lateral-izq' : 'seccion-lateral seccion-lateral-der';
         bodyHTML = `<div class="${lateralClass}" style="flex-direction:${dir}">
           ${imgEl}
-          <div class="seccion-lateral-text">${descEl}${afirEl}</div>
-        </div>${videoEl}`;
+          <div class="seccion-lateral-text">${descEl}</div>
+        </div>${videoEl}${afirEl}`;
       }
 
       function videoEmbed(url) {
