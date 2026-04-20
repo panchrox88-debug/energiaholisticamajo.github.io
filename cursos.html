@@ -337,25 +337,33 @@
 
   function buildFiltros() {
     const cats = [...new Set(todosLosCursos.map(c => c.categoria).filter(Boolean))];
-    const el   = document.getElementById('filtros');
-    el.innerHTML = `<button class="filtro-btn active" data-cat="">Todos</button>` +
-      cats.map(c => `<button class="filtro-btn" data-cat="${c}">${c}</button>`).join('');
+    const hayGratuitos = todosLosCursos.some(c => c.gratuito);
+    const el = document.getElementById('filtros');
+    el.innerHTML =
+      `<button class="filtro-btn active" data-cat="" data-gratis="">Todos</button>` +
+      (hayGratuitos ? `<button class="filtro-btn" data-cat="" data-gratis="1">Gratuitos</button>` : '') +
+      cats.map(c => `<button class="filtro-btn" data-cat="${c}" data-gratis="">$${c}</button>`.replace('$',''))
+          .join('');
     el.querySelectorAll('.filtro-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         el.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        catActual = btn.dataset.cat;
+        catActual  = btn.dataset.cat;
+        soloGratis = btn.dataset.gratis === '1';
         paginaActual = 1;
         renderCursos();
       });
     });
   }
 
+  let soloGratis = false;
+
   function renderCursos() {
     const grid = document.getElementById('cursosGrid');
-    const lista = catActual
+    let lista = catActual
       ? todosLosCursos.filter(c => c.categoria === catActual)
       : todosLosCursos;
+    if (soloGratis) lista = lista.filter(c => c.gratuito);
 
     if (!lista.length) {
       grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
