@@ -153,7 +153,18 @@
     .card-name { font-size: 0.95rem; font-weight: 600; color: var(--dark); }
     .card-sub  { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
     .card-text { font-size: 0.85rem; color: var(--dark); margin-top: 6px; line-height: 1.6; }
-    .card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .card-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+    /* Toggle switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 7px; }
+    .toggle-switch { position: relative; width: 42px; height: 23px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider { position: absolute; inset: 0; background: #ddd; border-radius: 23px; cursor: pointer; transition: background 0.25s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 17px; height: 17px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
+    .toggle-switch input:checked + .toggle-slider { background: var(--rose); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(19px); }
+    .toggle-label { font-size: 0.72rem; color: var(--muted); min-width: 42px; }
+    .btn-icon { background: transparent; border: 1.5px solid var(--beige); color: var(--muted); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, color 0.2s; }
+    .btn-icon:hover { border-color: var(--rose); color: var(--rose); }
 
     /* Toggle switch */
     .toggle-wrap { display: flex; align-items: center; gap: 8px; }
@@ -757,14 +768,9 @@
     <!-- Footer fijo -->
     <div style="padding:16px 28px;border-top:1.5px solid var(--beige);flex-shrink:0">
       <div id="cursoModalMsg" class="msg-banner" style="margin-bottom:12px"></div>
-      <div style="display:flex;gap:10px;justify-content:space-between;align-items:center">
-        <a id="previewCursoBtn" href="#" target="_blank"
-           style="font-size:0.78rem;color:var(--muted);text-decoration:none;display:none;gap:6px;align-items:center"
-           title="Ver cómo queda el curso (sin publicar)">👁 Vista previa</a>
-        <div style="display:flex;gap:10px">
-          <button class="btn btn-ghost" id="cancelCursoBtn">Cancelar</button>
-          <button class="btn btn-primary" id="saveCursoBtn">Guardar curso</button>
-        </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost" id="cancelCursoBtn">Cancelar</button>
+        <button class="btn btn-primary" id="saveCursoBtn">Guardar curso</button>
       </div>
     </div>
 
@@ -1621,10 +1627,18 @@
           <div class="card-row">
             <div class="card-body">
               <div class="card-name">${c.titulo} ${c.gratuito ? '<span style="background:#d4edda;color:#2d6a4f;padding:2px 8px;border-radius:10px;font-size:.65rem">Gratuito</span>' : (c.precio ? '<span style="background:var(--beige);color:var(--muted);padding:2px 8px;border-radius:10px;font-size:.65rem">$' + Number(c.precio).toLocaleString('es-CL') + '</span>' : '')}</div>
-              <div class="card-sub">${c.categoria || 'Sin categoría'} · ${c.activo ? 'Visible' : 'Oculto'}</div>
+              <div class="card-sub">${c.categoria || 'Sin categoría'}</div>
               ${c.descripcion ? `<div class="card-text">${c.descripcion.slice(0,120)}…</div>` : ''}
             </div>
             <div class="card-actions">
+              <label class="toggle-wrap" title="${c.activo ? 'Publicado' : 'Oculto'}">
+                <div class="toggle-switch">
+                  <input type="checkbox" ${c.activo ? 'checked' : ''} onchange="window._toggleActivo('${c.id}', this.checked, this)"/>
+                  <span class="toggle-slider"></span>
+                </div>
+                <span class="toggle-label" id="toggle-label-${c.id}">${c.activo ? 'Visible' : 'Oculto'}</span>
+              </label>
+              <button class="btn-icon" title="Vista previa" onclick="window.open('../curso.html?id=${c.id}&preview=1','_blank')">👁</button>
               <button class="btn btn-ghost" onclick="window._editCurso(${JSON.stringify(c).replace(/"/g,'&quot;')})">Editar</button>
               <button class="btn btn-danger" onclick="window._deleteCurso('${c.id}')">×</button>
             </div>
@@ -1846,13 +1860,6 @@
     document.getElementById('cursoTabSecciones').style.display = 'none';
     document.getElementById('cursoTabAccesos').style.display   = 'none';
     document.getElementById('cursoModalTitle').textContent = c ? 'Editar curso' : 'Nuevo curso';
-    const prevBtn = document.getElementById('previewCursoBtn');
-    if (c?.id) {
-      prevBtn.href = `../curso.html?id=${c.id}&preview=1`;
-      prevBtn.style.display = 'flex';
-    } else {
-      prevBtn.style.display = 'none';
-    }
     document.getElementById('cursoImgPreview').innerHTML = cursoImgUrl
       ? `<img src="${cursoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
       : '';
@@ -1863,6 +1870,17 @@
   document.getElementById('addCursoBtn').addEventListener('click', () => openCursoModal());
   document.getElementById('cancelCursoBtn').addEventListener('click', () => cursoModal.classList.remove('open'));
   window._editCurso = c => openCursoModal(c);
+
+  window._toggleActivo = async (id, checked, input) => {
+    const label = document.getElementById(`toggle-label-${id}`);
+    try {
+      await sbPatch(`/cursos?id=eq.${id}`, { activo: checked });
+      if (label) label.textContent = checked ? 'Visible' : 'Oculto';
+    } catch(e) {
+      input.checked = !checked; // revertir si falla
+      showMsg('cursosMsg', 'Error al actualizar: ' + e.message, 'err');
+    }
+  };
   window._deleteCurso = async id => {
     if (!confirm('¿Eliminar este curso?')) return;
     await sbDelete(`/cursos?id=eq.${id}`);
@@ -1914,36 +1932,16 @@
       savedId = rows[0]?.id;
       document.getElementById('curso-id').value = savedId;
       // mostrar botón preview ahora que tenemos ID
-      const prevBtn = document.getElementById('previewCursoBtn');
-      prevBtn.href = `../curso.html?id=${savedId}&preview=1`;
-      prevBtn.style.display = 'flex';
     }
     loadCursosAdmin();
-    if (!silent) {
-      cursoModal.classList.remove('open');
-      showMsg('cursosMsg', 'Curso guardado ✓');
-    } else {
-      msgEl.textContent = 'Cambios guardados ✓'; msgEl.className = 'msg-banner ok';
-      setTimeout(() => { msgEl.textContent = ''; msgEl.className = 'msg-banner'; }, 2500);
-    }
+    cursoModal.classList.remove('open');
+    showMsg('cursosMsg', 'Curso guardado ✓');
     return savedId;
   }
 
   document.getElementById('saveCursoBtn').addEventListener('click', async () => {
     try { await saveCurso(); }
     catch(e) { if (e.message !== 'titulo requerido') document.getElementById('cursoModalMsg').textContent = 'Error: ' + e.message; }
-  });
-
-  document.getElementById('previewCursoBtn').addEventListener('click', async e => {
-    e.preventDefault();
-    const msgEl = document.getElementById('cursoModalMsg');
-    msgEl.textContent = 'Guardando…'; msgEl.className = 'msg-banner ok';
-    try {
-      const savedId = await saveCurso({ silent: true });
-      window.open(`../curso.html?id=${savedId}&preview=1`, '_blank');
-    } catch(e) {
-      if (e.message !== 'titulo requerido') { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
-    }
   });
 
   // ── BLOG ──────────────────────────────────────────────────
