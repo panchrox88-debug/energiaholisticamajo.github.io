@@ -377,7 +377,7 @@
       }
 
       return `
-        <section class="seccion" id="sec-${i}" style="${i%2===1?'background:var(--beige)':''}">
+        <section class="seccion" id="sec-${i}" style="background:${i%2===1 ? hex2rgba(color, 0.07) : 'var(--cream)'}">
           <div class="seccion-inner">
             <div class="seccion-visual">
               <div class="seccion-circle" style="background:radial-gradient(circle at 35% 35%, ${color}, ${color}cc); --c:${color}; box-shadow:0 16px 48px ${glow}">
