@@ -1636,7 +1636,7 @@
                   <input type="checkbox" ${c.activo ? 'checked' : ''} onchange="window._toggleActivo('${c.id}', this.checked, this)"/>
                   <span class="toggle-slider"></span>
                 </div>
-                <span class="toggle-label" id="toggle-label-${c.id}">${c.activo ? 'Visible' : 'Oculto'}</span>
+                <span class="toggle-label" id="toggle-label-${c.id}">${c.activo ? 'Publicado' : 'Oculto'}</span>
               </label>
               <button class="btn-icon" title="Vista previa" onclick="window.open('../curso.html?id=${c.id}&preview=1','_blank')">👁</button>
               <button class="btn btn-ghost" onclick="window._editCurso(${JSON.stringify(c).replace(/"/g,'&quot;')})">Editar</button>
@@ -1875,7 +1875,7 @@
     const label = document.getElementById(`toggle-label-${id}`);
     try {
       await sbPatch(`/cursos?id=eq.${id}`, { activo: checked });
-      if (label) label.textContent = checked ? 'Visible' : 'Oculto';
+      if (label) label.textContent = checked ? 'Publicado' : 'Oculto';
     } catch(e) {
       input.checked = !checked; // revertir si falla
       showMsg('cursosMsg', 'Error al actualizar: ' + e.message, 'err');
