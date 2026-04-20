@@ -396,7 +396,7 @@
             <div class="seccion-visual">
               ${s.icono_img
                 ? `<div class="seccion-icono-img" style="border-color:${color};background:${hex2rgba(color,0.06)}">
-                     <img src="${s.icono_img}" alt="${s.titulo||''}"/>
+                     <img src="${s.icono_img}" alt="${s.titulo||''}" style="object-position:${s.icono_img_pos||'50% 50%'}"/>
                    </div>`
                 : `<div class="seccion-circle" style="background:radial-gradient(circle at 35% 35%, ${color}, ${color}cc); --c:${color}; box-shadow:0 16px 48px ${glow}">
                      <div class="seccion-icono">${s.icono||'✦'}</div>

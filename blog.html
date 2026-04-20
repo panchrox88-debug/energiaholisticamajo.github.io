@@ -248,7 +248,7 @@
 
     el.innerHTML = rows.map(p => {
       const imgHTML = p.imagen
-        ? `<img class="post-card-img" src="${p.imagen}" alt="${p.titulo}" loading="lazy"/>`
+        ? `<img class="post-card-img" src="${p.imagen}" alt="${p.titulo}" loading="lazy" style="object-position:${p.imagen_posicion||'50% 50%'}"/>`
         : `<div class="post-card-img-placeholder">🌸</div>`;
       return `
         <article class="post-card" onclick="verPost('${p.id}')">
@@ -285,7 +285,7 @@
 
     const postEl = document.getElementById('vistaPost');
     const imgHTML = p.imagen
-      ? `<img class="post-hero-img" src="${p.imagen}" alt="${p.titulo}"/>`
+      ? `<img class="post-hero-img" src="${p.imagen}" alt="${p.titulo}" style="object-position:${p.imagen_posicion||'50% 50%'}"/>`
       : '';
 
     // Convertir saltos de línea a párrafos

@@ -893,7 +893,15 @@
     <div class="field"><label>Contenido (usa doble salto de línea para separar párrafos)</label><textarea id="blog-contenido" style="min-height:200px"></textarea></div>
     <div class="field">
       <label>Imagen destacada</label>
-      <div id="blogImgPreview" style="margin-bottom:8px"></div>
+      <div id="blogImgPositioner" style="display:none;margin-bottom:8px">
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">↔ Arrastra para reposicionar</div>
+        <div id="blogPosDrag" style="width:100%;height:160px;overflow:hidden;position:relative;cursor:grab;user-select:none;border-radius:10px;border:1.5px solid var(--beige)">
+          <img id="blogPosPrev" src="" style="width:100%;height:100%;object-fit:cover;object-position:50% 50%;pointer-events:none;display:block"/>
+          <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
+            <div style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.85);box-shadow:0 0 0 1px rgba(0,0,0,0.3)"></div>
+          </div>
+        </div>
+      </div>
       <label class="upload-zone"><input type="file" id="blogImgInput" accept="image/*"/>📁 Subir imagen</label>
     </div>
     <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="blog-publicado" style="width:16px;height:16px;accent-color:var(--rose)"/> Publicado (visible en el sitio)</label></div>
@@ -1839,6 +1847,17 @@
   }
   _initDrag('cursoPosDrag', 'cursoPosPrev', v => { cursoImgPos = v; });
   _initDrag('promoPosDrag', 'promoPosPrev', v => { promoImgPos = v; });
+  _initDrag('blogPosDrag',  'blogPosPrev',  v => { blogImgPos  = v; });
+
+  // Drag dinámico para íconos de secciones (se re-inicializa tras cada render)
+  window._initSeccionDrags = function() {
+    CURSO_SECCIONES.forEach((s, i) => {
+      if (!s.icono_img) return;
+      _initDrag(`icono-drag-${i}`, `icono-prev-${i}`, v => {
+        CURSO_SECCIONES[i].icono_img_pos = v;
+      });
+    });
+  };
 
   /* ── Helpers secciones ── */
   function _esc(s) {
@@ -1863,6 +1882,7 @@
     try {
       const url = await uploadFile(input.files[0], 'cursos');
       CURSO_SECCIONES[i].icono_img = url;
+      CURSO_SECCIONES[i].icono_img_pos = '50% 50%';
       renderSeccionesList();
       msgEl.textContent = 'Imagen subida ✓';
       setTimeout(() => msgEl.className = 'msg-banner', 2500);
@@ -1902,9 +1922,14 @@
           <div class="field">
             <label>Imagen visual (reemplaza el círculo con emoji)</label>
             ${s.icono_img ? `
-              <div style="margin-bottom:8px;position:relative;width:100px;height:100px">
-                <img src="${_esc(s.icono_img)}" style="width:100px;height:100px;object-fit:contain;border-radius:50%;border:2px solid var(--beige);background:var(--cream)"/>
-                <button type="button" onclick="updateSeccion(${i},'icono_img','');renderSeccionesList()" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer;line-height:1">✕</button>
+              <div style="margin-bottom:8px">
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">↔ Arrastra para reposicionar</div>
+                <div style="position:relative;display:inline-block">
+                  <div id="icono-drag-${i}" style="width:100px;height:100px;border-radius:50%;overflow:hidden;cursor:grab;user-select:none;border:2px solid var(--beige)">
+                    <img id="icono-prev-${i}" src="${_esc(s.icono_img)}" style="width:100%;height:100%;object-fit:cover;object-position:${s.icono_img_pos||'50% 50%'};pointer-events:none;display:block"/>
+                  </div>
+                  <button type="button" onclick="updateSeccion(${i},'icono_img','');renderSeccionesList()" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer;line-height:1">✕</button>
+                </div>
               </div>` : ''}
             <label class="upload-zone" style="padding:10px">
               <input type="file" accept="image/*" onchange="uploadSeccionIconoImg(this,${i})"/>
@@ -1953,6 +1978,7 @@
           </div>
         </div>
       </div>`).join('');
+    if (typeof _initSeccionDrags === 'function') _initSeccionDrags();
   }
 
   /* Tabs del modal de cursos */
@@ -2348,18 +2374,18 @@
 
   const blogModal = document.getElementById('blogModal');
   let blogImgUrl  = '';
+  let blogImgPos  = '50% 50%';
 
   function openBlogModal(p = null) {
     blogImgUrl = p?.imagen || '';
+    blogImgPos = p?.imagen_posicion || '50% 50%';
     document.getElementById('blog-id').value        = p?.id || '';
     document.getElementById('blog-titulo').value    = p?.titulo || '';
     document.getElementById('blog-resumen').value   = p?.resumen || '';
     document.getElementById('blog-contenido').value = p?.contenido || '';
     document.getElementById('blog-publicado').checked = !!p?.publicado;
     document.getElementById('blogModalTitle').textContent = p ? 'Editar entrada' : 'Nueva entrada';
-    document.getElementById('blogImgPreview').innerHTML = blogImgUrl
-      ? `<img src="${blogImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
-      : '';
+    _showPosDrag('blogImgPositioner', 'blogPosPrev', blogImgUrl, blogImgPos);
     document.getElementById('blogModalMsg').className = 'msg-banner';
     blogModal.classList.add('open');
   }
@@ -2379,7 +2405,8 @@
     msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
     try {
       blogImgUrl = await uploadFile(this.files[0], 'blog');
-      document.getElementById('blogImgPreview').innerHTML = `<img src="${blogImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`;
+      blogImgPos = '50% 50%';
+      _showPosDrag('blogImgPositioner', 'blogPosPrev', blogImgUrl, blogImgPos);
       msgEl.textContent = 'Imagen subida ✓';
       setTimeout(() => msgEl.className = 'msg-banner', 2500);
     } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
@@ -2398,7 +2425,8 @@
       titulo,
       resumen:   document.getElementById('blog-resumen').value.trim() || null,
       contenido,
-      imagen:    blogImgUrl || null,
+      imagen:           blogImgUrl || null,
+      imagen_posicion:  blogImgPos,
       publicado: document.getElementById('blog-publicado').checked,
       slug:      id ? undefined : slug, // solo en creación
     };
