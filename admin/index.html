@@ -547,6 +547,10 @@
       </select>
     </div>
     <div class="field">
+      <label>Precio (en pesos chilenos, sin puntos ni signos)</label>
+      <input type="number" id="svc-precio" placeholder="30000" min="0"/>
+    </div>
+    <div class="field">
       <label>Imágenes del carrusel</label>
       <div id="svcSlides" class="img-grid"></div>
       <label class="upload-zone" style="margin-top:10px">
@@ -881,7 +885,7 @@
           <div class="card-row">
             <div class="card-body">
               <div class="card-name">${s.emoji} ${s.titulo}</div>
-              <div class="card-sub">${s.modo} · ${(s.slides||[]).length} imágenes</div>
+              <div class="card-sub">${s.modo} · ${(s.slides||[]).length} imágenes${s.precio ? ' · $' + s.precio.toLocaleString('es-CL') : ''}</div>
               <div class="card-text">${s.descripcion || ''}</div>
             </div>
             <div class="card-actions">
@@ -909,6 +913,7 @@
     document.getElementById('svc-titulo').value      = svc?.titulo || '';
     document.getElementById('svc-desc').value        = svc?.descripcion || '';
     document.getElementById('svc-modo').value        = svc?.modo || 'Presencial';
+    document.getElementById('svc-precio').value      = svc?.precio || '';
     servicioModalTitle.textContent = svc ? 'Editar servicio' : 'Nuevo servicio';
     document.getElementById('svc-id').disabled = !!svc; // no editar ID si existe
     renderSvcSlides();
@@ -962,11 +967,13 @@
     const titulo = document.getElementById('svc-titulo').value.trim();
     const descripcion = document.getElementById('svc-desc').value.trim();
     const modo  = document.getElementById('svc-modo').value;
+    const precioRaw = document.getElementById('svc-precio').value;
+    const precio = precioRaw ? parseInt(precioRaw, 10) : null;
     const msgEl = document.getElementById('servicioModalMsg');
 
     if (!id || !titulo) { msgEl.textContent = 'ID y título son obligatorios'; msgEl.className = 'msg-banner err'; return; }
 
-    const body = { id, emoji, titulo, descripcion, modo, slides: svcCurrentSlides };
+    const body = { id, emoji, titulo, descripcion, modo, slides: svcCurrentSlides, precio };
     try {
       if (idOriginal) {
         await sbPatch(`/servicios?id=eq.${idOriginal}`, body);

@@ -138,6 +138,7 @@
     body.menu-open { overflow: hidden; }
     .nav-logo {
       display: flex; flex-direction: column; line-height: 1.1;
+      text-decoration: none; cursor: pointer;
     }
     .nav-logo-main {
       font-family: 'Cormorant Garamond', serif;
@@ -334,11 +335,12 @@
 
     .about-badge {
       position: absolute; bottom: 32px; right: -24px;
-      background: white;
+      background: #ffffff;
       border-radius: 16px;
       padding: 16px 24px;
-      box-shadow: 0 8px 32px rgba(201,133,138,0.2);
+      box-shadow: 0 8px 32px rgba(201,133,138,0.25);
       display: flex; align-items: center; gap: 12px;
+      z-index: 10;
     }
     .badge-num {
       font-family: 'Cormorant Garamond', serif;
@@ -374,7 +376,9 @@
     /* About card carousel */
     .about-card-slide {
       position: absolute; inset: 0;
-      background-size: cover; background-position: center;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
       opacity: 0; transition: opacity 1.8s ease-in-out;
       border-radius: inherit;
     }
@@ -435,6 +439,18 @@
       margin-bottom: 12px;
     }
     .service-card p { font-size: 0.82rem; line-height: 1.9; color: var(--muted); }
+    .service-price {
+      display: block; margin-top: 14px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem; font-weight: 400;
+      color: var(--dark); letter-spacing: 0.02em;
+    }
+    .service-price small {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.68rem; font-weight: 300;
+      color: var(--muted); letter-spacing: 0.1em;
+      text-transform: uppercase; margin-right: 3px;
+    }
     .service-mode {
       display: inline-block;
       margin-top: 20px;
@@ -1381,10 +1397,10 @@
 
   <!-- NAV -->
   <nav>
-    <div class="nav-logo">
+    <a href="#" class="nav-logo">
       <span class="nav-logo-main">Energía Holística Majo</span>
       <span class="nav-logo-sub">Psicóloga & Terapeuta</span>
-    </div>
+    </a>
     <ul class="nav-links">
       <li><a href="#about">Sobre mí</a></li>
       <li><a href="#services">Servicios</a></li>
@@ -2432,10 +2448,14 @@
         const card = document.createElement('div');
         card.className = 'service-card reveal';
         card.dataset.serviceId = s.id;
+        const precioHTML = s.precio
+          ? `<span class="service-price"><small>desde</small>$${Number(s.precio).toLocaleString('es-CL')}</span>`
+          : '';
         card.innerHTML = `
           <div class="service-icon">${s.emoji}</div>
           <h3>${s.titulo}</h3>
           <p>${s.descripcion}</p>
+          ${precioHTML}
           <span class="service-mode">${s.modo}</span>
           <div class="service-card-cta">Ver más →</div>`;
         preloadSlides(s.slides).then(valid => {
