@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manual de los Chakras — Energía Holística Majo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --rose:    #c9858a;
+      --rose-lt: #dba8ac;
+      --blush:   #f0dada;
+      --cream:   #faf5f0;
+      --beige:   #ede0d4;
+      --gold:    #c9a96e;
+      --gold-lt: #e8d5b0;
+      --dark:    #3d2b2b;
+      --muted:   #7a5c5c;
+      --white:   #ffffff;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--dark); font-family: 'Nunito', sans-serif; font-weight: 300; overflow-x: hidden; }
+
+    /* ── NAV ── */
+    nav { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 22px 64px; background: rgba(250,245,240,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(201,133,138,0.12); z-index: 100; }
+    .nav-logo { display: flex; flex-direction: column; line-height: 1.1; text-decoration: none; }
+    .nav-logo-main { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.12em; color: var(--rose); }
+    .nav-logo-sub  { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); }
+    .nav-back { display: inline-flex; align-items: center; gap: 8px; font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+    .nav-back:hover { color: var(--rose); }
+    .nav-btn { background: var(--rose); color: white; border: none; padding: 10px 28px; font-family: 'Nunito', sans-serif; font-size: 0.72rem; font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase; border-radius: 40px; cursor: pointer; transition: background 0.3s; text-decoration: none; }
+    .nav-btn:hover { background: var(--dark); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 64px 80px;
+      background: radial-gradient(ellipse at 50% 60%, rgba(201,133,138,0.15) 0%, transparent 70%),
+                  linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a96e' fill-opacity='0.06'%3E%3Cpath d='M30 30l15-15M30 30L15 15M30 30l15 15M30 30L15 45'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 720px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--blush); color: var(--rose); padding: 6px 18px; border-radius: 20px; font-size: 0.68rem; letter-spacing: 0.25em; text-transform: uppercase; margin-bottom: 28px; }
+    .hero h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 300; line-height: 1.1; color: var(--dark); margin-bottom: 8px; }
+    .hero h1 em { font-style: italic; color: var(--rose); }
+    .hero-sub { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.2rem, 2.5vw, 1.6rem); font-weight: 300; font-style: italic; color: var(--muted); margin-bottom: 32px; }
+    .hero-desc { font-size: 0.95rem; line-height: 2; color: var(--muted); max-width: 540px; margin: 0 auto 48px; }
+    .hero-cta { display: inline-flex; align-items: center; gap: 10px; background: var(--rose); color: white; padding: 14px 36px; border-radius: 40px; font-family: 'Nunito', sans-serif; font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; transition: all 0.3s; }
+    .hero-cta:hover { background: var(--dark); transform: translateY(-2px); }
+    .hero-scroll { margin-top: 60px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .hero-scroll span { font-size: 0.62rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); }
+    .hero-scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, var(--gold), transparent); animation: scrollPulse 2s ease-in-out infinite; }
+    @keyframes scrollPulse { 0%,100%{opacity:.3;transform:scaleY(1)} 50%{opacity:1;transform:scaleY(1.2)} }
+
+    /* ── INTRO ── */
+    .intro { max-width: 760px; margin: 0 auto; padding: 100px 64px; text-align: center; }
+    .intro .eyebrow { font-size: 0.65rem; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; }
+    .intro h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 300; color: var(--dark); line-height: 1.3; margin-bottom: 28px; }
+    .intro h2 em { font-style: italic; color: var(--rose); }
+    .intro p { font-size: 0.95rem; line-height: 2.1; color: var(--muted); margin-bottom: 18px; }
+    .intro-divider { width: 60px; height: 1px; background: var(--gold-lt); margin: 40px auto; }
+
+    /* ── ÍNDICE ── */
+    .indice { background: var(--beige); padding: 80px 64px; }
+    .indice-inner { max-width: 900px; margin: 0 auto; }
+    .indice .eyebrow { font-size: 0.65rem; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 16px; }
+    .indice h3 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: var(--dark); text-align: center; margin-bottom: 48px; }
+    .indice-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+    .indice-item { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 10px; background: white; border-radius: 16px; text-decoration: none; transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; border: 2px solid transparent; }
+    .indice-item:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .indice-dot { width: 36px; height: 36px; border-radius: 50%; }
+    .indice-num { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+    .indice-name { font-family: 'Cormorant Garamond', serif; font-size: 0.85rem; font-weight: 400; color: var(--dark); text-align: center; line-height: 1.3; }
+
+    /* ── CHAKRA SECTION ── */
+    .chakra-section { padding: 100px 64px; position: relative; overflow: hidden; }
+    .chakra-section:nth-child(even) { background: var(--beige); }
+    .chakra-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .chakra-section:nth-child(odd) .chakra-inner { direction: rtl; }
+    .chakra-section:nth-child(odd) .chakra-inner > * { direction: ltr; }
+
+    .chakra-visual { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .chakra-circle-wrap { position: relative; }
+    .chakra-circle {
+      width: 240px; height: 240px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px;
+      box-shadow: 0 20px 60px var(--chakra-glow, rgba(201,133,138,0.3));
+      position: relative;
+    }
+    .chakra-circle::before {
+      content: '';
+      position: absolute; inset: -12px;
+      border-radius: 50%;
+      border: 1px solid var(--chakra-color, var(--rose));
+      opacity: 0.25;
+    }
+    .chakra-circle::after {
+      content: '';
+      position: absolute; inset: -24px;
+      border-radius: 50%;
+      border: 1px solid var(--chakra-color, var(--rose));
+      opacity: 0.12;
+    }
+    .chakra-symbol { font-size: 4.5rem; line-height: 1; }
+    .chakra-sanskrit { font-family: 'Cormorant Garamond', serif; font-size: 0.85rem; font-style: italic; color: white; opacity: 0.8; letter-spacing: 0.1em; }
+    .chakra-num-badge { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 300; color: var(--chakra-color, var(--rose)); }
+
+    .chakra-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .chakra-tag { padding: 5px 14px; border-radius: 20px; font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; border: 1px solid var(--chakra-color, var(--rose)); color: var(--chakra-color, var(--rose)); background: white; }
+
+    .chakra-content {}
+    .chakra-eyebrow { font-size: 0.62rem; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 12px; }
+    .chakra-nombre { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.2rem, 3.5vw, 3rem); font-weight: 300; color: var(--dark); line-height: 1.2; margin-bottom: 6px; }
+    .chakra-nombre em { font-style: italic; }
+    .chakra-ubicacion { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+    .chakra-ubicacion::before { content: '✦'; color: var(--gold); font-size: 0.6rem; }
+    .chakra-divider { width: 40px; height: 1px; background: var(--gold-lt); margin-bottom: 24px; }
+    .chakra-desc { font-size: 0.92rem; line-height: 2.1; color: var(--muted); margin-bottom: 28px; }
+
+    .chakra-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+    .chakra-col-title { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+    .chakra-col ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .chakra-col li { font-size: 0.82rem; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+    .chakra-col li::before { content: '·'; color: var(--chakra-color, var(--rose)); font-size: 1rem; flex-shrink: 0; margin-top: -1px; }
+
+    .chakra-afirmacion {
+      background: var(--cream);
+      border-left: 3px solid var(--chakra-color, var(--rose));
+      padding: 16px 20px; border-radius: 0 12px 12px 0;
+    }
+    .chakra-afirmacion-label { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+    .chakra-afirmacion p { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-style: italic; color: var(--dark); line-height: 1.6; }
+
+    /* ── CIERRE ── */
+    .cierre { text-align: center; padding: 100px 64px; background: linear-gradient(180deg, var(--cream) 0%, var(--blush) 100%); }
+    .cierre .eyebrow { font-size: 0.65rem; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; }
+    .cierre h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 300; color: var(--dark); margin-bottom: 24px; line-height: 1.3; }
+    .cierre h2 em { font-style: italic; color: var(--rose); }
+    .cierre p { font-size: 0.95rem; line-height: 2; color: var(--muted); max-width: 560px; margin: 0 auto 40px; }
+    .cierre-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary-cta { display: inline-flex; align-items: center; gap: 8px; background: var(--rose); color: white; padding: 14px 36px; border-radius: 40px; font-family: 'Nunito', sans-serif; font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; transition: all 0.3s; }
+    .btn-primary-cta:hover { background: var(--dark); transform: translateY(-2px); }
+    .btn-ghost-cta { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--rose); padding: 14px 36px; border-radius: 40px; font-family: 'Nunito', sans-serif; font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; border: 1.5px solid var(--rose); transition: all 0.3s; }
+    .btn-ghost-cta:hover { background: var(--rose); color: white; }
+
+    /* ── FOOTER ── */
+    footer { background: var(--dark); color: rgba(255,255,255,0.6); text-align: center; padding: 40px 24px; font-size: 0.75rem; letter-spacing: 0.1em; }
+    footer strong { color: var(--rose-lt); }
+
+    /* ── PROGRESS BAR ── */
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--rose); z-index: 200; transition: width 0.1s; width: 0%; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 18px 24px; }
+      .hero { padding: 120px 24px 60px; }
+      .intro { padding: 60px 24px; }
+      .indice { padding: 60px 24px; }
+      .indice-grid { grid-template-columns: repeat(4, 1fr); }
+      .chakra-section { padding: 60px 24px; }
+      .chakra-inner { grid-template-columns: 1fr; gap: 40px; }
+      .chakra-section:nth-child(odd) .chakra-inner { direction: ltr; }
+      .chakra-circle { width: 180px; height: 180px; }
+      .chakra-symbol { font-size: 3.5rem; }
+      .chakra-cols { grid-template-columns: 1fr; gap: 16px; }
+      .cierre { padding: 60px 24px; }
+    }
+    @media (max-width: 500px) {
+      .indice-grid { grid-template-columns: repeat(4, 1fr); }
+      .indice-name { font-size: 0.72rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Nav -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="nav-logo-main">Energía Holística Majo</span>
+    <span class="nav-logo-sub">Psicóloga & Terapeuta</span>
+  </a>
+  <a href="cursos.html" class="nav-back">← Volver a cursos</a>
+  <a href="index.html#booking" class="nav-btn">Agendar sesión</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">✨ Curso gratuito</div>
+    <h1>Manual secreto<br>de los <em>chakras</em></h1>
+    <p class="hero-sub">Una guía completa para despertar tu energía interior</p>
+    <p class="hero-desc">Los chakras son centros de energía que gobiernan cada aspecto de tu vida: tu seguridad, tu creatividad, tu poder personal, tu amor, tu voz, tu intuición y tu conexión espiritual. Aprende a conocerlos, equilibrarlos y activarlos.</p>
+    <a href="#chakra-1" class="hero-cta">Comenzar el recorrido ✦</a>
+    <div class="hero-scroll">
+      <span>Descubre</span>
+      <div class="hero-scroll-line"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Intro -->
+<section class="intro">
+  <p class="eyebrow">¿Qué son los chakras?</p>
+  <h2>Centros de <em>energía vital</em><br>en tu cuerpo</h2>
+  <p>La palabra "chakra" proviene del sánscrito y significa <strong>rueda</strong> o <strong>disco</strong>. Son vórtices de energía que se distribuyen a lo largo del eje central de tu cuerpo, desde la base de la columna hasta la coronilla. Cuando fluyen libremente, experimentas salud, bienestar y equilibrio.</p>
+  <p>Cada chakra está asociado a determinadas funciones físicas, emocionales y espirituales. Cuando uno de ellos se bloquea o desequilibra, esa energía estancada puede manifestarse en tu cuerpo o en tus emociones como malestar, miedo, bloqueo creativo o desconexión.</p>
+  <div class="intro-divider"></div>
+  <p>En este recorrido explorarás los <strong>7 chakras principales</strong>, su significado, sus señales de desequilibrio y las herramientas para activarlos y sanarlos.</p>
+</section>
+
+<!-- Índice -->
+<section class="indice">
+  <div class="indice-inner">
+    <p class="eyebrow">El mapa energético</p>
+    <h3>Los 7 chakras</h3>
+    <div class="indice-grid">
+      <a class="indice-item" href="#chakra-1"><div class="indice-dot" style="background:#c0392b"></div><div class="indice-num">01</div><div class="indice-name">Raíz</div></a>
+      <a class="indice-item" href="#chakra-2"><div class="indice-dot" style="background:#e67e22"></div><div class="indice-num">02</div><div class="indice-name">Sacro</div></a>
+      <a class="indice-item" href="#chakra-3"><div class="indice-dot" style="background:#f1c40f"></div><div class="indice-num">03</div><div class="indice-name">Plexo Solar</div></a>
+      <a class="indice-item" href="#chakra-4"><div class="indice-dot" style="background:#27ae60"></div><div class="indice-num">04</div><div class="indice-name">Corazón</div></a>
+      <a class="indice-item" href="#chakra-5"><div class="indice-dot" style="background:#2980b9"></div><div class="indice-num">05</div><div class="indice-name">Garganta</div></a>
+      <a class="indice-item" href="#chakra-6"><div class="indice-dot" style="background:#6c3483"></div><div class="indice-num">06</div><div class="indice-name">Tercer Ojo</div></a>
+      <a class="indice-item" href="#chakra-7"><div class="indice-dot" style="background:#9b59b6"></div><div class="indice-num">07</div><div class="indice-name">Corona</div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHAKRA 1: RAÍZ ── -->
+<section class="chakra-section" id="chakra-1">
+  <div class="chakra-inner">
+    <div class="chakra-visual">
+      <div class="chakra-circle" style="background: radial-gradient(circle at 35% 35%, #e74c3c, #922b21); --chakra-color:#c0392b; --chakra-glow:rgba(192,57,43,0.3)">
+        <div class="chakra-symbol">🔴</div>
+        <div class="chakra-sanskrit">Muladhara</div>
+      </div>
+      <div class="chakra-tags">
+        <span class="chakra-tag" style="--chakra-color:#c0392b; border-color:#c0392b; color:#c0392b">Tierra</span>
+        <span class="chakra-tag" style="--chakra-color:#c0392b; border-color:#c0392b; color:#c0392b">Supervivencia</span>
+        <span class="chakra-tag" style="--chakra-color:#c0392b; border-color:#c0392b; color:#c0392b">Arraigo</span>
+      </div>
+    </div>
+    <div class="chakra-content">
+      <div class="chakra-eyebrow" style="color:#c0392b">Chakra 01</div>
+      <h2 class="chakra-nombre">Muladhara<br><em>Chakra Raíz</em></h2>
+      <div class="chakra-ubicacion">Base de la columna vertebral · Color: Rojo</div>
+      <div class="chakra-divider"></div>
+      <p class="chakra-desc">El chakra raíz es el primero y el más fundamental. Representa tu conexión con la tierra, tu sentido de seguridad y tu instinto de supervivencia. Es la base sobre la que se construyen todos los demás chakras. Cuando está equilibrado, te sientes segura, estable y con los pies en la tierra.</p>
+      <div class="chakra-cols">
+        <div class="chakra-col">
+          <div class="chakra-col-title">Cuando está equilibrado</div>
+          <ul>
+            <li>Sensación de seguridad y estabilidad</li>
+            <li>Confianza en la vida y sus procesos</li>
+            <li>Vitalidad física y energía constante</li>
+            <li>Relación sana con el cuerpo y el dinero</li>
+          </ul>
+        </div>
+        <div class="chakra-col">
+          <div class="chakra-col-title">Señales de desequilibrio</div>
+          <ul>
+            <li>Miedo excesivo, ansiedad o paranoia</li>
+            <li>Problemas económicos o materiales</li>
+            <li>Dolor lumbar o de rodillas</li>
+            <li>Desconexión del cuerpo o la realidad</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chakra-afirmacion">
+        <div class="chakra-afirmacion-label">Afirmación</div>
+        <p>"Estoy segura. Estoy arraigada. La tierra me sostiene y la vida me provee todo lo que necesito."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHAKRA 2: SACRO ── -->
+<section class="chakra-section" id="chakra-2">
+  <div class="chakra-inner">
+    <div class="chakra-visual">
+      <div class="chakra-circle" style="background: radial-gradient(circle at 35% 35%, #e67e22, #a04000)">
+        <div class="chakra-symbol">🟠</div>
+        <div class="chakra-sanskrit">Svadhisthana</div>
+      </div>
+      <div class="chakra-tags">
+        <span class="chakra-tag" style="border-color:#e67e22; color:#e67e22">Agua</span>
+        <span class="chakra-tag" style="border-color:#e67e22; color:#e67e22">Creatividad</span>
+        <span class="chakra-tag" style="border-color:#e67e22; color:#e67e22">Placer</span>
+      </div>
+    </div>
+    <div class="chakra-content">
+      <div class="chakra-eyebrow" style="color:#e67e22">Chakra 02</div>
+      <h2 class="chakra-nombre">Svadhisthana<br><em>Chakra Sacro</em></h2>
+      <div class="chakra-ubicacion">Bajo vientre, debajo del ombligo · Color: Naranja</div>
+      <div class="chakra-divider"></div>
+      <p class="chakra-desc">El chakra sacro es el centro de tu creatividad, sensualidad y emociones. Rige tu capacidad de sentir placer, de relacionarte con los demás y de crear: proyectos, hijos, arte, vínculos. En las mujeres, tiene una conexión profunda con el útero y el ciclo menstrual.</p>
+      <div class="chakra-cols">
+        <div class="chakra-col">
+          <div class="chakra-col-title">Cuando está equilibrado</div>
+          <ul>
+            <li>Fluidez emocional y creatividad libre</li>
+            <li>Disfrute del placer sin culpa</li>
+            <li>Relaciones sanas y afectuosas</li>
+            <li>Ciclo menstrual armónico y sin dolor</li>
+          </ul>
+        </div>
+        <div class="chakra-col">
+          <div class="chakra-col-title">Señales de desequilibrio</div>
+          <ul>
+            <li>Bloqueo creativo o emocional</li>
+            <li>Dificultad para sentir placer</li>
+            <li>Dependencia emocional o frialdad</li>
+            <li>Problemas ginecológicos o de riñones</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chakra-afirmacion">
+        <div class="chakra-afirmacion-label" style="color:var(--gold)">Afirmación</div>
+        <p>"Mi creatividad fluye libremente. Me permito sentir, crear y disfrutar la vida con plenitud."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHAKRA 3: PLEXO SOLAR ── -->
+<section class="chakra-section" id="chakra-3">
+  <div class="chakra-inner">
+    <div class="chakra-visual">
+      <div class="chakra-circle" style="background: radial-gradient(circle at 35% 35%, #f1c40f, #b7950b)">
+        <div class="chakra-symbol">🟡</div>
+        <div class="chakra-sanskrit">Manipura</div>
+      </div>
+      <div class="chakra-tags">
+        <span class="chakra-tag" style="border-color:#d4ac0d; color:#d4ac0d">Fuego</span>
+        <span class="chakra-tag" style="border-color:#d4ac0d; color:#d4ac0d">Poder personal</span>
+        <span class="chakra-tag" style="border-color:#d4ac0d; color:#d4ac0d">Voluntad</span>
+      </div>
+    </div>
+    <div class="chakra-content">
+      <div class="chakra-eyebrow" style="color:#d4ac0d">Chakra 03</div>
+      <h2 class="chakra-nombre">Manipura<br><em>Plexo Solar</em></h2>
+      <div class="chakra-ubicacion">Zona del estómago, plexo solar · Color: Amarillo</div>
+      <div class="chakra-divider"></div>
+      <p class="chakra-desc">El chakra del plexo solar es el centro de tu poder personal, tu autoestima y tu voluntad. Es el fuego que te impulsa a actuar, a establecer límites y a avanzar hacia tus metas. Cuando está activo y equilibrado, te sientes segura de ti misma, con propósito y capacidad de decisión.</p>
+      <div class="chakra-cols">
+        <div class="chakra-col">
+          <div class="chakra-col-title">Cuando está equilibrado</div>
+          <ul>
+            <li>Autoestima sana y confianza propia</li>
+            <li>Capacidad de fijar límites claros</li>
+            <li>Motivación y sentido de propósito</li>
+            <li>Buena digestión y metabolismo</li>
+          </ul>
+        </div>
+        <div class="chakra-col">
+          <div class="chakra-col-title">Señales de desequilibrio</div>
+          <ul>
+            <li>Baja autoestima o exceso de control</li>
+            <li>Dificultad para decir "no"</li>
+            <li>Problemas digestivos o de estómago</li>
+            <li>Miedo al juicio de los demás</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chakra-afirmacion">
+        <div class="chakra-afirmacion-label" style="color:var(--gold)">Afirmación</div>
+        <p>"Soy poderosa y capaz. Confío en mí misma y actúo desde mi verdad con firmeza y amor."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHAKRA 4: CORAZÓN ── -->
+<section class="chakra-section" id="chakra-4">
+  <div class="chakra-inner">
+    <div class="chakra-visual">
+      <div class="chakra-circle" style="background: radial-gradient(circle at 35% 35%, #27ae60, #1a5e35)">
+        <div class="chakra-symbol">💚</div>
+        <div class="chakra-sanskrit">Anahata</div>
+      </div>
+      <div class="chakra-tags">
+        <span class="chakra-tag" style="border-color:#27ae60; color:#27ae60">Aire</span>
+        <span class="chakra-tag" style="border-color:#27ae60; color:#27ae60">Amor</span>
+        <span class="chakra-tag" style="border-color:#27ae60; color:#27ae60">Compasión</span>
+      </div>
+    </div>
+    <div class="chakra-content">
+      <div class="chakra-eyebrow" style="color:#27ae60">Chakra 04</div>
+      <h2 class="chakra-nombre">Anahata<br><em>Chakra Corazón</em></h2>
+      <div class="chakra-ubicacion">Centro del pecho · Color: Verde / Rosa</div>
+      <div class="chakra-divider"></div>
+      <p class="chakra-desc">El chakra del corazón es el centro de todo el sistema: une los tres chakras inferiores (tierra, cuerpo, ego) con los tres superiores (expresión, intuición, espíritu). Es el puente entre lo humano y lo divino, el hogar del amor incondicional, la compasión y el perdón.</p>
+      <div class="chakra-cols">
+        <div class="chakra-col">
+          <div class="chakra-col-title">Cuando está equilibrado</div>
+          <ul>
+            <li>Amor propio y hacia los demás</li>
+            <li>Capacidad de perdonar y soltar</li>
+            <li>Compasión sin autoanulación</li>
+            <li>Relaciones desde la libertad</li>
+          </ul>
+        </div>
+        <div class="chakra-col">
+          <div class="chakra-col-title">Señales de desequilibrio</div>
+          <ul>
+            <li>Resentimiento o incapacidad de perdonar</li>
+            <li>Miedo al amor o al abandono</li>
+            <li>Problemas cardíacos o pulmonares</li>
+            <li>Dar en exceso desde el vacío</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chakra-afirmacion">
+        <div class="chakra-afirmacion-label" style="color:var(--gold)">Afirmación</div>
+        <p>"Me abro al amor en todas sus formas. Doy y recibo desde la abundancia de mi corazón."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHAKRA 5: GARGANTA ── -->
+<section class="chakra-section" id="chakra-5">
+  <div class="chakra-inner">
+    <div class="chakra-visual">
+      <div class="chakra-circle" style="background: radial-gradient(circle at 35% 35%, #2980b9, #1a5276)">
+        <div class="chakra-symbol">🔵</div>
+        <div class="chakra-sanskrit">Vishuddha</div>
+      </div>
+      <div class="chakra-tags">
+        <span class="chakra-tag" style="border-color:#2980b9; color:#2980b9">Éter</span>
+        <span class="chakra-tag" style="border-color:#2980b9; color:#2980b9">Comunicación</span>
+        <span class="chakra-tag" style="border-color:#2980b9; color:#2980b9">Expresión</span>
+      </div>
+    </div>
+    <div class="chakra-content">
+      <div class="chakra-eyebrow" style="color:#2980b9">Chakra 05</div>
+      <h2 class="chakra-nombre">Vishuddha<br><em>Chakra Garganta</em></h2>
+      <div class="chakra-ubicacion">Garganta y cuello · Color: Azul</div>
+      <div class="chakra-divider"></div>
+      <p class="chakra-desc">El chakra de la garganta es el centro de tu expresión y comunicación. Aquí reside tu voz auténtica: la capacidad de decir tu verdad, de expresar quién eres y qué sientes sin miedo ni vergüenza. También rige la escucha activa y la creatividad verbal.</p>
+      <div class="chakra-cols">
+        <div class="chakra-col">
+          <div class="chakra-col-title">Cuando está equilibrado</div>
+          <ul>
+            <li>Expresión auténtica y sin miedo</li>
+            <li>Comunicación clara y amorosa</li>
+            <li>Escucha activa y presente</li>
+            <li>Creatividad a través de la voz o escritura</li>
+          </ul>
+        </div>
+        <div class="chakra-col">
+          <div class="chakra-col-title">Señales de desequilibrio</div>
+          <ul>
+            <li>Dificultad para expresar lo que sientes</li>
+            <li>Miedo a hablar en público o decepcionar</li>
+            <li>Problemas de garganta, tiroides o mandíbula</li>
+            <li>Comunicación agresiva o pasivo-agresiva</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chakra-afirmacion">
+        <div class="chakra-afirmacion-label" style="color:var(--gold)">Afirmación</div>
+        <p>"Mi voz es sagrada. Me expreso con claridad, honestidad y amor, y mi verdad merece ser escuchada."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHAKRA 6: TERCER OJO ── -->
+<section class="chakra-section" id="chakra-6">
+  <div class="chakra-inner">
+    <div class="chakra-visual">
+      <div class="chakra-circle" style="background: radial-gradient(circle at 35% 35%, #6c3483, #4a235a)">
+        <div class="chakra-symbol">👁️</div>
+        <div class="chakra-sanskrit">Ajna</div>
+      </div>
+      <div class="chakra-tags">
+        <span class="chakra-tag" style="border-color:#6c3483; color:#6c3483">Luz</span>
+        <span class="chakra-tag" style="border-color:#6c3483; color:#6c3483">Intuición</span>
+        <span class="chakra-tag" style="border-color:#6c3483; color:#6c3483">Sabiduría</span>
+      </div>
+    </div>
+    <div class="chakra-content">
+      <div class="chakra-eyebrow" style="color:#6c3483">Chakra 06</div>
+      <h2 class="chakra-nombre">Ajna<br><em>Tercer Ojo</em></h2>
+      <div class="chakra-ubicacion">Entre las cejas, frente · Color: Índigo</div>
+      <div class="chakra-divider"></div>
+      <p class="chakra-desc">El chakra del tercer ojo es el asiento de tu intuición, percepción extrasensorial y sabiduría interior. Es el ojo que ve más allá de lo visible: patrones, verdades ocultas, el sentido más profundo de las situaciones. Desarrollarlo te permite confiar en tu guía interna.</p>
+      <div class="chakra-cols">
+        <div class="chakra-col">
+          <div class="chakra-col-title">Cuando está equilibrado</div>
+          <ul>
+            <li>Intuición clara y confiable</li>
+            <li>Visión amplia y perspectiva profunda</li>
+            <li>Imaginación creativa y sueños vívidos</li>
+            <li>Pensamiento crítico equilibrado</li>
+          </ul>
+        </div>
+        <div class="chakra-col">
+          <div class="chakra-col-title">Señales de desequilibrio</div>
+          <ul>
+            <li>Desconexión de la intuición propia</li>
+            <li>Confusión mental o dificultad de concentración</li>
+            <li>Dolores de cabeza o problemas de visión</li>
+            <li>Exceso de racionalización o fantasía</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chakra-afirmacion">
+        <div class="chakra-afirmacion-label" style="color:var(--gold)">Afirmación</div>
+        <p>"Confío en mi intuición. Veo con claridad y sabiduría, y me guío por la luz de mi interior."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHAKRA 7: CORONA ── -->
+<section class="chakra-section" id="chakra-7">
+  <div class="chakra-inner">
+    <div class="chakra-visual">
+      <div class="chakra-circle" style="background: radial-gradient(circle at 35% 35%, #9b59b6, #6c3483)">
+        <div class="chakra-symbol">🔮</div>
+        <div class="chakra-sanskrit">Sahasrara</div>
+      </div>
+      <div class="chakra-tags">
+        <span class="chakra-tag" style="border-color:#9b59b6; color:#9b59b6">Conciencia</span>
+        <span class="chakra-tag" style="border-color:#9b59b6; color:#9b59b6">Espiritualidad</span>
+        <span class="chakra-tag" style="border-color:#9b59b6; color:#9b59b6">Unidad</span>
+      </div>
+    </div>
+    <div class="chakra-content">
+      <div class="chakra-eyebrow" style="color:#9b59b6">Chakra 07</div>
+      <h2 class="chakra-nombre">Sahasrara<br><em>Chakra Corona</em></h2>
+      <div class="chakra-ubicacion">Coronilla de la cabeza · Color: Violeta / Blanco</div>
+      <div class="chakra-divider"></div>
+      <p class="chakra-desc">El chakra corona es el más elevado de todos. Representa tu conexión con la conciencia universal, lo divino, lo que está más allá de ti misma. No se "activa" como los demás: se abre naturalmente cuando los seis chakras inferiores están en equilibrio y la energía puede ascender libremente.</p>
+      <div class="chakra-cols">
+        <div class="chakra-col">
+          <div class="chakra-col-title">Cuando está equilibrado</div>
+          <ul>
+            <li>Sentido de propósito y conexión sagrada</li>
+            <li>Paz interior profunda y desapego sano</li>
+            <li>Apertura a la trascendencia</li>
+            <li>Sensación de unidad con todo</li>
+          </ul>
+        </div>
+        <div class="chakra-col">
+          <div class="chakra-col-title">Señales de desequilibrio</div>
+          <ul>
+            <li>Sensación de vacío existencial</li>
+            <li>Materialismo extremo o fanatismo espiritual</li>
+            <li>Desconexión de la dimensión espiritual</li>
+            <li>Migraña crónica o trastornos neurológicos</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chakra-afirmacion">
+        <div class="chakra-afirmacion-label" style="color:var(--gold)">Afirmación</div>
+        <p>"Soy parte de algo más grande que yo. Me abro a la guía divina y confío en el plan perfecto de la vida."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cierre -->
+<section class="cierre">
+  <p class="eyebrow">¿Lista para el siguiente paso?</p>
+  <h2>Tu energía merece<br>atención <em>profesional</em></h2>
+  <p>Conocer tus chakras es el primer paso. Si sientes que alguno de ellos está bloqueado o que hay patrones en tu vida que quieres transformar, te acompaño en un proceso personalizado de sanación energética.</p>
+  <div class="cierre-btns">
+    <a href="index.html#booking" class="btn-primary-cta">Agendar una sesión ✦</a>
+    <a href="index.html#services" class="btn-ghost-cta">Ver servicios</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <strong>Energía Holística Majo</strong> · Psicóloga &amp; Terapeuta Holística · Santiago, Chile
+</footer>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+  });
+</script>
+</body>
+</html>
