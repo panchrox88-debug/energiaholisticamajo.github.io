@@ -1678,7 +1678,8 @@
           <div class="field"><label>Ubicación / Dato extra</label><input type="text" value="${_esc(s.ubicacion||'')}" oninput="updateSeccion(${i},'ubicacion',this.value)" placeholder="Ej: Duración · Online"/></div>
           <div class="field"><label>Tags (separados por coma)</label><input type="text" value="${_esc((s.tags||[]).join(', '))}" oninput="updateSeccion(${i},'tags',this.value.split(',').map(t=>t.trim()).filter(Boolean))" placeholder="Ej: Meditación, Respiración"/></div>
           <div class="field field-full"><label>Descripción</label><textarea oninput="updateSeccion(${i},'descripcion',this.value)" style="min-height:70px">${_esc(s.descripcion||'')}</textarea></div>
-          <div class="field field-full"><label>Afirmación / Frase cierre</label><input type="text" value="${_esc(s.afirmacion||'')}" oninput="updateSeccion(${i},'afirmacion',this.value)" placeholder="Ej: Frase inspiradora para cerrar esta sección…"/></div>
+          <div class="field"><label>Etiqueta del cierre</label><input type="text" value="${_esc(s.afirmacion_label||'')}" oninput="updateSeccion(${i},'afirmacion_label',this.value)" placeholder="Afirmación, Reflexión, Mantra…"/></div>
+          <div class="field"><label>Frase de cierre</label><input type="text" value="${_esc(s.afirmacion||'')}" oninput="updateSeccion(${i},'afirmacion',this.value)" placeholder="Ej: Frase inspiradora para cerrar esta sección…"/></div>
           <div class="field field-full">
             <label>Imagen de la sección (opcional)</label>
             ${s.imagen ? `

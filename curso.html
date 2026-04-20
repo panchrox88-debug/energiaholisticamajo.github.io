@@ -352,7 +352,7 @@
 
       const afirEl = s.afirmacion
         ? `<div class="seccion-afirmacion" style="--c:${color}; border-left-color:${color}">
-             <div class="seccion-afirmacion-label">Afirmación</div>
+             <div class="seccion-afirmacion-label">${s.afirmacion_label || 'Afirmación'}</div>
              <p>${s.afirmacion}</p>
            </div>`
         : '';
