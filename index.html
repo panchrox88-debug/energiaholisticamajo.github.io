@@ -464,18 +464,6 @@
       margin-bottom: 12px;
     }
     .service-card p { font-size: 0.82rem; line-height: 1.9; color: var(--muted); }
-    .service-price {
-      display: block; margin-top: 14px;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.15rem; font-weight: 400;
-      color: var(--dark); letter-spacing: 0.02em;
-    }
-    .service-price small {
-      font-family: 'Nunito', sans-serif;
-      font-size: 0.68rem; font-weight: 300;
-      color: var(--muted); letter-spacing: 0.1em;
-      text-transform: uppercase; margin-right: 3px;
-    }
     .service-mode {
       display: inline-block;
       margin-top: 20px;
@@ -1084,6 +1072,13 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .detail-precio {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem; font-weight: 400; color: var(--dark);
+      display: none; align-items: baseline; gap: 8px;
+    }
+    .detail-precio.visible { display: flex; }
+    .detail-precio s { opacity: 0.45; font-size: 0.85em; }
     .detail-divider {
       width: 50px; height: 1px;
       background: var(--rose-lt);
@@ -1545,6 +1540,7 @@
               <h3 class="detail-title" id="detailTitle">—</h3>
             </div>
             <div class="detail-header-actions">
+              <span class="detail-precio" id="detailPrecio"></span>
               <button class="detail-cta-btn" id="detailReserve">Reservar →</button>
               <button class="detail-close" id="detailClose" aria-label="Cerrar">✕</button>
             </div>
@@ -2527,26 +2523,10 @@
         const card = document.createElement('div');
         card.className = 'service-card reveal';
         card.dataset.serviceId = s.id;
-        let precioHTML = '';
-        if (s.precio) {
-          const original  = Number(s.precio);
-          const descuento = BANNER_DESCUENTO || 0;
-          if (descuento > 0) {
-            const final = Math.round(original * (1 - descuento / 100));
-            precioHTML = `<span class="service-price">
-              <small>desde</small>
-              <s style="opacity:.5;font-size:.85em">$${original.toLocaleString('es-CL')}</s>
-              &nbsp;$${final.toLocaleString('es-CL')}
-            </span>`;
-          } else {
-            precioHTML = `<span class="service-price"><small>desde</small>$${original.toLocaleString('es-CL')}</span>`;
-          }
-        }
         card.innerHTML = `
           <div class="service-icon">${s.emoji}</div>
           <h3>${s.titulo}</h3>
           <p>${s.descripcion}</p>
-          ${precioHTML}
           <span class="service-mode">${s.modo}</span>
           <div class="service-card-cta">Ver más →</div>`;
         preloadSlides(s.slides).then(valid => {
@@ -2600,6 +2580,23 @@
 
       // Título
       detailTitle.textContent = data.titulo;
+
+      // Precio en el panel
+      const precioEl = document.getElementById('detailPrecio');
+      if (data.precio) {
+        const original  = Number(data.precio);
+        const descuento = BANNER_DESCUENTO || 0;
+        if (descuento > 0) {
+          const final = Math.round(original * (1 - descuento / 100));
+          precioEl.innerHTML = `<s>$${original.toLocaleString('es-CL')}</s> $${final.toLocaleString('es-CL')}`;
+        } else {
+          precioEl.innerHTML = `$${original.toLocaleString('es-CL')}`;
+        }
+        precioEl.classList.add('visible');
+      } else {
+        precioEl.innerHTML = '';
+        precioEl.classList.remove('visible');
+      }
 
       // Slides
       carousel.track.innerHTML = data.slides.map(src =>
