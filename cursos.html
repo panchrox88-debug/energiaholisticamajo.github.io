@@ -133,6 +133,85 @@
     .empty-state { text-align: center; padding: 80px 24px; color: var(--muted); font-size: 0.9rem; line-height: 2; }
     .empty-state .big { font-size: 3rem; margin-bottom: 16px; }
 
+    /* ── MODAL PREVIEW ── */
+    .preview-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(61,43,43,0.55); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    .preview-overlay.open { opacity: 1; pointer-events: auto; }
+    .preview-box {
+      background: var(--cream); border-radius: 24px;
+      max-width: 560px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 32px 80px rgba(61,43,43,0.22);
+      transform: translateY(24px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+      position: relative;
+    }
+    .preview-overlay.open .preview-box { transform: translateY(0) scale(1); }
+    .preview-close {
+      position: absolute; top: 16px; right: 16px; z-index: 10;
+      background: rgba(250,245,240,0.9); border: none; cursor: pointer;
+      width: 36px; height: 36px; border-radius: 50%;
+      font-size: 1rem; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .preview-close:hover { background: var(--dark); color: white; }
+    .preview-hero {
+      width: 100%; height: 220px; object-fit: cover;
+      border-radius: 24px 24px 0 0; display: block;
+    }
+    .preview-hero-placeholder {
+      width: 100%; height: 220px;
+      border-radius: 24px 24px 0 0;
+      background: linear-gradient(135deg, var(--blush), var(--beige));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 4rem;
+    }
+    .preview-body { padding: 32px 32px 28px; }
+    .preview-eyebrow { font-size: 0.62rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    .preview-titulo { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 400; color: var(--dark); line-height: 1.2; margin-bottom: 12px; }
+    .preview-intro { font-size: 0.88rem; line-height: 1.85; color: var(--muted); margin-bottom: 24px; }
+    .preview-aprender-titulo {
+      font-size: 0.65rem; letter-spacing: 0.4em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 14px;
+    }
+    .preview-lista { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .preview-lista li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 0.88rem; line-height: 1.6; color: var(--dark);
+    }
+    .preview-lista li .bullet {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; margin-top: 1px;
+    }
+    .preview-divider { height: 1px; background: var(--beige); margin-bottom: 24px; }
+    .preview-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .preview-precio { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 400; color: var(--dark); }
+    .preview-acciones { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+    .btn-comprar {
+      display: inline-flex; align-items: center;
+      background: var(--rose); color: white;
+      padding: 11px 24px; border-radius: 40px;
+      font-family: 'Nunito', sans-serif; font-size: 0.75rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      text-decoration: none; transition: background 0.3s; white-space: nowrap;
+    }
+    .btn-comprar:hover { background: var(--dark); }
+    .btn-acceder {
+      font-size: 0.75rem; color: var(--muted); text-decoration: none;
+      letter-spacing: 0.1em; text-align: right;
+      border-bottom: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-acceder:hover { color: var(--rose); border-bottom-color: var(--rose); }
+
     /* ── FOOTER ── */
     footer { background: var(--dark); color: rgba(255,255,255,0.6); text-align: center; padding: 40px 24px; font-size: 0.75rem; letter-spacing: 0.1em; }
     footer strong { color: var(--rose-lt); }
@@ -205,6 +284,14 @@
   </div>
 </main>
 
+<!-- Modal preview curso -->
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-box" id="previewBox">
+    <button class="preview-close" id="previewClose" aria-label="Cerrar">✕</button>
+    <div id="previewContent"></div>
+  </div>
+</div>
+
 <!-- Footer -->
 <footer>
   <strong>Energía Holística Majo</strong> · Psicóloga &amp; Terapeuta Holística · Santiago, Chile
@@ -276,8 +363,11 @@
           : '';
 
       const hasSecciones = Array.isArray(c.secciones) && c.secciones.length > 0;
+      const esPago = !c.gratuito && c.precio;
       const cta = hasSecciones
-        ? `<a href="curso.html?id=${c.id}" class="curso-cta">${c.gratuito ? 'Ver gratis →' : 'Ver curso →'}</a>`
+        ? esPago
+          ? `<button class="curso-cta" onclick="openPreview('${c.id}')">Ver curso →</button>`
+          : `<a href="curso.html?id=${c.id}" class="curso-cta">Ver gratis →</a>`
         : c.link_pago
           ? `<a href="${c.link_pago}" target="_blank" rel="noopener" class="curso-cta">${c.gratuito ? 'Acceder gratis' : 'Inscribirme'} →</a>`
           : `<span class="curso-cta ghost" style="cursor:default">Próximamente</span>`;
@@ -297,6 +387,71 @@
         </article>`;
     }).join('');
   }
+
+  // ── MODAL PREVIEW ──
+  const overlay    = document.getElementById('previewOverlay');
+  const previewBox = document.getElementById('previewBox');
+  const previewClose = document.getElementById('previewClose');
+
+  function openPreview(id) {
+    const c = todosLosCursos.find(x => String(x.id) === String(id));
+    if (!c) return;
+    const color = c.color_tema || 'var(--rose)';
+
+    const heroHTML = c.imagen
+      ? `<img class="preview-hero" src="${c.imagen}" alt="${c.titulo}"/>`
+      : `<div class="preview-hero-placeholder" style="background:linear-gradient(135deg,${color}33,${color}66)">✨</div>`;
+
+    const hasSecciones = Array.isArray(c.secciones) && c.secciones.length > 0;
+    const listaHTML = hasSecciones
+      ? c.secciones.map(s => `
+          <li>
+            <span class="bullet" style="background:${color}22;color:${color}">${s.icono || '✦'}</span>
+            <span>${s.titulo}${s.subtitulo ? ` <em style="color:${color};font-style:italic;font-family:'Cormorant Garamond',serif"> · ${s.subtitulo}</em>` : ''}</span>
+          </li>`).join('')
+      : '';
+
+    const precioHTML = c.precio
+      ? `<div class="preview-precio">$${Number(c.precio).toLocaleString('es-CL')}</div>`
+      : '';
+
+    const comprarHTML = c.link_pago
+      ? `<a href="${c.link_pago}" target="_blank" rel="noopener" class="btn-comprar" style="background:${color}">Comprar acceso →</a>`
+      : `<a href="curso.html?id=${c.id}" class="btn-comprar" style="background:${color}">Acceder al curso →</a>`;
+
+    document.getElementById('previewContent').innerHTML = `
+      ${heroHTML}
+      <div class="preview-body">
+        <p class="preview-eyebrow">${c.categoria || 'Curso'}</p>
+        <h2 class="preview-titulo">${c.titulo}</h2>
+        ${c.descripcion ? `<p class="preview-intro">${c.descripcion}</p>` : ''}
+        ${hasSecciones ? `
+          <p class="preview-aprender-titulo">¿Qué vas a aprender?</p>
+          <ul class="preview-lista">${listaHTML}</ul>
+        ` : ''}
+        <div class="preview-divider"></div>
+        <div class="preview-footer">
+          ${precioHTML}
+          <div class="preview-acciones">
+            ${comprarHTML}
+            <a href="curso.html?id=${c.id}" class="btn-acceder">Ya tengo acceso → entrar</a>
+          </div>
+        </div>
+      </div>`;
+
+    previewBox.scrollTop = 0;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePreview() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  previewClose.addEventListener('click', closePreview);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePreview(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
 
   // Mobile menu
   const toggle   = document.getElementById('navToggle');
