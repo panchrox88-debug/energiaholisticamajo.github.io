@@ -703,6 +703,7 @@
         <div class="field"><label>Introducción (texto de bienvenida en la página del curso · doble salto de línea = párrafo nuevo)</label><textarea id="curso-intro" style="min-height:90px" placeholder="Escribe aquí una introducción al curso…"></textarea></div>
         <div style="display:flex;gap:16px">
           <div class="field" style="flex:2"><label>Categoría</label><input type="text" id="curso-cat" placeholder="Chakras, Meditación, Círculos…"/></div>
+          <div class="field" style="flex:1"><label>Palabra por sección</label><input type="text" id="curso-etiqueta" placeholder="Módulo, Chakra, Lección…"/></div>
           <div class="field" style="flex:1">
             <label>Color del curso</label>
             <div style="display:flex;gap:8px;align-items:center">
@@ -1637,6 +1638,18 @@
   }
   window.updateSeccion = function(i, key, val) { CURSO_SECCIONES[i][key] = val; };
   window.deleteSeccion = function(i) { CURSO_SECCIONES.splice(i, 1); renderSeccionesList(); updateSeccionesBadge(); };
+  window.uploadSeccionIconoImg = async function(input, i) {
+    const msgEl = document.getElementById('cursoModalMsg');
+    msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
+    try {
+      const url = await uploadFile(input.files[0], 'cursos');
+      CURSO_SECCIONES[i].icono_img = url;
+      renderSeccionesList();
+      msgEl.textContent = 'Imagen subida ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 2500);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    input.value = '';
+  };
   window.uploadSeccionImg = async function(input, i) {
     const msgEl = document.getElementById('cursoModalMsg');
     msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
@@ -1664,8 +1677,20 @@
           <button class="btn btn-danger" onclick="deleteSeccion(${i})" type="button" style="padding:4px 10px;font-size:.72rem;min-width:32px">✕</button>
         </div>
         <div class="seccion-fields">
-          <div class="field"><label>Ícono (emoji)</label>
+          <div class="field"><label>Ícono (emoji · se muestra si no hay imagen visual)</label>
             <input type="text" value="${_esc(s.icono||'')}" oninput="updateSeccion(${i},'icono',this.value);this.closest('.seccion-row').querySelector('.seccion-row-num').previousElementSibling.textContent=this.value||'✨'" placeholder="✨" style="font-size:1.1rem"/>
+          </div>
+          <div class="field">
+            <label>Imagen visual (reemplaza el círculo con emoji)</label>
+            ${s.icono_img ? `
+              <div style="margin-bottom:8px;position:relative;width:100px;height:100px">
+                <img src="${_esc(s.icono_img)}" style="width:100px;height:100px;object-fit:contain;border-radius:50%;border:2px solid var(--beige);background:var(--cream)"/>
+                <button type="button" onclick="updateSeccion(${i},'icono_img','');renderSeccionesList()" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer;line-height:1">✕</button>
+              </div>` : ''}
+            <label class="upload-zone" style="padding:10px">
+              <input type="file" accept="image/*" onchange="uploadSeccionIconoImg(this,${i})"/>
+              📁 ${s.icono_img ? 'Cambiar imagen' : 'Subir imagen'}
+            </label>
           </div>
           <div class="field"><label>Color de sección</label>
             <div style="display:flex;gap:8px;align-items:center">
@@ -1793,8 +1818,9 @@
     document.getElementById('curso-id').value      = c?.id || '';
     document.getElementById('curso-titulo').value  = c?.titulo || '';
     document.getElementById('curso-desc').value    = c?.descripcion || '';
-    document.getElementById('curso-intro').value   = c?.intro || '';
-    document.getElementById('curso-cat').value     = c?.categoria || '';
+    document.getElementById('curso-intro').value     = c?.intro || '';
+    document.getElementById('curso-cat').value       = c?.categoria || '';
+    document.getElementById('curso-etiqueta').value  = c?.etiqueta_seccion || '';
     document.getElementById('curso-precio').value  = c?.precio || '';
     document.getElementById('curso-gratuito').checked = !!c?.gratuito;
     document.getElementById('curso-link').value    = c?.link_pago || '';
@@ -1850,8 +1876,9 @@
     const body  = {
       titulo:      document.getElementById('curso-titulo').value.trim(),
       descripcion: document.getElementById('curso-desc').value.trim(),
-      intro:       document.getElementById('curso-intro').value.trim() || null,
-      categoria:   document.getElementById('curso-cat').value.trim() || null,
+      intro:            document.getElementById('curso-intro').value.trim() || null,
+      categoria:        document.getElementById('curso-cat').value.trim() || null,
+      etiqueta_seccion: document.getElementById('curso-etiqueta').value.trim() || 'Módulo',
       color_tema:  document.getElementById('curso-color-pick').value,
       precio:      parseInt(document.getElementById('curso-precio').value) || null,
       gratuito:    document.getElementById('curso-gratuito').checked,
