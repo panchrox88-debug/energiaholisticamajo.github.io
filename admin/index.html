@@ -776,7 +776,8 @@
           <p style="font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:20px">
             Para asignar o quitar el acceso a este curso, ve a la sección <strong>Usuarias</strong> en el menú lateral, elige la persona y asígnale el curso desde su tarjeta.
           </p>
-          <button class="btn" type="button" onclick="document.querySelector('[data-tab=usuarias]')?.click()"
+          <button class="btn" type="button"
+            onclick="document.getElementById('cursoModal').classList.remove('open'); document.querySelector('[data-tab=usuarias]')?.click()"
             style="background:var(--rose);color:white;padding:10px 22px;border-radius:20px;font-size:.78rem;letter-spacing:.1em">
             Ir a Usuarias →
           </button>
