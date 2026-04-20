@@ -1,14 +1,15 @@
 // =========================================================
 // js/auth.js — Energía Holística Majo
-// Módulo de autenticación compartido.
 // Requiere: @supabase/supabase-js v2 CDN cargado antes,
-//           SB_URL y SB_KEY definidos como globals en la página.
+//           SB_URL y SB_KEY definidos en la página.
 // =========================================================
 
 (function () {
   // ── Cliente ─────────────────────────────────────────────
+  // Nota: SB_URL y SB_KEY son const en cada página → NO están en window.
+  // Se acceden sin prefijo window (comparten scope global de scripts).
   const { createClient } = window.supabase;
-  const _sb = createClient(window.SB_URL, window.SB_KEY);
+  const _sb = createClient(SB_URL, SB_KEY);  // sin window.
 
   let _user   = null;
   let _perfil = null;
@@ -24,32 +25,29 @@
         <button onclick="closeLogin()" style="position:absolute;top:14px;right:18px;background:none;border:none;font-size:1.5rem;color:#7a5c5c;cursor:pointer;line-height:1;padding:4px 8px">×</button>
 
         <p style="font-size:0.6rem;letter-spacing:0.38em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px">Energía Holística Majo</p>
-        <h2 id="authModalTitle" style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;color:#3d2b2b;margin-bottom:6px;line-height:1.2">Bienvenida</h2>
-        <p id="authModalSub" style="font-size:0.84rem;color:#7a5c5c;margin-bottom:28px;line-height:1.75">Inicia sesión para acceder a tus cursos</p>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;color:#3d2b2b;margin-bottom:6px;line-height:1.2">Bienvenida</h2>
+        <p id="authModalSub" style="font-size:0.84rem;color:#7a5c5c;margin-bottom:28px;line-height:1.75">Inicia sesión para acceder a tu cuenta</p>
 
-        <!-- Tabs -->
         <div style="display:flex;border-radius:12px;overflow:hidden;border:1.5px solid #ede0d4;margin-bottom:26px">
           <button id="authTabLogin"  onclick="authSetTab('login')"    style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;transition:all 0.2s">Ingresar</button>
           <button id="authTabReg"    onclick="authSetTab('register')" style="flex:1;padding:10px 8px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;transition:all 0.2s">Crear cuenta</button>
         </div>
 
-        <!-- Form: Login -->
         <div id="authFormLogin">
           <input id="authEmail" type="email" placeholder="tu@correo.com"
             style="width:100%;padding:12px 16px;border:1.5px solid #ede0d4;border-radius:11px;font-family:'Nunito',sans-serif;font-size:0.88rem;background:white;outline:none;margin-bottom:11px;box-sizing:border-box;color:#3d2b2b"/>
           <input id="authPass" type="password" placeholder="Contraseña"
             style="width:100%;padding:12px 16px;border:1.5px solid #ede0d4;border-radius:11px;font-family:'Nunito',sans-serif;font-size:0.88rem;background:white;outline:none;margin-bottom:14px;box-sizing:border-box;color:#3d2b2b"/>
           <button id="authLoginBtn" onclick="doLogin()"
-            style="width:100%;padding:13px;background:#c9858a;color:white;border:none;border-radius:40px;font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-bottom:11px">
+            style="width:100%;padding:13px;background:#c9858a;color:white;border:none;border-radius:40px;font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;margin-bottom:11px">
             Ingresar →
           </button>
           <button onclick="doMagicLink()"
-            style="width:100%;padding:11px;background:transparent;color:#7a5c5c;border:1.5px solid #ede0d4;border-radius:40px;font-family:'Nunito',sans-serif;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:border-color 0.2s">
+            style="width:100%;padding:11px;background:transparent;color:#7a5c5c;border:1.5px solid #ede0d4;border-radius:40px;font-family:'Nunito',sans-serif;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer">
             Enviar enlace mágico
           </button>
         </div>
 
-        <!-- Form: Registro -->
         <div id="authFormReg" style="display:none">
           <input id="regNombre" type="text" placeholder="Tu nombre"
             style="width:100%;padding:12px 16px;border:1.5px solid #ede0d4;border-radius:11px;font-family:'Nunito',sans-serif;font-size:0.88rem;background:white;outline:none;margin-bottom:11px;box-sizing:border-box;color:#3d2b2b"/>
@@ -58,7 +56,7 @@
           <input id="regPass" type="password" placeholder="Contraseña (mín. 6 caracteres)"
             style="width:100%;padding:12px 16px;border:1.5px solid #ede0d4;border-radius:11px;font-family:'Nunito',sans-serif;font-size:0.88rem;background:white;outline:none;margin-bottom:14px;box-sizing:border-box;color:#3d2b2b"/>
           <button id="authRegBtn" onclick="doRegister()"
-            style="width:100%;padding:13px;background:#c9858a;color:white;border:none;border-radius:40px;font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.2s">
+            style="width:100%;padding:13px;background:#c9858a;color:white;border:none;border-radius:40px;font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer">
             Crear cuenta →
           </button>
         </div>
@@ -66,19 +64,15 @@
         <p id="authMsg" style="margin-top:14px;font-size:0.82rem;min-height:18px;text-align:center;line-height:1.6;color:#7a5c5c"></p>
       </div>`;
     document.body.appendChild(div);
-
-    // Cerrar al hacer click en backdrop
     div.addEventListener('click', e => { if (e.target === div) closeLogin(); });
-
-    // Tab inicial
     authSetTab('login');
   }
 
   // ── Perfil ───────────────────────────────────────────────
   async function _loadPerfil(userId, token) {
     try {
-      const res = await fetch(`${window.SB_URL}/rest/v1/perfiles?id=eq.${userId}&select=*`, {
-        headers: { 'apikey': window.SB_KEY, 'Authorization': 'Bearer ' + token }
+      const res = await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${userId}&select=*`, {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token }
       });
       const rows = await res.json();
       _perfil = Array.isArray(rows) ? (rows[0] || null) : null;
@@ -169,10 +163,9 @@
   window.isAdmin       = () => _perfil?.rol === 'admin';
   window.getAuthToken  = async function () {
     const { data: { session } } = await _sb.auth.getSession();
-    return session?.access_token || window.SB_KEY;
+    return session?.access_token || SB_KEY;  // sin window.
   };
 
-  // ── initAuth ─────────────────────────────────────────────
   window.initAuth = async function (onReady) {
     _injectModal();
     const { data: { session } } = await _sb.auth.getSession();
@@ -180,7 +173,6 @@
       _user = session.user;
       await _loadPerfil(_user.id, session.access_token);
     }
-    // Listener de cambios de sesión
     _sb.auth.onAuthStateChange(async (event, session) => {
       _user = session?.user || null;
       if (_user) await _loadPerfil(_user.id, session.access_token);
@@ -190,13 +182,11 @@
     if (onReady) onReady(_user, _perfil);
   };
 
-  // ── Helpers ──────────────────────────────────────────────
   function _setMsg(el, txt, type) {
     if (!el) return;
     el.textContent = txt;
     el.style.color = type === 'ok' ? '#2d6a4f' : '#c9585a';
   }
 
-  // Cerrar con Escape
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLogin(); });
 })();
