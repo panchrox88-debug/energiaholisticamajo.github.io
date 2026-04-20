@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Blog — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -189,6 +190,7 @@
     <li><a href="blog.html" class="active">Blog</a></li>
     <li><a href="index.html#contact">Contacto</a></li>
   </ul>
+  <div id="navUserArea" style="display:flex;align-items:center;gap:14px"></div>
   <a href="index.html#booking" class="nav-btn">Agendar sesión</a>
   <button class="nav-toggle" id="navToggle" aria-label="Menú">
     <span></span><span></span><span></span>
@@ -370,6 +372,7 @@
   async function loadComentarios(postId) {
     const lista = document.getElementById('comentarioLista');
     if (!lista) return;
+    const admin = typeof isAdmin === 'function' && isAdmin();
     try {
       const res  = await sbFetch(`/comentarios?post_id=eq.${postId}&order=created_at.asc&select=*`);
       const rows = await res.json();
@@ -382,18 +385,70 @@
           <div class="comentario-header">
             <span class="comentario-nombre">${esc(c.nombre)}</span>
             <span class="comentario-fecha">${formatFecha(c.created_at)}</span>
+            ${admin ? `<button onclick="deleteCom('${c.id}','${postId}')" style="margin-left:auto;background:none;border:none;color:#c9585a;font-size:0.8rem;cursor:pointer;padding:2px 6px;opacity:0.6">✕</button>` : ''}
           </div>
           <p class="comentario-msg">${esc(c.mensaje)}</p>
           ${c.respuesta ? `
             <div class="comentario-respuesta">
               <div class="comentario-respuesta-autor">Energía Holística Majo</div>
               <p class="comentario-msg" style="margin-top:4px">${esc(c.respuesta)}</p>
-            </div>` : ''}
+              ${admin ? `<button onclick="editarRespuesta('${c.id}','${postId}')" style="margin-top:6px;background:none;border:none;color:var(--rose);font-family:'Nunito',sans-serif;font-size:0.72rem;cursor:pointer;text-decoration:underline;padding:0">Editar respuesta</button>` : ''}
+            </div>` : (admin ? `
+            <div id="respForm-${c.id}" style="display:none;margin-top:12px;padding:12px;background:#faf5f0;border-radius:10px;border:1.5px solid #ede0d4">
+              <textarea id="respTxt-${c.id}" placeholder="Responder como Energía Holística Majo…" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid #ede0d4;border-radius:8px;font-family:'Nunito',sans-serif;font-size:0.85rem;resize:vertical;box-sizing:border-box;outline:none"></textarea>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button onclick="guardarRespuesta('${c.id}','${postId}')" style="flex:1;padding:8px;background:#c9858a;color:white;border:none;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.75rem;letter-spacing:0.12em;cursor:pointer">Responder →</button>
+                <button onclick="toggleRespForm('${c.id}')" style="padding:8px 14px;background:none;border:1.5px solid #ede0d4;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.75rem;cursor:pointer;color:#7a5c5c">Cancelar</button>
+              </div>
+            </div>
+            <button onclick="toggleRespForm('${c.id}')" style="margin-top:8px;background:none;border:none;color:var(--rose);font-family:'Nunito',sans-serif;font-size:0.72rem;cursor:pointer;text-decoration:underline;padding:0">Responder ↩</button>` : '')}
         </div>`).join('');
     } catch(e) {
       lista.innerHTML = `<p class="comentario-empty">No se pudieron cargar los comentarios.</p>`;
     }
   }
+
+  window.toggleRespForm = function(id) {
+    const el = document.getElementById(`respForm-${id}`);
+    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+  };
+
+  window.guardarRespuesta = async function(id, postId) {
+    const txt = document.getElementById(`respTxt-${id}`)?.value.trim();
+    if (!txt) return;
+    const token = await getAuthToken();
+    await fetch(`${SB_URL}/rest/v1/comentarios?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ respuesta: txt, respondido_at: new Date().toISOString() })
+    });
+    await loadComentarios(postId);
+  };
+
+  window.editarRespuesta = async function(id, postId) {
+    await loadComentarios(postId); // re-render sin respuesta para mostrar form
+    // Después del re-render, el form no existe porque ya tiene respuesta.
+    // Mejor: hacer patch borrando la respuesta y recargar, luego mostrar form.
+    const token = await getAuthToken();
+    await fetch(`${SB_URL}/rest/v1/comentarios?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ respuesta: null, respondido_at: null })
+    });
+    await loadComentarios(postId);
+    toggleRespForm(id);
+    document.getElementById(`respTxt-${id}`)?.focus();
+  };
+
+  window.deleteCom = async function(id, postId) {
+    if (!confirm('¿Eliminar este comentario?')) return;
+    const token = await getAuthToken();
+    await fetch(`${SB_URL}/rest/v1/comentarios?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    await loadComentarios(postId);
+  };
 
   window.enviarComentario = async function(postId) {
     const nombre  = document.getElementById('comNombre')?.value.trim();
@@ -456,6 +511,22 @@
     }
   });
 
+  function updateNavAuth(user, perfil) {
+    const area = document.getElementById('navUserArea');
+    if (!area) return;
+    if (user) {
+      const nombre = perfil?.nombre || user.email.split('@')[0];
+      area.innerHTML = `
+        <span style="font-size:0.72rem;color:var(--muted);font-family:'Nunito',sans-serif">${nombre}</span>
+        <button onclick="doLogout().then(()=>location.reload())" style="background:none;border:1.5px solid var(--beige);padding:6px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);cursor:pointer">Salir</button>`;
+      // Auto-fill nombre en el form de comentarios
+      const comNombreEl = document.getElementById('comNombre');
+      if (comNombreEl && !comNombreEl.value) comNombreEl.value = nombre;
+    } else {
+      area.innerHTML = `<button onclick="openLogin()" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>`;
+    }
+  }
+
   // Iniciar
   if (postParam) {
     loadLista().then(() => renderPost(postParam));
@@ -463,5 +534,7 @@
     loadLista();
   }
 </script>
+<script src="js/auth.js"></script>
+<script>initAuth(updateNavAuth);</script>
 </body>
 </html>

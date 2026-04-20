@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Curso — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Josefin+Sans:wght@100;200;300&family=Nunito:wght@200;300;400;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -170,6 +171,7 @@
     <span class="nav-logo-sub">Psicóloga & Terapeuta</span>
   </a>
   <a href="cursos.html" class="nav-back">← Volver a cursos</a>
+  <div id="navUserArea" style="display:flex;align-items:center;gap:14px"></div>
   <a href="index.html#booking" class="nav-btn">Agendar sesión</a>
 </nav>
 
@@ -193,29 +195,39 @@
     });
   }
 
-  async function load() {
+  let _cursoCache = null;
+
+  async function load(user) {
     if (!id) { render404(); return; }
     try {
-      const endpoint = preview
-        ? `/cursos?id=eq.${id}`          // preview: ignora activo
-        : `/cursos?id=eq.${id}&activo=eq.true`;
-      const res  = await sbFetch(endpoint);
-      const rows = await res.json();
-      const c = rows && rows[0];
+      if (!_cursoCache) {
+        const endpoint = preview
+          ? `/cursos?id=eq.${id}`
+          : `/cursos?id=eq.${id}&activo=eq.true`;
+        const res  = await sbFetch(endpoint);
+        const rows = await res.json();
+        _cursoCache = rows && rows[0];
+      }
+      const c = _cursoCache;
       if (!c) { render404(); return; }
 
-      if (preview) {
-        renderPreviewBanner();
-        renderCurso(c);
-        return;
-      }
+      if (preview) { renderPreviewBanner(); renderCurso(c); return; }
 
       const isPaid = !c.gratuito && c.precio;
-      if (isPaid) {
-        const cached = localStorage.getItem(`acceso_${id}`);
-        cached ? renderCurso(c) : renderPaywall(c);
-      } else {
+      if (!isPaid) { renderCurso(c); return; }
+
+      // Curso de pago: verificar sesión y acceso
+      if (!user) { renderPaywall(c, 'noAuth'); return; }
+
+      const token = await getAuthToken();
+      const r = await fetch(`${SB_URL}/rest/v1/accesos?user_id=eq.${user.id}&curso_id=eq.${id}&select=id`, {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token }
+      });
+      const rows2 = await r.json();
+      if (Array.isArray(rows2) && rows2.length > 0) {
         renderCurso(c);
+      } else {
+        renderPaywall(c, 'noAcceso');
       }
     } catch(e) { render404(); }
   }
@@ -227,7 +239,7 @@
     document.body.appendChild(bar);
   }
 
-  function renderPaywall(c) {
+  function renderPaywall(c, reason) {
     const tema = c.color_tema || '#c9858a';
     document.title = c.titulo + ' — Energía Holística Majo';
     document.documentElement.style.setProperty('--tema', tema);
@@ -238,6 +250,15 @@
         ${c.intro.split(/\n\n+/).map(p => `<p>${p}</p>`).join('')}
         <div class="intro-divider"></div>
       </section>` : '';
+
+    const subMsg = reason === 'noAuth'
+      ? 'Inicia sesión para ver si tienes acceso a este curso.'
+      : 'Tu cuenta no tiene acceso a este curso aún. Si ya lo compraste, escríbele a Majo.';
+    const btnHTML = reason === 'noAuth'
+      ? `<button class="paywall-buy" onclick="openLogin('Inicia sesión para acceder al curso')">Iniciar sesión →</button>`
+      : c.link_pago
+        ? `<a href="${c.link_pago}" target="_blank" class="paywall-buy" style="background:${tema}">Comprar acceso →</a>`
+        : '';
 
     document.getElementById('main').innerHTML = `
       <section class="hero" style="background:radial-gradient(ellipse at 50% 60%, ${hex2rgba(tema,0.15)} 0%, transparent 70%), linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%)">
@@ -254,53 +275,10 @@
         <div class="paywall-inner">
           <div class="paywall-lock">🔒</div>
           <h2 class="paywall-title">Contenido <em>exclusivo</em></h2>
-          <p class="paywall-sub">Este curso es de acceso exclusivo para alumnas que lo han adquirido.<br>Si ya compraste el curso, ingresa el correo con el que lo adquiriste.</p>
-          <div class="paywall-divider"><span>¿Ya adquiriste el curso?</span></div>
-          <div class="paywall-form">
-            <input type="email" id="paywallEmail" placeholder="tu@correo.com"/>
-            <button id="paywallBtn">Acceder →</button>
-          </div>
-          <p class="paywall-msg" id="paywallMsg"></p>
+          <p class="paywall-sub">${subMsg}</p>
+          ${btnHTML}
         </div>
       </section>`;
-
-    document.getElementById('paywallBtn').addEventListener('click', () => checkAcceso(id, c));
-    document.getElementById('paywallEmail').addEventListener('keydown', e => {
-      if (e.key === 'Enter') checkAcceso(id, c);
-    });
-  }
-
-  async function checkAcceso(cursoId, c) {
-    const emailInput = document.getElementById('paywallEmail');
-    const msgEl      = document.getElementById('paywallMsg');
-    const btn        = document.getElementById('paywallBtn');
-    const email      = emailInput.value.trim().toLowerCase();
-
-    if (!email || !email.includes('@')) {
-      msgEl.textContent = 'Ingresa un correo válido.';
-      msgEl.className = 'paywall-msg err';
-      return;
-    }
-    btn.textContent = 'Verificando…'; btn.disabled = true;
-
-    try {
-      const res  = await sbFetch(`/accesos?curso_id=eq.${cursoId}&email=eq.${encodeURIComponent(email)}&activo=eq.true`);
-      const rows = await res.json();
-      if (rows && rows.length > 0) {
-        localStorage.setItem(`acceso_${cursoId}`, email);
-        msgEl.textContent = '¡Acceso verificado! Cargando curso…';
-        msgEl.className = 'paywall-msg ok';
-        setTimeout(() => renderCurso(c), 900);
-      } else {
-        msgEl.textContent = 'No encontramos acceso para este correo. Verifica que sea el mismo con que adquiriste el curso.';
-        msgEl.className = 'paywall-msg err';
-        btn.textContent = 'Acceder →'; btn.disabled = false;
-      }
-    } catch(e) {
-      msgEl.textContent = 'Error de conexión. Intenta de nuevo.';
-      msgEl.className = 'paywall-msg err';
-      btn.textContent = 'Acceder →'; btn.disabled = false;
-    }
   }
 
   function hex2rgba(hex, a) {
@@ -473,7 +451,26 @@
     document.getElementById('progressBar').style.width = pct + '%';
   });
 
-  load();
+  function updateNavAuth(user, perfil) {
+    const area = document.getElementById('navUserArea');
+    if (!area) return;
+    if (user) {
+      const nombre = perfil?.nombre || user.email.split('@')[0];
+      area.innerHTML = `
+        <a href="mis-cursos.html" style="font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);text-decoration:none;font-family:'Nunito',sans-serif">Mis Cursos</a>
+        <span style="font-size:0.72rem;color:var(--muted);font-family:'Nunito',sans-serif">${nombre}</span>
+        <button onclick="doLogout().then(()=>location.reload())" style="background:none;border:1.5px solid var(--beige);padding:6px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);cursor:pointer">Salir</button>`;
+    } else {
+      area.innerHTML = `<button onclick="openLogin()" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>`;
+    }
+  }
+</script>
+<script src="js/auth.js"></script>
+<script>
+  initAuth(async (user, perfil) => {
+    updateNavAuth(user, perfil);
+    await load(user);
+  });
 </script>
 </body>
 </html>
