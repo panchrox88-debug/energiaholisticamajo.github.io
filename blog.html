@@ -129,6 +129,17 @@
     .comentario-submit:disabled { background: var(--beige); color: var(--muted); cursor: not-allowed; }
     .comentario-msg-ok { font-size: 0.82rem; color: #2d6a4f; }
     .comentario-msg-err { font-size: 0.82rem; color: var(--red, #c9585a); }
+    .comentario-respuesta {
+      margin-top: 12px; margin-left: 16px;
+      padding: 12px 14px;
+      background: var(--blush); border-radius: 10px;
+      border-left: 3px solid var(--rose);
+    }
+    .comentario-respuesta-autor {
+      font-size: 0.72rem; font-weight: 400; color: var(--rose);
+      letter-spacing: 0.08em; margin-bottom: 4px;
+      font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 0.9rem;
+    }
 
     /* ── EMPTY ── */
     .empty-state { text-align: center; padding: 80px 24px; color: var(--muted); font-size: 0.9rem; line-height: 2; }
@@ -373,6 +384,11 @@
             <span class="comentario-fecha">${formatFecha(c.created_at)}</span>
           </div>
           <p class="comentario-msg">${esc(c.mensaje)}</p>
+          ${c.respuesta ? `
+            <div class="comentario-respuesta">
+              <div class="comentario-respuesta-autor">Energía Holística Majo</div>
+              <p class="comentario-msg" style="margin-top:4px">${esc(c.respuesta)}</p>
+            </div>` : ''}
         </div>`).join('');
     } catch(e) {
       lista.innerHTML = `<p class="comentario-empty">No se pudieron cargar los comentarios.</p>`;
