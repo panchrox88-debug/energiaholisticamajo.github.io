@@ -169,25 +169,35 @@
     .preview-titulo { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 400; color: var(--dark); line-height: 1.2; margin-bottom: 12px; }
     .preview-intro { font-size: 0.88rem; line-height: 1.85; color: var(--muted); margin-bottom: 24px; }
     .preview-items-titulo {
-      font-size: 0.65rem; letter-spacing: 0.4em; text-transform: uppercase;
-      color: var(--gold); margin-bottom: 14px;
+      font-size: 0.62rem; letter-spacing: 0.45em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 16px;
     }
-    .preview-items-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-    .preview-items-list li {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 0.88rem; line-height: 1.6; color: var(--dark);
-      padding: 10px 14px; background: white; border-radius: 12px;
-      border: 1.5px solid var(--beige);
+    .preview-items-list { list-style: none; display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
+    .preview-item-row {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 0.875rem; color: var(--dark);
+      padding: 13px 16px; background: white;
+      border: 1.5px solid var(--beige); border-radius: 14px;
+      margin-bottom: 3px; transition: border-color 0.2s, background 0.2s;
     }
-    .preview-item-emoji { font-size: 1.2rem; flex-shrink: 0; }
+    .preview-item-row.picker-open {
+      border-radius: 14px 14px 0 0;
+      border-bottom-color: transparent;
+      background: var(--cream);
+    }
+    .preview-item-emoji {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--blush); display: flex; align-items: center;
+      justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .preview-item-nombre { flex: 1; font-weight: 300; }
     .preview-item-tipo {
-      font-size: 0.62rem; padding: 2px 8px; border-radius: 10px;
-      flex-shrink: 0;
+      font-size: 0.6rem; padding: 3px 9px; border-radius: 10px; flex-shrink: 0;
+      letter-spacing: 0.08em; text-transform: uppercase;
     }
     .tipo-servicio { background: var(--blush); color: var(--rose); }
-    .tipo-curso    { background: #e8f4ff; color: #2563eb; }
-    .preview-item-nombre { flex: 1; }
-    .preview-item-precio { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+    .tipo-curso    { background: #e8f0ff; color: #5b7ec9; }
+    .preview-item-precio { font-size: 0.82rem; color: var(--muted); white-space: nowrap; font-family: 'Cormorant Garamond', serif; font-size: 1rem; }
     .preview-divider { height: 1px; background: var(--beige); margin-bottom: 24px; }
     .preview-pricing {
       display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
@@ -225,67 +235,85 @@
     }
     .cal-day {
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      border-radius: 8px; font-size: 0.82rem; cursor: pointer;
+      border-radius: 50%; font-size: 0.82rem; cursor: pointer;
       transition: background 0.15s, color 0.15s;
       border: none; background: transparent; font-family: 'Nunito', sans-serif;
     }
     .cal-day.empty { cursor: default; }
-    .cal-day.disabled { color: var(--beige); cursor: default; pointer-events: none; }
+    .cal-day.disabled { color: #ddd; cursor: default; pointer-events: none; }
     .cal-day.available { color: var(--dark); }
     .cal-day.available:hover { background: var(--blush); color: var(--rose); }
-    .cal-day.selected { background: var(--rose); color: white; font-weight: 400; }
-    .cal-day.today { border: 1.5px solid var(--gold); }
+    .cal-day.selected { background: var(--rose); color: white; }
+    .cal-day.today { outline: 1.5px solid var(--gold-lt); outline-offset: -1px; }
 
     /* ── SLOTS ── */
     .slots-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
     .slot-pill {
       padding: 7px 16px; border-radius: 20px; font-size: 0.78rem;
-      border: 1.5px solid var(--beige); background: transparent;
+      border: 1.5px solid var(--beige); background: white;
       color: var(--muted); cursor: pointer; font-family: 'Nunito', sans-serif;
       transition: all 0.15s;
     }
-    .slot-pill:hover { border-color: var(--rose); color: var(--rose); }
+    .slot-pill:hover { border-color: var(--rose); color: var(--rose); background: var(--blush); }
     .slot-pill.selected { background: var(--rose); border-color: var(--rose); color: white; }
 
     /* ── PICKER POR ÍTEM ── */
     .item-date-btn {
       margin-left: auto; flex-shrink: 0;
-      font-size: 0.72rem; font-family: 'Nunito', sans-serif;
-      background: var(--beige); color: var(--muted);
-      border: none; border-radius: 8px; padding: 5px 11px;
-      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+      font-size: 0.7rem; font-family: 'Nunito', sans-serif; letter-spacing: 0.06em;
+      background: transparent; color: var(--rose);
+      border: 1.5px solid var(--rose-lt); border-radius: 20px;
+      padding: 5px 14px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
-    .item-date-btn:hover { background: var(--blush); color: var(--rose); }
-    .item-date-btn.confirmed { background: var(--blush); color: var(--rose); font-weight: 400; }
-    .preview-item-row.picker-open { border-radius: 12px 12px 0 0; border-bottom-color: transparent; }
+    .item-date-btn:hover { background: var(--blush); border-color: var(--rose); }
+    .item-date-btn.confirmed {
+      background: var(--blush); border-color: var(--rose); color: var(--rose);
+    }
+    .preview-item-row.picker-open {
+      border-radius: 14px 14px 0 0;
+      border-bottom-color: var(--blush);
+      background: var(--cream);
+    }
     .item-picker-row {
-      display: none; flex-direction: column; gap: 12px;
-      padding: 14px; background: var(--cream);
+      display: none; flex-direction: column; gap: 14px;
+      padding: 20px 18px 18px;
+      background: white;
       border: 1.5px solid var(--beige); border-top: none;
-      border-radius: 0 0 12px 12px;
+      border-radius: 0 0 14px 14px;
+      box-shadow: 0 8px 24px rgba(201,133,138,0.08);
+      margin-bottom: 3px;
     }
     .item-picker-row.open { display: flex; }
     .mini-cal-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .mini-cal-mes { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--dark); text-transform: capitalize; }
+    .mini-cal-mes {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.1rem;
+      font-weight: 400; color: var(--dark); text-transform: capitalize;
+    }
+    .slots-label {
+      font-size: 0.62rem; letter-spacing: 0.38em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px; margin-top: 4px;
+    }
     .btn-confirmar {
-      align-self: flex-end; margin-top: 4px;
+      width: 100%; margin-top: 6px;
       background: var(--rose); color: white; border: none;
-      border-radius: 20px; padding: 7px 22px;
-      font-family: 'Nunito', sans-serif; font-size: 0.75rem;
-      letter-spacing: 0.12em; cursor: pointer; transition: background 0.2s;
+      border-radius: 40px; padding: 11px;
+      font-family: 'Nunito', sans-serif; font-size: 0.72rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.2s;
     }
     .btn-confirmar:disabled { background: var(--beige); color: var(--muted); cursor: not-allowed; }
     .btn-confirmar:not(:disabled):hover { background: var(--dark); }
 
     /* ── BTN COMPRAR ── */
     .btn-comprar {
-      display: inline-flex; align-items: center;
+      display: flex; align-items: center; justify-content: center;
+      width: 100%;
       background: var(--rose); color: white;
-      padding: 13px 28px; border-radius: 40px;
+      padding: 14px 28px; border-radius: 40px;
       font-family: 'Nunito', sans-serif; font-size: 0.78rem;
-      letter-spacing: 0.15em; text-transform: uppercase;
+      letter-spacing: 0.2em; text-transform: uppercase;
       border: none; cursor: pointer; transition: background 0.3s; white-space: nowrap;
       margin-top: 8px;
     }
@@ -651,7 +679,7 @@
       return;
     }
     el.innerHTML = `
-      <p style="font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin:10px 0 8px">Hora</p>
+      <p class="slots-label">Horario disponible</p>
       <div class="slots-grid">
         ${slots.map(s => `<button class="slot-pill ${s===sel.slot?'selected':''}" onclick="selectItemSlot(${idx},'${s}')">${s}</button>`).join('')}
       </div>`;
@@ -685,7 +713,7 @@
       const [y,m,d] = sel.date.split('-');
       const fecha = new Date(sel.date + 'T12:00:00');
       const label = fecha.toLocaleDateString('es-CL', {day:'numeric', month:'short'});
-      btn.textContent = `${label} · ${sel.slot}`;
+      btn.textContent = `✓ ${label} · ${sel.slot}`;
       btn.classList.add('confirmed');
     }
     updatePagarBtn();
