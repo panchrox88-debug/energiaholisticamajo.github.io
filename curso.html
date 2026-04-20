@@ -181,7 +181,9 @@
   const SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
   const SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
 
-  const id = new URLSearchParams(location.search).get('id');
+  const params  = new URLSearchParams(location.search);
+  const id      = params.get('id');
+  const preview = params.get('preview') === '1';
 
   async function sbFetch(path) {
     return fetch(SB_URL + '/rest/v1' + path, {
@@ -192,10 +194,19 @@
   async function load() {
     if (!id) { render404(); return; }
     try {
-      const res  = await sbFetch(`/cursos?id=eq.${id}&activo=eq.true`);
+      const endpoint = preview
+        ? `/cursos?id=eq.${id}`          // preview: ignora activo
+        : `/cursos?id=eq.${id}&activo=eq.true`;
+      const res  = await sbFetch(endpoint);
       const rows = await res.json();
       const c = rows && rows[0];
       if (!c) { render404(); return; }
+
+      if (preview) {
+        renderPreviewBanner();
+        renderCurso(c);
+        return;
+      }
 
       const isPaid = !c.gratuito && c.precio;
       if (isPaid) {
@@ -205,6 +216,13 @@
         renderCurso(c);
       }
     } catch(e) { render404(); }
+  }
+
+  function renderPreviewBanner() {
+    const bar = document.createElement('div');
+    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999;background:#3d2b2b;color:rgba(255,255,255,0.85);text-align:center;padding:10px 24px;font-size:0.75rem;letter-spacing:0.15em;font-family:Nunito,sans-serif;';
+    bar.innerHTML = '👁 MODO VISTA PREVIA — Este curso puede no estar publicado &nbsp;·&nbsp; <a href="javascript:window.close()" style="color:#dba8ac;text-decoration:none;">Cerrar</a>';
+    document.body.appendChild(bar);
   }
 
   function renderPaywall(c) {

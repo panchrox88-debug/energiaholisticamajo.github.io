@@ -757,9 +757,14 @@
     <!-- Footer fijo -->
     <div style="padding:16px 28px;border-top:1.5px solid var(--beige);flex-shrink:0">
       <div id="cursoModalMsg" class="msg-banner" style="margin-bottom:12px"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn btn-ghost" id="cancelCursoBtn">Cancelar</button>
-        <button class="btn btn-primary" id="saveCursoBtn">Guardar curso</button>
+      <div style="display:flex;gap:10px;justify-content:space-between;align-items:center">
+        <a id="previewCursoBtn" href="#" target="_blank"
+           style="font-size:0.78rem;color:var(--muted);text-decoration:none;display:none;gap:6px;align-items:center"
+           title="Ver cómo queda el curso (sin publicar)">👁 Vista previa</a>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" id="cancelCursoBtn">Cancelar</button>
+          <button class="btn btn-primary" id="saveCursoBtn">Guardar curso</button>
+        </div>
       </div>
     </div>
 
@@ -1841,6 +1846,13 @@
     document.getElementById('cursoTabSecciones').style.display = 'none';
     document.getElementById('cursoTabAccesos').style.display   = 'none';
     document.getElementById('cursoModalTitle').textContent = c ? 'Editar curso' : 'Nuevo curso';
+    const prevBtn = document.getElementById('previewCursoBtn');
+    if (c?.id) {
+      prevBtn.href = `../curso.html?id=${c.id}&preview=1`;
+      prevBtn.style.display = 'flex';
+    } else {
+      prevBtn.style.display = 'none';
+    }
     document.getElementById('cursoImgPreview').innerHTML = cursoImgUrl
       ? `<img src="${cursoImgUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"/>`
       : '';
