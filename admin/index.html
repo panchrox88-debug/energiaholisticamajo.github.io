@@ -1730,6 +1730,17 @@
   }
   window.updateSeccion = function(i, key, val) { CURSO_SECCIONES[i][key] = val; };
   window.deleteSeccion = function(i) { CURSO_SECCIONES.splice(i, 1); renderSeccionesList(); updateSeccionesBadge(); };
+
+  function videoEmbed(url) {
+    if (!url) return '';
+    // YouTube
+    const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+    if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+    // Vimeo
+    const vi = url.match(/vimeo\.com\/(\d+)/);
+    if (vi) return `https://player.vimeo.com/video/${vi[1]}`;
+    return url; // ya es embed u otro formato
+  }
   window.uploadSeccionIconoImg = async function(input, i) {
     const msgEl = document.getElementById('cursoModalMsg');
     msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
@@ -1797,6 +1808,11 @@
           <div class="field field-full"><label>Descripción</label><textarea oninput="updateSeccion(${i},'descripcion',this.value)" style="min-height:70px">${_esc(s.descripcion||'')}</textarea></div>
           <div class="field"><label>Etiqueta del cierre</label><input type="text" value="${_esc(s.afirmacion_label||'')}" oninput="updateSeccion(${i},'afirmacion_label',this.value)" placeholder="Afirmación, Reflexión, Mantra…"/></div>
           <div class="field"><label>Frase de cierre</label><input type="text" value="${_esc(s.afirmacion||'')}" oninput="updateSeccion(${i},'afirmacion',this.value)" placeholder="Ej: Frase inspiradora para cerrar esta sección…"/></div>
+          <div class="field field-full">
+            <label>Video (YouTube o Vimeo — opcional)</label>
+            <input type="text" value="${_esc(s.video||'')}" oninput="updateSeccion(${i},'video',this.value.trim())" placeholder="Ej: https://youtube.com/watch?v=... o https://vimeo.com/..."/>
+            ${s.video ? `<div style="margin-top:8px;border-radius:10px;overflow:hidden;aspect-ratio:16/9"><iframe src="${_esc(videoEmbed(s.video))}" style="width:100%;height:100%;border:none" allowfullscreen loading="lazy"></iframe></div>` : ''}
+          </div>
           <div class="field field-full">
             <label>Imagen de la sección (opcional)</label>
             ${s.imagen ? `
@@ -1891,7 +1907,7 @@
   }
 
   document.getElementById('addSeccionBtn').addEventListener('click', () => {
-    CURSO_SECCIONES.push({ icono: '✨', color: '#c9858a', titulo: '', subtitulo: '', ubicacion: '', tags: [], descripcion: '', afirmacion: '', imagen: '', imagen_pos: 'abajo' });
+    CURSO_SECCIONES.push({ icono: '✨', color: '#c9858a', titulo: '', subtitulo: '', ubicacion: '', tags: [], descripcion: '', afirmacion: '', imagen: '', imagen_pos: 'abajo', video: '' });
     renderSeccionesList();
     updateSeccionesBadge();
     document.getElementById('seccionesList').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

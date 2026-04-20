@@ -86,6 +86,8 @@
     .seccion-divider { width: 40px; height: 1px; background: var(--gold-lt); margin-bottom: 20px; }
     .seccion-desc { font-size: 0.92rem; line-height: 2.1; color: var(--muted); margin-bottom: 24px; white-space: pre-line; }
     .seccion-afirmacion { background: var(--cream); border-left: 3px solid var(--c,var(--rose)); padding: 14px 18px; border-radius: 0 10px 10px 0; margin-top: 20px; }
+    .seccion-video { margin-top: 28px; border-radius: 14px; overflow: hidden; aspect-ratio: 16/9; box-shadow: 0 8px 32px rgba(61,43,43,0.12); }
+    .seccion-video iframe { width: 100%; height: 100%; border: none; display: block; }
     .seccion-afirmacion-label { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
     .seccion-afirmacion p { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-style: italic; color: var(--dark); line-height: 1.6; }
     /* Imagen de sección — contain + fondo de color (sin recorte) */
@@ -381,22 +383,31 @@
 
       const descEl = `<div class="seccion-desc">${s.descripcion||''}</div>`;
 
+      const videoEl = s.video ? `<div class="seccion-video"><iframe src="${videoEmbed(s.video)}" allowfullscreen loading="lazy"></iframe></div>` : '';
+
       // Ensamblar según posición
       let bodyHTML;
       if (!s.imagen) {
-        bodyHTML = descEl + afirEl;
+        bodyHTML = descEl + afirEl + videoEl;
       } else if (pos === 'arriba') {
-        bodyHTML = imgEl + descEl + afirEl;
+        bodyHTML = imgEl + descEl + afirEl + videoEl;
       } else if (pos === 'abajo') {
-        bodyHTML = descEl + imgEl + afirEl;
+        bodyHTML = descEl + imgEl + afirEl + videoEl;
       } else {
-        // izquierda / derecha
         const dir = pos === 'izquierda' ? 'row' : 'row-reverse';
         const lateralClass = pos === 'izquierda' ? 'seccion-lateral seccion-lateral-izq' : 'seccion-lateral seccion-lateral-der';
         bodyHTML = `<div class="${lateralClass}" style="flex-direction:${dir}">
           ${imgEl}
           <div class="seccion-lateral-text">${descEl}${afirEl}</div>
-        </div>`;
+        </div>${videoEl}`;
+      }
+
+      function videoEmbed(url) {
+        const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+        if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+        const vi = url.match(/vimeo\.com\/(\d+)/);
+        if (vi) return `https://player.vimeo.com/video/${vi[1]}`;
+        return url;
       }
 
       return `
