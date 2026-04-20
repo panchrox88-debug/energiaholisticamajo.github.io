@@ -1624,6 +1624,18 @@
   }
   window.updateSeccion = function(i, key, val) { CURSO_SECCIONES[i][key] = val; };
   window.deleteSeccion = function(i) { CURSO_SECCIONES.splice(i, 1); renderSeccionesList(); updateSeccionesBadge(); };
+  window.uploadSeccionImg = async function(input, i) {
+    const msgEl = document.getElementById('cursoModalMsg');
+    msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
+    try {
+      const url = await uploadFile(input.files[0], 'cursos');
+      CURSO_SECCIONES[i].imagen = url;
+      renderSeccionesList();
+      msgEl.textContent = 'Imagen subida ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 2500);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    input.value = '';
+  };
 
   function renderSeccionesList() {
     const el = document.getElementById('seccionesList');
@@ -1654,6 +1666,14 @@
           <div class="field"><label>Tags (separados por coma)</label><input type="text" value="${_esc((s.tags||[]).join(', '))}" oninput="updateSeccion(${i},'tags',this.value.split(',').map(t=>t.trim()).filter(Boolean))" placeholder="Seguridad, Estabilidad, Raíces"/></div>
           <div class="field field-full"><label>Descripción</label><textarea oninput="updateSeccion(${i},'descripcion',this.value)" style="min-height:70px">${_esc(s.descripcion||'')}</textarea></div>
           <div class="field field-full"><label>Afirmación</label><input type="text" value="${_esc(s.afirmacion||'')}" oninput="updateSeccion(${i},'afirmacion',this.value)" placeholder="Estoy segura, arraigada y en paz…"/></div>
+          <div class="field field-full">
+            <label>Imagen de la sección (opcional)</label>
+            ${s.imagen ? `<div style="margin-bottom:8px"><img src="${_esc(s.imagen)}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px"/><button type="button" onclick="updateSeccion(${i},'imagen','');renderSeccionesList()" style="margin-top:4px;font-size:.72rem;background:none;border:none;color:var(--red);cursor:pointer">✕ Quitar imagen</button></div>` : ''}
+            <label class="upload-zone" style="padding:14px" onclick="event.stopPropagation()">
+              <input type="file" accept="image/*" onchange="uploadSeccionImg(this,${i})"/>
+              📁 ${s.imagen ? 'Cambiar imagen' : 'Subir imagen'}
+            </label>
+          </div>
         </div>
       </div>`).join('');
   }

@@ -237,6 +237,7 @@
               ${s.ubicacion ? `<div class="seccion-subtitulo">${s.ubicacion}</div>` : ''}
               <div class="seccion-divider"></div>
               <div class="seccion-desc">${s.descripcion||''}</div>
+              ${s.imagen ? `<img src="${s.imagen}" alt="${s.titulo||''}" style="width:100%;max-height:340px;object-fit:cover;border-radius:16px;margin:24px 0 8px"/>` : ''}
               ${s.afirmacion ? `
                 <div class="seccion-afirmacion" style="--c:${color}; border-left-color:${color}">
                   <div class="seccion-afirmacion-label">Afirmación</div>
