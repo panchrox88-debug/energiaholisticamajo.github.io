@@ -129,6 +129,19 @@
     .curso-cta.ghost { background: transparent; color: var(--rose); border: 1.5px solid var(--rose); }
     .curso-cta.ghost:hover { background: var(--rose); color: white; }
 
+    /* ── PAGINADOR ── */
+    .paginador { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 64px 80px; }
+    .pag-btn {
+      width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--beige);
+      background: transparent; font-family: 'Nunito', sans-serif; font-size: 0.82rem;
+      color: var(--muted); cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pag-btn:hover { border-color: var(--rose); color: var(--rose); }
+    .pag-btn.active { background: var(--rose); border-color: var(--rose); color: white; }
+    .pag-btn:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+    .pag-arrow { font-size: 1rem; }
+
     /* ── EMPTY ── */
     .empty-state { text-align: center; padding: 80px 24px; color: var(--muted); font-size: 0.9rem; line-height: 2; }
     .empty-state .big { font-size: 3rem; margin-bottom: 16px; }
@@ -284,6 +297,9 @@
   </div>
 </main>
 
+<!-- Paginador -->
+<div class="paginador" id="paginador"></div>
+
 <!-- Modal preview curso -->
 <div class="preview-overlay" id="previewOverlay">
   <div class="preview-box" id="previewBox">
@@ -308,6 +324,8 @@
 
   let todosLosCursos = [];
   let catActual = '';
+  let paginaActual = 1;
+  const POR_PAGINA = 6;
 
   async function loadCursos() {
     const res  = await sbFetch('/cursos?activo=eq.true&order=orden.asc,created_at.desc');
@@ -327,6 +345,7 @@
         el.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         catActual = btn.dataset.cat;
+        paginaActual = 1;
         renderCursos();
       });
     });
@@ -343,10 +362,16 @@
         <div class="big">🌸</div>
         Próximamente nuevos cursos.<br>¡Vuelve pronto!
       </div>`;
+      document.getElementById('paginador').innerHTML = '';
       return;
     }
 
-    grid.innerHTML = lista.map(c => {
+    const totalPags = Math.ceil(lista.length / POR_PAGINA);
+    if (paginaActual > totalPags) paginaActual = totalPags;
+    const inicio = (paginaActual - 1) * POR_PAGINA;
+    const pagina = lista.slice(inicio, inicio + POR_PAGINA);
+
+    grid.innerHTML = pagina.map(c => {
       const imgHTML = c.imagen
         ? `<img class="curso-img" src="${c.imagen}" alt="${c.titulo}" loading="lazy"/>`
         : `<div class="curso-img-placeholder">✨</div>`;
@@ -386,6 +411,22 @@
           </div>
         </article>`;
     }).join('');
+
+    // Paginador
+    const pag = document.getElementById('paginador');
+    if (totalPags <= 1) { pag.innerHTML = ''; return; }
+    let pagHTML = `<button class="pag-btn pag-arrow" ${paginaActual===1?'disabled':''} onclick="irPagina(${paginaActual-1})">‹</button>`;
+    for (let i = 1; i <= totalPags; i++) {
+      pagHTML += `<button class="pag-btn ${i===paginaActual?'active':''}" onclick="irPagina(${i})">${i}</button>`;
+    }
+    pagHTML += `<button class="pag-btn pag-arrow" ${paginaActual===totalPags?'disabled':''} onclick="irPagina(${paginaActual+1})">›</button>`;
+    pag.innerHTML = pagHTML;
+  }
+
+  function irPagina(n) {
+    paginaActual = n;
+    renderCursos();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ── MODAL PREVIEW ──
