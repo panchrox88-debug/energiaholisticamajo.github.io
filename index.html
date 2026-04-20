@@ -1782,7 +1782,9 @@
       duracion_sesion: 60, pausa_minutos: 15,
       descanso_desde: '', descanso_hasta: '',
       dias_habiles: [1,2,3,4,5,6], fechas_bloqueadas: [],
+      horarios_por_dia: {},
     };
+    let AGENDA_DIA_OVERRIDE = null; // override del día seleccionado
 
     async function loadAgenda() {
       try {
@@ -1793,11 +1795,13 @@
     }
 
     // Genera slots de hora automáticamente según duración + pausa + descanso diario
+    // Si el día tiene horario propio, usa ese; si no, usa el general
     function generarHorarios() {
       const toMin = t => { const [h, m] = (t||'0:0').split(':').map(Number); return h * 60 + (m || 0); };
       const toStr = m => { const h = Math.floor(m / 60); const min = m % 60; return `${h}:${min.toString().padStart(2, '0')}`; };
-      const inicio    = toMin(AGENDA.hora_inicio);
-      const fin       = toMin(AGENDA.hora_fin);
+      const ov    = AGENDA_DIA_OVERRIDE || {};
+      const inicio    = toMin(ov.hora_inicio || AGENDA.hora_inicio);
+      const fin       = toMin(ov.hora_fin    || AGENDA.hora_fin);
       const dur       = AGENDA.duracion_sesion || 60;
       const pausa     = AGENDA.pausa_minutos   || 0;
       const breakFrom = AGENDA.descanso_desde  ? toMin(AGENDA.descanso_desde) : null;
@@ -1932,6 +1936,9 @@
       [...elDays.children].forEach((c, i) => c.classList.toggle('selected', i === idx));
       state.time = null;
       SLOTS_OCUPADOS = [];
+      // Horario propio del día de la semana (ej: sábado con horario reducido)
+      const dow = days[idx].getDay(); // 0=dom,1=lun,...,6=sáb
+      AGENDA_DIA_OVERRIDE = (AGENDA.horarios_por_dia || {})[String(dow)] || null;
       // Cargar slots ocupados desde Supabase
       try {
         const d = days[idx];

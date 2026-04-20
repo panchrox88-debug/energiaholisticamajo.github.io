@@ -260,6 +260,17 @@
       background: var(--rose); color: white; border-color: var(--rose);
     }
 
+    /* Horarios por día */
+    .day-override-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .day-override-row {
+      display: grid; grid-template-columns: 100px 1fr 1fr;
+      gap: 10px; align-items: center;
+      background: var(--cream); border-radius: 10px; padding: 10px 14px;
+    }
+    .day-override-row label { font-size: 0.8rem; font-weight: 400; color: var(--dark); }
+    .day-override-row input { font-size: 0.82rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--beige); background: white; }
+    @media (max-width: 600px) { .day-override-row { grid-template-columns: 1fr 1fr 1fr; } }
+
     /* Loading spinner */
     .loading {
       text-align: center; padding: 40px;
@@ -407,6 +418,10 @@
               <div class="day-pill" data-d="6">Sábado</div>
               <div class="day-pill" data-d="0">Domingo</div>
             </div>
+          </div>
+          <div class="field" style="margin-top:8px">
+            <label>Horario personalizado por día <span style="font-weight:300;color:var(--muted)">(opcional — dejar en blanco para usar el horario general)</span></label>
+            <div class="day-override-list" id="dayOverrideList"></div>
           </div>
           <div class="field" style="margin-top:8px">
             <label>Fechas bloqueadas</label>
@@ -609,6 +624,8 @@
   let AGENDA_DATA = {};
   let FECHAS_BLOQUEADAS = [];
   let DIAS_HABILES = [1,2,3,4,5,6];
+  let HORARIOS_POR_DIA = {}; // { "6": { hora_inicio:"10:00", hora_fin:"14:00" } }
+  const DAY_NAMES_ADMIN = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
   // ── REST helpers ──────────────────────────────────────────
   function authHeaders(extra = {}) {
@@ -1095,9 +1112,42 @@
         pill.classList.toggle('sel', DIAS_HABILES.includes(d));
       });
 
+      HORARIOS_POR_DIA = a.horarios_por_dia || {};
+      renderDayOverrides();
       renderFechasBloqueadas();
     } catch(e) { showMsg('agendaMsg', 'Error al cargar agenda: ' + e.message, 'err'); }
   }
+
+  // Renderiza los campos de horario personalizado por día activo
+  function renderDayOverrides() {
+    const el = document.getElementById('dayOverrideList');
+    if (!el) return;
+    // Solo días activos, ordenados
+    const diasOrdenados = [...DIAS_HABILES].sort((a,b) => a - b);
+    el.innerHTML = diasOrdenados.map(d => {
+      const ov = HORARIOS_POR_DIA[String(d)] || {};
+      return `
+        <div class="day-override-row">
+          <label>${DAY_NAMES_ADMIN[d]}</label>
+          <input type="text" placeholder="Inicio (ej: 10:00)"
+            id="ov-inicio-${d}" value="${ov.hora_inicio || ''}"
+            oninput="window._updateOverride(${d})"/>
+          <input type="text" placeholder="Fin (ej: 14:00)"
+            id="ov-fin-${d}" value="${ov.hora_fin || ''}"
+            oninput="window._updateOverride(${d})"/>
+        </div>`;
+    }).join('');
+  }
+
+  window._updateOverride = d => {
+    const inicio = document.getElementById(`ov-inicio-${d}`)?.value.trim();
+    const fin    = document.getElementById(`ov-fin-${d}`)?.value.trim();
+    if (inicio || fin) {
+      HORARIOS_POR_DIA[String(d)] = { hora_inicio: inicio, hora_fin: fin };
+    } else {
+      delete HORARIOS_POR_DIA[String(d)];
+    }
+  };
 
   // Toggle día
   document.querySelectorAll('.day-pill').forEach(pill => {
@@ -1105,11 +1155,13 @@
       const d = parseInt(pill.dataset.d);
       if (DIAS_HABILES.includes(d)) {
         DIAS_HABILES = DIAS_HABILES.filter(x => x !== d);
+        delete HORARIOS_POR_DIA[String(d)];
       } else {
         DIAS_HABILES.push(d);
         DIAS_HABILES.sort();
       }
       pill.classList.toggle('sel');
+      renderDayOverrides();
     });
   });
 
@@ -1146,8 +1198,9 @@
       pausa_minutos:    parseInt(document.getElementById('ag-pausa').value) || 15,
       descanso_desde:   document.getElementById('ag-break-desde').value.trim() || null,
       descanso_hasta:   document.getElementById('ag-break-hasta').value.trim() || null,
-      dias_habiles:     DIAS_HABILES,
+      dias_habiles:      DIAS_HABILES,
       fechas_bloqueadas: FECHAS_BLOQUEADAS,
+      horarios_por_dia:  HORARIOS_POR_DIA,
     };
     try {
       // upsert: update if exists, insert if not
