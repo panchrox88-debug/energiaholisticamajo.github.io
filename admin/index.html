@@ -1668,8 +1668,22 @@
           <div class="field field-full"><label>Afirmación / Frase cierre</label><input type="text" value="${_esc(s.afirmacion||'')}" oninput="updateSeccion(${i},'afirmacion',this.value)" placeholder="Ej: Frase inspiradora para cerrar esta sección…"/></div>
           <div class="field field-full">
             <label>Imagen de la sección (opcional)</label>
-            ${s.imagen ? `<div style="margin-bottom:8px"><img src="${_esc(s.imagen)}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px"/><button type="button" onclick="updateSeccion(${i},'imagen','');renderSeccionesList()" style="margin-top:4px;font-size:.72rem;background:none;border:none;color:var(--red);cursor:pointer">✕ Quitar imagen</button></div>` : ''}
-            <label class="upload-zone" style="padding:14px" onclick="event.stopPropagation()">
+            ${s.imagen ? `
+              <div style="margin-bottom:10px;position:relative;border-radius:10px;overflow:hidden;max-height:160px">
+                <img src="${_esc(s.imagen)}" style="width:100%;max-height:160px;object-fit:cover;display:block"/>
+                <button type="button" onclick="updateSeccion(${i},'imagen','');renderSeccionesList()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:white;border:none;border-radius:20px;padding:3px 10px;font-size:.72rem;cursor:pointer">✕ Quitar</button>
+              </div>
+              <div style="margin-bottom:10px">
+                <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Posición de la imagen</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  ${['arriba','abajo','izquierda','derecha'].map(pos => `
+                    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;padding:5px 12px;border-radius:20px;border:1.5px solid ${(s.imagen_pos||'abajo')===pos?'var(--rose)':'var(--beige)'};background:${(s.imagen_pos||'abajo')===pos?'var(--blush)':'transparent'}">
+                      <input type="radio" name="imgpos_${i}" value="${pos}" ${(s.imagen_pos||'abajo')===pos?'checked':''} onchange="updateSeccion(${i},'imagen_pos',this.value);renderSeccionesList()" style="accent-color:var(--rose)"/>
+                      ${{arriba:'↑ Arriba',abajo:'↓ Abajo',izquierda:'← Izquierda',derecha:'→ Derecha'}[pos]}
+                    </label>`).join('')}
+                </div>
+              </div>` : ''}
+            <label class="upload-zone" style="padding:14px">
               <input type="file" accept="image/*" onchange="uploadSeccionImg(this,${i})"/>
               📁 ${s.imagen ? 'Cambiar imagen' : 'Subir imagen'}
             </label>
@@ -1697,7 +1711,7 @@
   }
 
   document.getElementById('addSeccionBtn').addEventListener('click', () => {
-    CURSO_SECCIONES.push({ icono: '✨', color: '#c9858a', titulo: '', subtitulo: '', ubicacion: '', tags: [], descripcion: '', afirmacion: '' });
+    CURSO_SECCIONES.push({ icono: '✨', color: '#c9858a', titulo: '', subtitulo: '', ubicacion: '', tags: [], descripcion: '', afirmacion: '', imagen: '', imagen_pos: 'abajo' });
     renderSeccionesList();
     updateSeccionesBadge();
     document.getElementById('seccionesList').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

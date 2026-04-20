@@ -86,6 +86,17 @@
     .seccion-afirmacion { background: var(--cream); border-left: 3px solid var(--c,var(--rose)); padding: 14px 18px; border-radius: 0 10px 10px 0; margin-top: 20px; }
     .seccion-afirmacion-label { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
     .seccion-afirmacion p { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-style: italic; color: var(--dark); line-height: 1.6; }
+    /* Imagen de sección */
+    .seccion-img { border-radius: 16px; object-fit: cover; display: block; }
+    .seccion-img-arriba { width: 100%; max-height: 340px; margin-bottom: 24px; }
+    .seccion-img-abajo  { width: 100%; max-height: 340px; margin: 24px 0 8px; }
+    .seccion-lateral { display: flex; gap: 32px; align-items: flex-start; }
+    .seccion-lateral .seccion-img { width: 42%; flex-shrink: 0; max-height: 360px; align-self: stretch; }
+    .seccion-lateral-text { flex: 1; min-width: 0; }
+    @media (max-width: 700px) {
+      .seccion-lateral { flex-direction: column !important; }
+      .seccion-lateral .seccion-img { width: 100%; max-height: 240px; }
+    }
 
     /* CIERRE */
     .cierre { text-align: center; padding: 100px 64px; background: linear-gradient(180deg, var(--cream) 0%, var(--blush) 100%); }
@@ -236,13 +247,18 @@
               <h2 class="seccion-titulo">${s.titulo}${s.subtitulo ? `<br><em>${s.subtitulo}</em>` : ''}</h2>
               ${s.ubicacion ? `<div class="seccion-subtitulo">${s.ubicacion}</div>` : ''}
               <div class="seccion-divider"></div>
-              <div class="seccion-desc">${s.descripcion||''}</div>
-              ${s.imagen ? `<img src="${s.imagen}" alt="${s.titulo||''}" style="width:100%;max-height:340px;object-fit:cover;border-radius:16px;margin:24px 0 8px"/>` : ''}
-              ${s.afirmacion ? `
-                <div class="seccion-afirmacion" style="--c:${color}; border-left-color:${color}">
-                  <div class="seccion-afirmacion-label">Afirmación</div>
-                  <p>${s.afirmacion}</p>
-                </div>` : ''}
+              ${(()=>{
+                const pos  = s.imagen_pos || 'abajo';
+                const img  = s.imagen ? `<img src="${s.imagen}" alt="${s.titulo||''}" class="seccion-img seccion-img-${pos}"/>` : '';
+                const afir = s.afirmacion ? `<div class="seccion-afirmacion" style="--c:${color}; border-left-color:${color}"><div class="seccion-afirmacion-label">Afirmación</div><p>${s.afirmacion}</p></div>` : '';
+                const desc = `<div class="seccion-desc">${s.descripcion||''}</div>`;
+                if (!s.imagen) return desc + afir;
+                if (pos === 'arriba')    return img + desc + afir;
+                if (pos === 'abajo')     return desc + img + afir;
+                // izquierda / derecha
+                const flexDir = pos === 'izquierda' ? 'row' : 'row-reverse';
+                return `<div class="seccion-lateral" style="flex-direction:${flexDir}">${img}<div class="seccion-lateral-text">${desc}${afir}</div></div>`;
+              })()}
             </div>
           </div>
         </section>`;
