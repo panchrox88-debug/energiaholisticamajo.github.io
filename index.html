@@ -73,8 +73,8 @@
       opacity: 0.7; line-height: 1; padding: 4px;
     }
     .site-banner-close:hover { opacity: 1; }
-    body.banner-open nav { top: 44px; }
-    body.banner-open .hero { padding-top: calc(44px + 80px); }
+    body.banner-open nav { top: var(--banner-h, 44px); }
+    body.banner-open .hero { padding-top: calc(var(--banner-h, 44px) + 80px); }
 
     /* ── WHATSAPP FLOTANTE ── */
     .wa-float {
@@ -2246,6 +2246,17 @@
 
     // ── BANNER PROMO ──────────────────────────────────────────
     let BANNER_DESCUENTO = 0;
+
+    function adjustBannerOffset() {
+      const el = document.getElementById('siteBanner');
+      if (!el) return;
+      const h = el.offsetHeight;
+      document.documentElement.style.setProperty('--banner-h', h + 'px');
+    }
+    window.addEventListener('resize', () => {
+      if (document.body.classList.contains('banner-open')) adjustBannerOffset();
+    });
+
     async function loadBanner() {
       try {
         const res  = await sbFetch('/banner?id=eq.1&select=*');
@@ -2273,10 +2284,12 @@
 
         el.classList.add('visible');
         document.body.classList.add('banner-open');
+        adjustBannerOffset();
 
         document.getElementById('bannerClose').addEventListener('click', () => {
           el.classList.remove('visible');
           document.body.classList.remove('banner-open');
+          document.documentElement.style.removeProperty('--banner-h');
         });
       } catch(e) { console.warn('Banner no disponible', e); }
     }
