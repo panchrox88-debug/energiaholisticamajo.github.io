@@ -260,6 +260,11 @@
         <button class="share-btn" id="copyLink" onclick="copiarLink('${encodeURIComponent(postURL)}')">
           🔗 Copiar link
         </button>
+      </div>
+      <div style="margin-top:40px">
+        <button class="post-back" onclick="volverLista()" style="font-size:.82rem;padding:12px 28px;border:1.5px solid var(--beige);border-radius:40px;background:white;">
+          ← Volver al blog
+        </button>
       </div>`;
     postEl.style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'instant' });
