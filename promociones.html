@@ -247,6 +247,38 @@
     .slot-pill:hover { border-color: var(--rose); color: var(--rose); }
     .slot-pill.selected { background: var(--rose); border-color: var(--rose); color: white; }
 
+    /* ── PICKER POR ÍTEM ── */
+    .item-date-btn {
+      margin-left: auto; flex-shrink: 0;
+      font-size: 0.72rem; font-family: 'Nunito', sans-serif;
+      background: var(--beige); color: var(--muted);
+      border: none; border-radius: 8px; padding: 5px 11px;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .item-date-btn:hover { background: var(--blush); color: var(--rose); }
+    .item-date-btn.confirmed { background: var(--blush); color: var(--rose); font-weight: 400; }
+    .preview-item-row.picker-open { border-radius: 12px 12px 0 0; border-bottom-color: transparent; }
+    .item-picker-row {
+      display: none; flex-direction: column; gap: 12px;
+      padding: 14px; background: var(--cream);
+      border: 1.5px solid var(--beige); border-top: none;
+      border-radius: 0 0 12px 12px;
+    }
+    .item-picker-row.open { display: flex; }
+    .mini-cal-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+    }
+    .mini-cal-mes { font-family: 'Cormorant Garamond', serif; font-size: 1rem; color: var(--dark); text-transform: capitalize; }
+    .btn-confirmar {
+      align-self: flex-end; margin-top: 4px;
+      background: var(--rose); color: white; border: none;
+      border-radius: 20px; padding: 7px 22px;
+      font-family: 'Nunito', sans-serif; font-size: 0.75rem;
+      letter-spacing: 0.12em; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-confirmar:disabled { background: var(--beige); color: var(--muted); cursor: not-allowed; }
+    .btn-confirmar:not(:disabled):hover { background: var(--dark); }
+
     /* ── BTN COMPRAR ── */
     .btn-comprar {
       display: inline-flex; align-items: center;
@@ -447,35 +479,52 @@
   // ── MODAL PREVIEW ─────────────────────────────────────────
   const overlay    = document.getElementById('previewOverlay');
   const previewBox = document.getElementById('previewBox');
-  let calState = { year: 0, month: 0, selectedDate: '', selectedSlot: '', promoId: '' };
+  let itemSelections = {}; // {idx: {date, slot, confirmed, calYear, calMonth}}
+  let currentPromo   = null;
+  let serviceIdxs    = []; // indices de items que son servicios
 
   function openPreview(id) {
     const p = todasLasPromos.find(x => String(x.id) === String(id));
     if (!p) return;
+    currentPromo = p;
+    itemSelections = {};
 
     const color = p.color_tema || '#c9858a';
     const items = Array.isArray(p.items) ? p.items : [];
     const ref   = p.precio_referencial;
     const combo = p.precio_combo;
     const ahorro = ref && combo && ref > combo ? ref - combo : 0;
-    const hasServicios = items.some(x => x.tipo === 'servicio');
+    serviceIdxs = items.map((item,i) => item.tipo === 'servicio' ? i : -1).filter(i => i >= 0);
 
     const heroHTML = p.imagen
       ? `<img class="preview-hero" src="${p.imagen}" alt="${esc(p.titulo)}"/>`
       : `<div class="preview-hero-placeholder" style="background:linear-gradient(135deg,${color}33,${color}66)">🎁</div>`;
 
-    const itemsHTML = items.length
-      ? `<p class="preview-items-titulo">Incluye</p>
-         <ul class="preview-items-list">
-           ${items.map(item => `
-             <li>
-               <span class="preview-item-emoji">${item.emoji || (item.tipo==='servicio'?'✨':'📚')}</span>
-               <span class="preview-item-nombre">${esc(item.nombre)}</span>
-               <span class="preview-item-tipo ${item.tipo==='servicio'?'tipo-servicio':'tipo-curso'}">${item.tipo==='servicio'?'Servicio':'Curso'}</span>
-               ${item.precio_ref ? `<span class="preview-item-precio">$${Number(item.precio_ref).toLocaleString('es-CL')}</span>` : ''}
-             </li>`).join('')}
-         </ul>`
-      : '';
+    const itemsHTML = items.length ? `
+      <p class="preview-items-titulo">Incluye</p>
+      <ul class="preview-items-list">
+        ${items.map((item, i) => {
+          const isSvc = item.tipo === 'servicio';
+          return `
+            <li class="preview-item-row" id="item-row-${i}">
+              <span class="preview-item-emoji">${item.emoji || (isSvc?'✨':'📚')}</span>
+              <span class="preview-item-nombre">${esc(item.nombre)}</span>
+              ${isSvc ? `<button class="item-date-btn" id="date-btn-${i}" onclick="togglePicker(${i})">Seleccionar fecha →</button>` : ''}
+              <span class="preview-item-tipo ${isSvc?'tipo-servicio':'tipo-curso'}">${isSvc?'Servicio':'Curso'}</span>
+              ${item.precio_ref ? `<span class="preview-item-precio">$${Number(item.precio_ref).toLocaleString('es-CL')}</span>` : ''}
+            </li>
+            ${isSvc ? `<li class="item-picker-row" id="picker-row-${i}">
+              <div class="mini-cal-header">
+                <button class="cal-nav" onclick="calNavItem(${i},-1)">‹</button>
+                <span class="mini-cal-mes" id="mini-cal-mes-${i}"></span>
+                <button class="cal-nav" onclick="calNavItem(${i},1)">›</button>
+              </div>
+              <div class="cal-grid" id="mini-cal-grid-${i}"></div>
+              <div id="mini-slots-${i}"></div>
+              <button class="btn-confirmar" id="confirm-btn-${i}" onclick="confirmItem(${i})" disabled>Confirmar</button>
+            </li>` : ''}`;
+        }).join('')}
+      </ul>` : '';
 
     const pricingHTML = `
       <div class="preview-pricing">
@@ -483,23 +532,6 @@
         <span class="preview-precio-combo" style="color:${color}">$${Number(combo||0).toLocaleString('es-CL')}</span>
         ${ahorro ? `<span class="preview-ahorro">Ahorras $${Number(ahorro).toLocaleString('es-CL')}</span>` : ''}
       </div>`;
-
-    // Calendar section (solo si hay servicios)
-    const calHTML = hasServicios && agendaData ? `
-      <div class="cal-section">
-        <p class="cal-section-titulo">Elige tu fecha</p>
-        <div class="cal-header">
-          <button class="cal-nav" id="calPrev" onclick="calNavMonth(-1)">‹</button>
-          <span class="cal-mes" id="calMesLabel"></span>
-          <button class="cal-nav" id="calNext" onclick="calNavMonth(1)">›</button>
-        </div>
-        <div class="cal-grid" id="calGrid"></div>
-        <div id="slotsSection" style="margin-top:4px"></div>
-      </div>` : '';
-
-    const pagarBtn = p.link_pago
-      ? `<a href="${p.link_pago}" target="_blank" rel="noopener" class="btn-comprar" style="background:${color}">Pagar →</a>`
-      : `<button class="btn-comprar disabled" disabled title="Próximamente">Pagar →</button>`;
 
     document.getElementById('previewContent').innerHTML = `
       ${heroHTML}
@@ -510,16 +542,15 @@
         ${itemsHTML}
         <div class="preview-divider"></div>
         ${pricingHTML}
-        ${calHTML}
-        ${pagarBtn}
+        <button id="pagarBtn" class="btn-comprar disabled" disabled style="background:${color}">Pagar →</button>
       </div>`;
 
-    // Init calendar state
-    if (hasServicios && agendaData) {
-      const now = new Date();
-      calState = { year: now.getFullYear(), month: now.getMonth(), selectedDate: '', selectedSlot: '', promoId: id };
-      renderCalendar();
-    }
+    // Init per-item state
+    const now = new Date();
+    serviceIdxs.forEach(i => {
+      itemSelections[i] = { date: '', slot: '', confirmed: false, calYear: now.getFullYear(), calMonth: now.getMonth() };
+    });
+    updatePagarBtn();
 
     previewBox.scrollTop = 0;
     overlay.classList.add('open');
@@ -529,103 +560,151 @@
   function closePreview() {
     overlay.classList.remove('open');
     document.body.style.overflow = '';
-    calState = { year: 0, month: 0, selectedDate: '', selectedSlot: '', promoId: '' };
+    itemSelections = {};
+    currentPromo = null;
+    serviceIdxs = [];
   }
 
   document.getElementById('previewClose').addEventListener('click', closePreview);
   overlay.addEventListener('click', e => { if (e.target === overlay) closePreview(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
 
-  // ── CALENDAR ─────────────────────────────────────────────
+  // ── CALENDAR POR ÍTEM ────────────────────────────────────
   const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const DIAS_SEMANA = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 
-  function calNavMonth(dir) {
-    calState.month += dir;
-    if (calState.month > 11) { calState.month = 0; calState.year++; }
-    if (calState.month < 0)  { calState.month = 11; calState.year--; }
-    calState.selectedDate = '';
-    calState.selectedSlot = '';
-    renderCalendar();
-    const ss = document.getElementById('slotsSection');
-    if (ss) ss.innerHTML = '';
-  }
+  window.togglePicker = function(idx) {
+    const pickerRow = document.getElementById(`picker-row-${idx}`);
+    const itemRow   = document.getElementById(`item-row-${idx}`);
+    const isOpen    = pickerRow.classList.contains('open');
+    // cerrar todos primero
+    serviceIdxs.forEach(i => {
+      document.getElementById(`picker-row-${i}`)?.classList.remove('open');
+      document.getElementById(`item-row-${i}`)?.classList.remove('picker-open');
+    });
+    if (!isOpen) {
+      pickerRow.classList.add('open');
+      itemRow.classList.add('picker-open');
+      renderItemCal(idx);
+    }
+  };
 
-  window.calNavMonth = calNavMonth;
+  window.calNavItem = function(idx, dir) {
+    const sel = itemSelections[idx];
+    if (!sel) return;
+    sel.calMonth += dir;
+    if (sel.calMonth > 11) { sel.calMonth = 0; sel.calYear++; }
+    if (sel.calMonth < 0)  { sel.calMonth = 11; sel.calYear--; }
+    sel.date = ''; sel.slot = '';
+    document.getElementById(`mini-slots-${idx}`).innerHTML = '';
+    renderItemCal(idx);
+    updateConfirmBtn(idx);
+  };
 
-  function renderCalendar() {
-    const label = document.getElementById('calMesLabel');
-    const grid  = document.getElementById('calGrid');
+  function renderItemCal(idx) {
+    const sel  = itemSelections[idx];
+    if (!sel || !agendaData) return;
+    const label = document.getElementById(`mini-cal-mes-${idx}`);
+    const grid  = document.getElementById(`mini-cal-grid-${idx}`);
     if (!label || !grid) return;
 
-    label.textContent = MESES[calState.month] + ' ' + calState.year;
+    label.textContent = MESES[sel.calMonth] + ' ' + sel.calYear;
 
-    const hoy = new Date();
-    hoy.setHours(0,0,0,0);
-    const firstDay = new Date(calState.year, calState.month, 1).getDay(); // 0=Dom
-    const daysInMonth = new Date(calState.year, calState.month + 1, 0).getDate();
-    const diasHabiles = agendaData?.dias_habiles || [1,2,3,4,5,6];
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const firstDay    = new Date(sel.calYear, sel.calMonth, 1).getDay();
+    const daysInMonth = new Date(sel.calYear, sel.calMonth + 1, 0).getDate();
+    const diasHabiles      = agendaData?.dias_habiles || [1,2,3,4,5,6];
     const fechasBloqueadas = agendaData?.fechas_bloqueadas || [];
 
     let html = DIAS_SEMANA.map(d => `<div class="cal-day-name">${d}</div>`).join('');
-
-    // Blank cells before first day
-    for (let i = 0; i < firstDay; i++) {
-      html += `<div class="cal-day empty"></div>`;
-    }
+    for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const fecha = new Date(calState.year, calState.month, d);
+      const fecha    = new Date(sel.calYear, sel.calMonth, d);
       fecha.setHours(0,0,0,0);
-      const fechaStr = `${calState.year}-${String(calState.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const dayOfWeek = fecha.getDay();
-      const isPast = fecha < hoy;
-      const isBlocked = fechasBloqueadas.includes(fechaStr);
-      const isHabil = diasHabiles.includes(dayOfWeek);
-      const isToday = fecha.getTime() === hoy.getTime();
-      const isSelected = fechaStr === calState.selectedDate;
-
-      const available = !isPast && !isBlocked && isHabil;
-      const cls = ['cal-day',
-        isSelected ? 'selected' : (available ? 'available' : 'disabled'),
-        isToday && !isSelected ? 'today' : '',
-      ].filter(Boolean).join(' ');
-
-      html += `<button class="${cls}" ${available ? `onclick="selectDate('${fechaStr}')"` : ''}>${d}</button>`;
+      const fechaStr = `${sel.calYear}-${String(sel.calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const available = !fecha < hoy && fecha >= hoy && !fechasBloqueadas.includes(fechaStr) && diasHabiles.includes(fecha.getDay());
+      const isSelected = fechaStr === sel.date;
+      const isToday    = fecha.getTime() === hoy.getTime();
+      const cls = ['cal-day', isSelected ? 'selected' : (available ? 'available' : 'disabled'), isToday && !isSelected ? 'today' : ''].filter(Boolean).join(' ');
+      html += `<button class="${cls}" ${available ? `onclick="selectItemDate(${idx},'${fechaStr}')"` : ''}>${d}</button>`;
     }
-
     grid.innerHTML = html;
   }
 
-  window.selectDate = function(fecha) {
-    calState.selectedDate = fecha;
-    calState.selectedSlot = '';
-    renderCalendar();
-    renderSlots(fecha);
+  window.selectItemDate = function(idx, fecha) {
+    const sel = itemSelections[idx];
+    if (!sel) return;
+    sel.date = fecha; sel.slot = '';
+    renderItemCal(idx);
+    renderItemSlots(idx);
+    updateConfirmBtn(idx);
   };
 
-  function renderSlots(fecha) {
-    const ss = document.getElementById('slotsSection');
-    if (!ss || !agendaData) return;
-    const slots = generarSlots(agendaData, fecha);
+  function renderItemSlots(idx) {
+    const sel = itemSelections[idx];
+    const el  = document.getElementById(`mini-slots-${idx}`);
+    if (!el || !agendaData || !sel?.date) return;
+    const slots = generarSlots(agendaData, sel.date);
     if (!slots.length) {
-      ss.innerHTML = `<p style="font-size:.82rem;color:var(--muted);margin-top:8px">Sin horarios disponibles para este día.</p>`;
+      el.innerHTML = `<p style="font-size:.8rem;color:var(--muted);margin-top:6px">Sin horarios para este día.</p>`;
       return;
     }
-    ss.innerHTML = `
-      <p style="font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Hora disponible</p>
+    el.innerHTML = `
+      <p style="font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin:10px 0 8px">Hora</p>
       <div class="slots-grid">
-        ${slots.map(s => `
-          <button class="slot-pill ${s === calState.selectedSlot ? 'selected' : ''}"
-            onclick="selectSlot('${s}')">${s}</button>`).join('')}
+        ${slots.map(s => `<button class="slot-pill ${s===sel.slot?'selected':''}" onclick="selectItemSlot(${idx},'${s}')">${s}</button>`).join('')}
       </div>`;
   }
 
-  window.selectSlot = function(slot) {
-    calState.selectedSlot = slot;
-    // Re-render slots to update selected state
-    if (calState.selectedDate) renderSlots(calState.selectedDate);
+  window.selectItemSlot = function(idx, slot) {
+    const sel = itemSelections[idx];
+    if (!sel) return;
+    sel.slot = slot;
+    renderItemSlots(idx);
+    updateConfirmBtn(idx);
   };
+
+  function updateConfirmBtn(idx) {
+    const btn = document.getElementById(`confirm-btn-${idx}`);
+    if (!btn) return;
+    const sel = itemSelections[idx];
+    btn.disabled = !(sel?.date && sel?.slot);
+  }
+
+  window.confirmItem = function(idx) {
+    const sel = itemSelections[idx];
+    if (!sel?.date || !sel?.slot) return;
+    sel.confirmed = true;
+    // Cerrar picker
+    document.getElementById(`picker-row-${idx}`)?.classList.remove('open');
+    document.getElementById(`item-row-${idx}`)?.classList.remove('picker-open');
+    // Actualizar botón con fecha confirmada
+    const btn = document.getElementById(`date-btn-${idx}`);
+    if (btn) {
+      const [y,m,d] = sel.date.split('-');
+      const fecha = new Date(sel.date + 'T12:00:00');
+      const label = fecha.toLocaleDateString('es-CL', {day:'numeric', month:'short'});
+      btn.textContent = `${label} · ${sel.slot}`;
+      btn.classList.add('confirmed');
+    }
+    updatePagarBtn();
+  };
+
+  function updatePagarBtn() {
+    const btn = document.getElementById('pagarBtn');
+    if (!btn || !currentPromo) return;
+    const allConfirmed = serviceIdxs.length === 0 || serviceIdxs.every(i => itemSelections[i]?.confirmed);
+    if (allConfirmed && currentPromo.link_pago) {
+      btn.disabled = false;
+      btn.classList.remove('disabled');
+      btn.onclick = () => window.open(currentPromo.link_pago, '_blank');
+    } else {
+      btn.disabled = true;
+      btn.classList.add('disabled');
+      btn.onclick = null;
+    }
+  }
 
   // ── SLOT GENERATION ──────────────────────────────────────
   function generarSlots(agenda, fecha) {
