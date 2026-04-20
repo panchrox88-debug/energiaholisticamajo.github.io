@@ -221,4 +221,49 @@
   }
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLogin(); });
+
+  // ── Dropdown de usuario en nav ───────────────────────────
+  window.updateNavAuth = function (user, perfil) {
+    const area = document.getElementById('navUserArea');
+    if (!area) return;
+    if (!user) return; // El botón "Ingresar" estático ya está en el HTML
+
+    const nombre = perfil?.nombre || user.email.split('@')[0];
+
+    area.innerHTML = `
+      <div id="authDropdownWrap" style="position:relative">
+        <button id="authDropdownTrigger"
+          style="background:none;border:1.5px solid var(--beige);padding:7px 18px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--dark);cursor:pointer;display:flex;align-items:center;gap:6px">
+          ${nombre} <span style="font-size:0.55rem;opacity:0.6">▾</span>
+        </button>
+        <div id="authDropdownMenu"
+          style="display:none;position:absolute;right:0;top:calc(100% + 8px);background:#faf5f0;border-radius:12px;box-shadow:0 4px 24px rgba(61,43,43,0.13);min-width:200px;overflow:hidden;z-index:2000;border:1px solid var(--beige)">
+          <a href="mis-cursos.html"
+            style="display:block;padding:13px 20px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);text-decoration:none;font-family:'Nunito',sans-serif;border-bottom:1px solid var(--beige)"
+            onmouseover="this.style.background='var(--blush)'" onmouseout="this.style.background=''">Mis Cursos</a>
+          <a href="mis-sesiones.html"
+            style="display:block;padding:13px 20px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;font-family:'Nunito',sans-serif;border-bottom:1px solid var(--beige)"
+            onmouseover="this.style.background='var(--blush)'" onmouseout="this.style.background=''">Mis Sesiones</a>
+          <button onclick="doLogout().then(()=>location.reload())"
+            style="display:block;width:100%;padding:13px 20px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--rose);background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;text-align:left"
+            onmouseover="this.style.background='var(--blush)'" onmouseout="this.style.background=''">Salir</button>
+        </div>
+      </div>`;
+
+    document.getElementById('authDropdownTrigger').addEventListener('click', function (e) {
+      e.stopPropagation();
+      const menu = document.getElementById('authDropdownMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', function _closeDropdown(e) {
+      const wrap = document.getElementById('authDropdownWrap');
+      if (!wrap) { document.removeEventListener('click', _closeDropdown); return; }
+      if (!wrap.contains(e.target)) {
+        const menu = document.getElementById('authDropdownMenu');
+        if (menu) menu.style.display = 'none';
+      }
+    });
+  };
+
 })();

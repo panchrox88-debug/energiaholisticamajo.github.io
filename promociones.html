@@ -790,17 +790,7 @@
 </script>
 <script src="js/auth.js"></script>
 <script>
-  initAuth(function(user, perfil) {
-    const area = document.getElementById('navUserArea');
-    if (!area) return;
-    if (user) {
-      const nombre = perfil?.nombre || user.email.split('@')[0];
-      area.innerHTML = `
-        <a href="mis-cursos.html" style="font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);text-decoration:none;font-family:'Nunito',sans-serif">Mis Cursos</a>
-        <span style="font-size:0.72rem;color:var(--muted);font-family:'Nunito',sans-serif">${nombre}</span>
-        <button onclick="doLogout().then(()=>location.reload())" style="background:none;border:1.5px solid var(--beige);padding:6px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);cursor:pointer">Salir</button>`;
-    }
-  });
+  initAuth(updateNavAuth);
 </script>
 </body>
 </html>
