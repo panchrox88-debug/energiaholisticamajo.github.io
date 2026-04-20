@@ -335,6 +335,7 @@
       <div class="sidebar-link" data-tab="agenda">🗓️ Agenda</div>
       <div class="sidebar-link" data-tab="portada">🖼️ Portada</div>
       <div class="sidebar-link" data-tab="sobremi">🌸 Sobre mí</div>
+      <div class="sidebar-link" data-tab="banner">🎯 Banner</div>
     </nav>
     <main class="content">
 
@@ -484,6 +485,65 @@
           <input type="file" id="sobremiFileInput" accept="image/*" multiple/>
           📁 Subir fotos
         </label>
+      </div>
+
+      <!-- BANNER -->
+      <div id="tab-banner" class="section">
+        <h2 class="section-title">Banner de promociones</h2>
+        <div id="bannerMsg" class="msg-banner"></div>
+
+        <!-- Preview -->
+        <div id="bannerPreview" style="border-radius:12px;padding:14px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:background 0.3s;background:#c9858a">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span id="bpTexto" style="font-weight:600;font-size:0.95rem;color:#fff">Texto del banner</span>
+            <span id="bpSub"   style="font-size:0.78rem;color:rgba(255,255,255,0.85)"></span>
+          </div>
+          <span id="bpDesc" style="background:rgba(255,255,255,0.25);border-radius:20px;padding:4px 14px;font-size:0.82rem;font-weight:600;color:#fff;display:none">20% OFF</span>
+        </div>
+
+        <div class="card">
+          <!-- Activo toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--beige)">
+            <div>
+              <div style="font-weight:400;font-size:0.9rem">Banner activo</div>
+              <div style="font-size:0.78rem;color:var(--muted)">Cuando está activo aparece en la parte superior del sitio</div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="bn-activo" style="width:18px;height:18px;accent-color:var(--rose)"/>
+              <span id="bn-activo-label" style="font-size:0.82rem;color:var(--muted)">Inactivo</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label>Texto principal</label>
+            <input type="text" id="bn-texto" placeholder="¡Promoción especial! 20% de descuento en todas las sesiones"/>
+          </div>
+          <div class="field">
+            <label>Subtexto (opcional)</label>
+            <input type="text" id="bn-subtexto" placeholder="Solo hasta el 31 de enero"/>
+          </div>
+          <div style="display:flex;gap:16px">
+            <div class="field" style="flex:1">
+              <label>Color de fondo</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="bn-color-fondo" value="#c9858a" style="width:44px;height:38px;border:none;background:none;cursor:pointer;padding:0"/>
+                <input type="text"  id="bn-color-fondo-txt" value="#c9858a" style="flex:1" placeholder="#c9858a"/>
+              </div>
+            </div>
+            <div class="field" style="flex:1">
+              <label>Color del texto</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="bn-color-texto" value="#ffffff" style="width:44px;height:38px;border:none;background:none;cursor:pointer;padding:0"/>
+                <input type="text"  id="bn-color-texto-txt" value="#ffffff" style="flex:1" placeholder="#ffffff"/>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Descuento % <span style="font-weight:300;color:var(--muted)">(0 = sin descuento, solo informativo)</span></label>
+            <input type="number" id="bn-descuento" min="0" max="100" placeholder="0" style="max-width:120px"/>
+          </div>
+          <button class="btn btn-primary" id="saveBannerBtn">Guardar banner</button>
+        </div>
       </div>
 
       <!-- PORTADA -->
@@ -730,6 +790,7 @@
       if (link.dataset.tab === 'agenda')      loadAgenda();
       if (link.dataset.tab === 'portada')     { loadPortada(); loadHeroTextoAdmin(); }
       if (link.dataset.tab === 'sobremi')     loadSobreMiAdmin();
+      if (link.dataset.tab === 'banner')      loadBannerAdmin();
     });
   });
 
@@ -1403,6 +1464,81 @@
       loadSobreMiAdmin();
     } catch(e) { showMsg('sobremiMsg', 'Error: ' + e.message, 'err'); }
   };
+
+  // ── BANNER ────────────────────────────────────────────────
+  function syncBannerPreview() {
+    const texto    = document.getElementById('bn-texto').value || 'Texto del banner';
+    const sub      = document.getElementById('bn-subtexto').value;
+    const fondo    = document.getElementById('bn-color-fondo').value;
+    const ctexto   = document.getElementById('bn-color-texto').value;
+    const desc     = parseInt(document.getElementById('bn-descuento').value) || 0;
+    const preview  = document.getElementById('bannerPreview');
+    preview.style.background = fondo;
+    document.getElementById('bpTexto').style.color = ctexto;
+    document.getElementById('bpTexto').textContent  = texto;
+    document.getElementById('bpSub').style.color   = ctexto;
+    document.getElementById('bpSub').textContent    = sub || '';
+    const bdesc = document.getElementById('bpDesc');
+    bdesc.style.color = ctexto;
+    bdesc.style.border = '1.5px solid ' + ctexto;
+    bdesc.style.background = 'transparent';
+    if (desc > 0) { bdesc.style.display = 'inline'; bdesc.textContent = desc + '% OFF'; }
+    else           { bdesc.style.display = 'none'; }
+  }
+
+  // Sync color picker ↔ text input
+  ['fondo','texto'].forEach(key => {
+    const picker = document.getElementById(`bn-color-${key}`);
+    const txt    = document.getElementById(`bn-color-${key}-txt`);
+    if (!picker || !txt) return;
+    picker.addEventListener('input', () => { txt.value = picker.value; syncBannerPreview(); });
+    txt.addEventListener('input',   () => { if (/^#[0-9a-fA-F]{6}$/.test(txt.value)) { picker.value = txt.value; } syncBannerPreview(); });
+  });
+
+  ['bn-texto','bn-subtexto','bn-descuento'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', syncBannerPreview);
+  });
+
+  document.getElementById('bn-activo')?.addEventListener('change', function() {
+    document.getElementById('bn-activo-label').textContent = this.checked ? 'Activo' : 'Inactivo';
+  });
+
+  async function loadBannerAdmin() {
+    try {
+      const rows = await sbGet('/banner?id=eq.1&select=*');
+      const b = rows[0] || {};
+      document.getElementById('bn-activo').checked    = !!b.activo;
+      document.getElementById('bn-activo-label').textContent = b.activo ? 'Activo' : 'Inactivo';
+      document.getElementById('bn-texto').value       = b.texto || '';
+      document.getElementById('bn-subtexto').value    = b.subtexto || '';
+      document.getElementById('bn-descuento').value   = b.descuento || '';
+      document.getElementById('bn-color-fondo').value     = b.color_fondo || '#c9858a';
+      document.getElementById('bn-color-fondo-txt').value = b.color_fondo || '#c9858a';
+      document.getElementById('bn-color-texto').value     = b.color_texto || '#ffffff';
+      document.getElementById('bn-color-texto-txt').value = b.color_texto || '#ffffff';
+      syncBannerPreview();
+    } catch(e) { showMsg('bannerMsg', 'Error al cargar: ' + e.message, 'err'); }
+  }
+
+  document.getElementById('saveBannerBtn')?.addEventListener('click', async () => {
+    const body = {
+      activo:      document.getElementById('bn-activo').checked,
+      texto:       document.getElementById('bn-texto').value.trim(),
+      subtexto:    document.getElementById('bn-subtexto').value.trim() || null,
+      color_fondo: document.getElementById('bn-color-fondo').value,
+      color_texto: document.getElementById('bn-color-texto').value,
+      descuento:   parseInt(document.getElementById('bn-descuento').value) || null,
+    };
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/banner?id=eq.1`, {
+        method: 'PATCH',
+        headers: authHeaders({ 'Prefer': 'return=minimal' }),
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) await sbPost('/banner', { id: 1, ...body });
+      showMsg('bannerMsg', 'Banner guardado ✓');
+    } catch(e) { showMsg('bannerMsg', 'Error: ' + e.message, 'err'); }
+  });
 </script>
 </body>
 </html>

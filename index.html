@@ -52,6 +52,30 @@
       50%      { opacity: 0.6; transform: scale(1.4); }
     }
 
+    /* ── BANNER PROMO ── */
+    .site-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      padding: 10px 24px;
+      display: none; align-items: center; justify-content: center; gap: 16px;
+      text-align: center; min-height: 44px;
+    }
+    .site-banner.visible { display: flex; }
+    .site-banner-body { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .site-banner-texto { font-size: 0.85rem; font-weight: 600; }
+    .site-banner-sub   { font-size: 0.78rem; opacity: 0.85; }
+    .site-banner-badge {
+      padding: 3px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700;
+      border: 1.5px solid currentColor;
+    }
+    .site-banner-close {
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; font-size: 1.2rem;
+      opacity: 0.7; line-height: 1; padding: 4px;
+    }
+    .site-banner-close:hover { opacity: 1; }
+    body.banner-open nav { top: 44px; }
+    body.banner-open .hero { padding-top: calc(44px + 80px); }
+
     /* ── WHATSAPP FLOTANTE ── */
     .wa-float {
       position: fixed; bottom: 28px; right: 28px; z-index: 999;
@@ -1396,6 +1420,16 @@
   <!-- Stars -->
   <div class="stars" id="stars"></div>
 
+  <!-- BANNER PROMO -->
+  <div id="siteBanner" class="site-banner" role="alert">
+    <div class="site-banner-body">
+      <span class="site-banner-texto" id="bannerTexto"></span>
+      <span class="site-banner-sub"   id="bannerSub"></span>
+      <span class="site-banner-badge" id="bannerBadge" style="display:none"></span>
+    </div>
+    <button class="site-banner-close" id="bannerClose" aria-label="Cerrar">×</button>
+  </div>
+
   <!-- NAV -->
   <nav>
     <a href="#" class="nav-logo">
@@ -2209,6 +2243,43 @@
       } catch(e) { console.warn('No se pudo cargar sobre mí', e); }
     }
 
+    // ── BANNER PROMO ──────────────────────────────────────────
+    let BANNER_DESCUENTO = 0;
+    async function loadBanner() {
+      try {
+        const res  = await sbFetch('/banner?id=eq.1&select=*');
+        const rows = await res.json();
+        const b = rows && rows[0] ? rows[0] : null;
+        if (!b || !b.activo || !b.texto) return;
+
+        BANNER_DESCUENTO = b.descuento || 0;
+
+        const el = document.getElementById('siteBanner');
+        el.style.background = b.color_fondo || '#c9858a';
+        el.style.color      = b.color_texto  || '#ffffff';
+
+        document.getElementById('bannerTexto').textContent = b.texto;
+        const subEl = document.getElementById('bannerSub');
+        subEl.textContent = b.subtexto || '';
+        subEl.style.display = b.subtexto ? 'inline' : 'none';
+
+        const badgeEl = document.getElementById('bannerBadge');
+        if (BANNER_DESCUENTO > 0) {
+          badgeEl.textContent = BANNER_DESCUENTO + '% OFF';
+          badgeEl.style.display = 'inline';
+          badgeEl.style.color = b.color_texto || '#ffffff';
+        }
+
+        el.classList.add('visible');
+        document.body.classList.add('banner-open');
+
+        document.getElementById('bannerClose').addEventListener('click', () => {
+          el.classList.remove('visible');
+          document.body.classList.remove('banner-open');
+        });
+      } catch(e) { console.warn('Banner no disponible', e); }
+    }
+
     loadHeroTexto();
     loadHeroBg();
     loadContacto();
@@ -2456,9 +2527,21 @@
         const card = document.createElement('div');
         card.className = 'service-card reveal';
         card.dataset.serviceId = s.id;
-        const precioHTML = s.precio
-          ? `<span class="service-price"><small>desde</small>$${Number(s.precio).toLocaleString('es-CL')}</span>`
-          : '';
+        let precioHTML = '';
+        if (s.precio) {
+          const original  = Number(s.precio);
+          const descuento = BANNER_DESCUENTO || 0;
+          if (descuento > 0) {
+            const final = Math.round(original * (1 - descuento / 100));
+            precioHTML = `<span class="service-price">
+              <small>desde</small>
+              <s style="opacity:.5;font-size:.85em">$${original.toLocaleString('es-CL')}</s>
+              &nbsp;$${final.toLocaleString('es-CL')}
+            </span>`;
+          } else {
+            precioHTML = `<span class="service-price"><small>desde</small>$${original.toLocaleString('es-CL')}</span>`;
+          }
+        }
         card.innerHTML = `
           <div class="service-icon">${s.emoji}</div>
           <h3>${s.titulo}</h3>
@@ -2624,7 +2707,7 @@
     }
 
     // Inicializar todo: servicios + agenda en paralelo
-    Promise.all([loadServicios(), loadAgenda()]).then(() => {
+    Promise.all([loadBanner(), loadServicios(), loadAgenda()]).then(() => {
       buildServiceCards();
       buildBookingServices();
       buildCalendar();
