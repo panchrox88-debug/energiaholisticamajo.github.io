@@ -1882,36 +1882,68 @@
     this.value = '';
   });
 
-  document.getElementById('saveCursoBtn').addEventListener('click', async () => {
+  async function saveCurso({ silent = false } = {}) {
     const msgEl = document.getElementById('cursoModalMsg');
     const id    = document.getElementById('curso-id').value;
     const body  = {
-      titulo:      document.getElementById('curso-titulo').value.trim(),
-      descripcion: document.getElementById('curso-desc').value.trim(),
+      titulo:           document.getElementById('curso-titulo').value.trim(),
+      descripcion:      document.getElementById('curso-desc').value.trim(),
       intro:            document.getElementById('curso-intro').value.trim() || null,
       categoria:        document.getElementById('curso-cat').value.trim() || null,
       etiqueta_seccion: document.getElementById('curso-etiqueta').value.trim() || 'Módulo',
-      color_tema:  document.getElementById('curso-color-pick').value,
-      precio:      parseInt(document.getElementById('curso-precio').value) || null,
-      gratuito:    document.getElementById('curso-gratuito').checked,
-      link_pago:   document.getElementById('curso-link').value.trim() || null,
-      activo:      document.getElementById('curso-activo').checked,
-      imagen:      cursoImgUrl || null,
-      secciones:   CURSO_SECCIONES,
+      color_tema:       document.getElementById('curso-color-pick').value,
+      precio:           parseInt(document.getElementById('curso-precio').value) || null,
+      gratuito:         document.getElementById('curso-gratuito').checked,
+      link_pago:        document.getElementById('curso-link').value.trim() || null,
+      activo:           document.getElementById('curso-activo').checked,
+      imagen:           cursoImgUrl || null,
+      secciones:        CURSO_SECCIONES,
     };
-    if (!body.titulo) { msgEl.textContent = 'El título es obligatorio'; msgEl.className = 'msg-banner err'; return; }
-    try {
-      if (id) {
-        await sbPatch(`/cursos?id=eq.${id}`, body);
-      } else {
-        const all = await sbGet('/cursos?select=orden&order=orden.desc&limit=1');
-        body.orden = (all[0]?.orden || 0) + 1;
-        await sbPost('/cursos', body);
-      }
+    if (!body.titulo) {
+      msgEl.textContent = 'El título es obligatorio';
+      msgEl.className = 'msg-banner err';
+      throw new Error('titulo requerido');
+    }
+    let savedId = id;
+    if (id) {
+      await sbPatch(`/cursos?id=eq.${id}`, body);
+    } else {
+      const all = await sbGet('/cursos?select=orden&order=orden.desc&limit=1');
+      body.orden = (all[0]?.orden || 0) + 1;
+      const rows = await sbPost('/cursos', body);
+      savedId = rows[0]?.id;
+      document.getElementById('curso-id').value = savedId;
+      // mostrar botón preview ahora que tenemos ID
+      const prevBtn = document.getElementById('previewCursoBtn');
+      prevBtn.href = `../curso.html?id=${savedId}&preview=1`;
+      prevBtn.style.display = 'flex';
+    }
+    loadCursosAdmin();
+    if (!silent) {
       cursoModal.classList.remove('open');
       showMsg('cursosMsg', 'Curso guardado ✓');
-      loadCursosAdmin();
-    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    } else {
+      msgEl.textContent = 'Cambios guardados ✓'; msgEl.className = 'msg-banner ok';
+      setTimeout(() => { msgEl.textContent = ''; msgEl.className = 'msg-banner'; }, 2500);
+    }
+    return savedId;
+  }
+
+  document.getElementById('saveCursoBtn').addEventListener('click', async () => {
+    try { await saveCurso(); }
+    catch(e) { if (e.message !== 'titulo requerido') document.getElementById('cursoModalMsg').textContent = 'Error: ' + e.message; }
+  });
+
+  document.getElementById('previewCursoBtn').addEventListener('click', async e => {
+    e.preventDefault();
+    const msgEl = document.getElementById('cursoModalMsg');
+    msgEl.textContent = 'Guardando…'; msgEl.className = 'msg-banner ok';
+    try {
+      const savedId = await saveCurso({ silent: true });
+      window.open(`../curso.html?id=${savedId}&preview=1`, '_blank');
+    } catch(e) {
+      if (e.message !== 'titulo requerido') { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    }
   });
 
   // ── BLOG ──────────────────────────────────────────────────
