@@ -198,20 +198,17 @@
     return session?.access_token || SB_KEY;  // sin window.
   };
 
-  window.initAuth = async function (onReady) {
+  window.initAuth = function (onReady) {
     _injectModal();
-    const { data: { session } } = await _sb.auth.getSession();
-    if (session) {
-      _user = session.user;
-      await _loadPerfil(_user.id, session.access_token);
-    }
+    // onAuthStateChange dispara INITIAL_SESSION de inmediato con la sesión actual,
+    // y luego SIGNED_IN / SIGNED_OUT cuando cambia. Esto cubre tanto la carga
+    // normal como el callback de OAuth (Google), sin necesidad de getSession() extra.
     _sb.auth.onAuthStateChange(async (event, session) => {
       _user = session?.user || null;
       if (_user) await _loadPerfil(_user.id, session.access_token);
       else _perfil = null;
       if (onReady) onReady(_user, _perfil);
     });
-    if (onReady) onReady(_user, _perfil);
   };
 
   function _setMsg(el, txt, type) {
