@@ -97,6 +97,13 @@
       });
       const rows = await res.json();
       _perfil = Array.isArray(rows) ? (rows[0] || null) : null;
+      // Si la cuenta está bloqueada, cerrar sesión
+      if (_perfil?.bloqueado) {
+        _perfil = null;
+        await _sb.auth.signOut();
+        _user = null;
+        alert('Tu cuenta ha sido suspendida. Contacta a la administradora.');
+      }
     } catch (e) { _perfil = null; }
   }
 

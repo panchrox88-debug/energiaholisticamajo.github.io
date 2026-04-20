@@ -2067,10 +2067,18 @@
                 <span style="font-size:0.8rem;color:#7a5c5c">${u.email}</span>
                 <span style="font-size:0.72rem;color:#b0948e;margin-left:10px">${new Date(u.created_at).toLocaleDateString('es-CL')}</span>
               </div>
-              <div style="display:flex;align-items:center;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 ${u.rol !== 'admin'
                   ? `<button onclick="setAdmin('${u.id}',true)" style="padding:5px 12px;background:none;border:1.5px solid #ede0d4;border-radius:20px;font-size:0.68rem;letter-spacing:0.12em;color:#7a5c5c;cursor:pointer">Hacer admin</button>`
                   : `<button onclick="setAdmin('${u.id}',false)" style="padding:5px 12px;background:none;border:1.5px solid #ede0d4;border-radius:20px;font-size:0.68rem;letter-spacing:0.12em;color:#7a5c5c;cursor:pointer">Quitar admin</button>`}
+                <button onclick="toggleBloqueo('${u.id}', ${!!u.bloqueado})"
+                  style="padding:5px 12px;background:none;border:1.5px solid #ede0d4;border-radius:20px;font-size:0.68rem;letter-spacing:0.12em;color:${u.bloqueado ? '#c9858a' : '#7a5c5c'};cursor:pointer">
+                  ${u.bloqueado ? '🔓 Desbloquear' : '🔒 Bloquear'}
+                </button>
+                <button onclick="eliminarUsuaria('${u.id}', '${u.email}')"
+                  style="padding:5px 12px;background:none;border:1.5px solid #f0dada;border-radius:20px;font-size:0.68rem;letter-spacing:0.12em;color:#c9585a;cursor:pointer">
+                  Eliminar
+                </button>
               </div>
             </div>
 
@@ -2119,6 +2127,25 @@
   window.setAdmin = async function(userId, esAdmin) {
     await sbPatch(`/perfiles?id=eq.${userId}`, { rol: esAdmin ? 'admin' : 'usuario' });
     await loadUsuarias();
+  };
+
+  window.toggleBloqueo = async function(userId, bloqueadoActual) {
+    const accion = bloqueadoActual ? 'desbloquear' : 'bloquear';
+    if (!confirm(`¿${accion.charAt(0).toUpperCase() + accion.slice(1)} a esta usuaria?`)) return;
+    try {
+      await sbPatch(`/perfiles?id=eq.${userId}`, { bloqueado: !bloqueadoActual });
+      await loadUsuarias();
+    } catch(e) { alert('Error: ' + e.message); }
+  };
+
+  window.eliminarUsuaria = async function(userId, email) {
+    if (!confirm(`¿Eliminar a ${email}?\n\nEsto borra su perfil y accesos.\nPara eliminarla de auth ve a Supabase → Authentication → Users.`)) return;
+    try {
+      await sbDelete(`/accesos?user_id=eq.${userId}`);
+      await sbDelete(`/perfiles?id=eq.${userId}`);
+      await loadUsuarias();
+      showMsg('usuariasMsg', 'Usuaria eliminada ✓');
+    } catch(e) { alert('Error: ' + e.message); }
   };
 
   // ── BLOG ──────────────────────────────────────────────────
