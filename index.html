@@ -2587,7 +2587,7 @@
         const original  = Number(data.precio);
         const descuento = BANNER_DESCUENTO || 0;
         if (descuento > 0) {
-          const final = Math.round(original * (1 - descuento / 100));
+          const final = Math.round(original * (1 - descuento / 100) / 1000) * 1000;
           precioEl.innerHTML = `<s>$${original.toLocaleString('es-CL')}</s> $${final.toLocaleString('es-CL')}`;
         } else {
           precioEl.innerHTML = `$${original.toLocaleString('es-CL')}`;
