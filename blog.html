@@ -289,7 +289,7 @@
       : '';
 
     // Convertir saltos de línea a párrafos
-    const contenidoHTML = p.contenido
+    const contenidoHTML = (p.contenido || '')
       .split(/\n\n+/)
       .map(par => `<p>${par.replace(/\n/g, '<br>')}</p>`)
       .join('');
