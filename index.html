@@ -853,6 +853,19 @@
       box-shadow: 0 4px 14px rgba(201,133,138,0.2);
     }
     .bk-day.disabled { opacity: 0.3; cursor: not-allowed; }
+    .bk-day.mod-online    { background: #eaf5fb; border-color: #9dcde0; }
+    .bk-day.mod-online:hover:not(.disabled)    { background: #d8edf7; border-color: #6aadcb; }
+    .bk-day.mod-presencial { background: var(--blush); border-color: var(--rose-lt); }
+    .bk-day.mod-presencial:hover:not(.disabled) { background: #e8c8cb; border-color: var(--rose); }
+    .bk-day.mod-mixta     { background: #f3eefa; border-color: #c4a8d8; }
+    .bk-day.mod-mixta:hover:not(.disabled)     { background: #e8dcf5; border-color: #a87fc4; }
+    .bk-day-mod-label {
+      font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+      font-weight: 600; line-height: 1; margin-top: 1px;
+    }
+    .bk-day.mod-online    .bk-day-mod-label { color: #4a90b8; }
+    .bk-day.mod-presencial .bk-day-mod-label { color: var(--rose); }
+    .bk-day.mod-mixta     .bk-day-mod-label { color: #8a60b0; }
     .bk-day-name {
       font-size: 0.62rem; letter-spacing: 0.2em;
       text-transform: uppercase; color: var(--gold);
@@ -2025,12 +2038,16 @@
       }
       days.forEach((d, i) => {
         const mod      = getModalidadConfig(d)?.modalidad;
-        const modBadge = mod === 'presencial' ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">🌸</span>'
-                       : mod === 'online'     ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">💻</span>'
-                       : mod === 'mixta'      ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">🌓</span>'
+        const modBadge = mod === 'presencial' ? '<span class="bk-day-mod-label">🌸 Presencial</span>'
+                       : mod === 'online'     ? '<span class="bk-day-mod-label">💻 Online</span>'
+                       : mod === 'mixta'      ? '<span class="bk-day-mod-label">🌓 Mixta</span>'
+                       : '';
+        const modClass = mod === 'presencial' ? ' mod-presencial'
+                       : mod === 'online'     ? ' mod-online'
+                       : mod === 'mixta'      ? ' mod-mixta'
                        : '';
         const el = document.createElement('div');
-        el.className = 'bk-day';
+        el.className = 'bk-day' + modClass;
         el.dataset.idx = i;
         el.innerHTML = `<span class="bk-day-name">${DAY_NAMES[d.getDay()]}</span><span class="bk-day-num">${d.getDate()}</span>${modBadge}`;
         el.addEventListener('click', () => selectDay(i));
