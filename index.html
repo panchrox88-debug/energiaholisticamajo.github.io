@@ -2337,7 +2337,16 @@
     }
 
     // ── BANNER PROMO ──────────────────────────────────────────
-    let BANNER_DESCUENTO = 0;
+    let BANNER_DESCUENTO    = 0;
+    let BANNER_APLICA_TODOS = true;
+    let BANNER_APLICA_A     = [];  // [{tipo:'servicio'|'curso', id, nombre, emoji}]
+
+    // ¿Tiene descuento de banner este ítem?
+    function tieneBannerDesc(tipo, id) {
+      if (!BANNER_DESCUENTO) return false;
+      if (BANNER_APLICA_TODOS) return true;
+      return BANNER_APLICA_A.some(a => a.tipo === tipo && a.id === id);
+    }
 
     function adjustBannerOffset() {
       const el = document.getElementById('siteBanner');
@@ -2356,7 +2365,9 @@
         const b = rows && rows[0] ? rows[0] : null;
         if (!b || !b.activo || !b.texto) return;
 
-        BANNER_DESCUENTO = b.descuento || 0;
+        BANNER_DESCUENTO    = b.descuento    || 0;
+        BANNER_APLICA_TODOS = b.aplica_todos !== false;
+        BANNER_APLICA_A     = b.aplica_a     || [];
 
         const el = document.getElementById('siteBanner');
         el.style.background = b.color_fondo || '#c9858a';
@@ -2652,10 +2663,15 @@
     function buildBookingServices() {
       elServices.innerHTML = '';
       SERVICIOS_DATA.forEach(s => {
+        const conDesc = tieneBannerDesc('servicio', s.id);
+        const badge   = conDesc
+          ? `<span style="position:absolute;top:-6px;right:-6px;background:var(--rose);color:white;font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:0.05em">${BANNER_DESCUENTO}% OFF</span>`
+          : '';
         const el = document.createElement('div');
         el.className = 'bk-opt';
         el.dataset.id = s.id;
-        el.innerHTML = `<span class="bk-opt-icon">${s.emoji}</span><span class="bk-opt-name">${s.titulo}</span>`;
+        el.style.position = 'relative';
+        el.innerHTML = `${badge}<span class="bk-opt-icon">${s.emoji}</span><span class="bk-opt-name">${s.titulo}</span>`;
         el.addEventListener('click', () => selectService(s.id));
         elServices.appendChild(el);
       });

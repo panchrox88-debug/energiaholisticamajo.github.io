@@ -602,6 +602,29 @@
             <label>Descuento % <span style="font-weight:300;color:var(--muted)">(0 = sin descuento, solo informativo)</span></label>
             <input type="number" id="bn-descuento" min="0" max="100" placeholder="0" style="max-width:120px"/>
           </div>
+
+          <!-- ¿A qué aplica? -->
+          <div class="field" id="bn-aplica-wrap">
+            <label>¿A qué aplica el descuento?</label>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+              <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.85rem;padding:10px 14px;border-radius:10px;border:1.5px solid var(--beige);background:var(--cream)">
+                <input type="radio" name="bn-aplica-tipo" id="bn-aplica-todos" value="todos" checked style="accent-color:var(--rose);width:15px;height:15px"/>
+                <span>🌐 <strong>Todos</strong> los servicios y cursos</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.85rem;padding:10px 14px;border-radius:10px;border:1.5px solid var(--beige);background:var(--cream)">
+                <input type="radio" name="bn-aplica-tipo" id="bn-aplica-selec" value="selec" style="accent-color:var(--rose);width:15px;height:15px"/>
+                <span>✅ <strong>Seleccionar</strong> servicios/cursos específicos</span>
+              </label>
+              <!-- Lista de checkboxes (visible solo si "selec" está activo) -->
+              <div id="bn-selec-wrap" style="display:none;border:1.5px solid var(--beige);border-radius:12px;padding:14px;background:var(--cream)">
+                <div id="bn-selec-list">
+                  <div style="font-size:.8rem;color:var(--muted);padding:8px 0">Cargando servicios y cursos…</div>
+                </div>
+                <div id="bn-selec-resumen" style="margin-top:10px;font-size:.75rem;color:var(--muted)"></div>
+              </div>
+            </div>
+          </div>
+
           <button class="btn btn-primary" id="saveBannerBtn">Guardar banner</button>
         </div>
       </div>
@@ -2618,6 +2641,9 @@
   };
 
   // ── BANNER ────────────────────────────────────────────────
+  let BANNER_APLICA_A    = [];   // [{tipo, id, nombre, emoji}]
+  let BANNER_APLICA_TODOS = true;
+
   function syncBannerPreview() {
     const texto    = document.getElementById('bn-texto').value || 'Texto del banner';
     const sub      = document.getElementById('bn-subtexto').value;
@@ -2668,9 +2694,103 @@
       document.getElementById('bn-color-fondo-txt').value = b.color_fondo || '#c9858a';
       document.getElementById('bn-color-texto').value     = b.color_texto || '#ffffff';
       document.getElementById('bn-color-texto-txt').value = b.color_texto || '#ffffff';
+      // Aplica a
+      BANNER_APLICA_A     = b.aplica_a     || [];
+      BANNER_APLICA_TODOS = b.aplica_todos !== false; // default true
+      const radioTodos = document.getElementById('bn-aplica-todos');
+      const radioSelec = document.getElementById('bn-aplica-selec');
+      const selecWrap  = document.getElementById('bn-selec-wrap');
+      if (BANNER_APLICA_TODOS) {
+        radioTodos.checked = true;
+        selecWrap.style.display = 'none';
+      } else {
+        radioSelec.checked = true;
+        selecWrap.style.display = '';
+        await loadBannerSelects();
+      }
       syncBannerPreview();
     } catch(e) { showMsg('bannerMsg', 'Error al cargar: ' + e.message, 'err'); }
   }
+
+  async function loadBannerSelects() {
+    const el = document.getElementById('bn-selec-list');
+    if (!el) return;
+    try {
+      const [servicios, cursos] = await Promise.all([
+        sbGet('/servicios?select=id,titulo,emoji,precio&order=orden.asc'),
+        sbGet('/cursos?select=id,titulo,precio,activo&order=orden.asc,created_at.desc'),
+      ]);
+
+      const isChecked = (tipo, id) => BANNER_APLICA_A.some(a => a.tipo === tipo && a.id === id);
+      const CLP = n => n ? `$${Number(n).toLocaleString('es-CL')}` : '';
+      const itemRow = (tipo, id, emoji, titulo, precio) => {
+        const checked = isChecked(tipo, id);
+        return `
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;
+            background:${checked ? 'var(--blush)' : 'white'};cursor:pointer;transition:background .15s;
+            border:1px solid ${checked ? 'var(--rose-lt)' : 'transparent'}">
+            <input type="checkbox" value="${id}" data-tipo="${tipo}"
+              data-nombre="${titulo.replace(/"/g,'&quot;')}" data-emoji="${emoji||''}"
+              ${checked ? 'checked' : ''}
+              onchange="window._bnToggleAplica(this)"
+              style="accent-color:var(--rose);width:15px;height:15px;flex-shrink:0"/>
+            <span style="flex:1;font-size:.83rem">${emoji||''} ${titulo}</span>
+            ${precio ? `<span style="font-size:.73rem;color:var(--muted)">${CLP(precio)}</span>` : ''}
+          </label>`;
+      };
+
+      let html = '';
+      if (servicios.length) {
+        html += `<div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);margin:6px 0 6px">Servicios</div>`;
+        html += servicios.map(s => itemRow('servicio', s.id, s.emoji, s.titulo, s.precio)).join('');
+      }
+      if (cursos.length) {
+        html += `<div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);margin:12px 0 6px">Cursos</div>`;
+        html += cursos.map(c => itemRow('curso', c.id, '📚', c.titulo, c.precio)).join('');
+      }
+      if (!html) html = '<p style="font-size:.82rem;color:var(--muted);padding:8px 0">Sin servicios ni cursos disponibles.</p>';
+      el.innerHTML = html;
+    } catch(e) { el.innerHTML = `<p style="color:var(--red);font-size:.8rem">Error al cargar: ${e.message}</p>`; }
+    _bnActualizarResumen();
+  }
+
+  window._bnToggleAplica = function(cb) {
+    const tipo   = cb.dataset.tipo;
+    const id     = cb.value;
+    const nombre = cb.dataset.nombre;
+    const emoji  = cb.dataset.emoji;
+    if (cb.checked) {
+      if (!BANNER_APLICA_A.some(a => a.tipo === tipo && a.id === id))
+        BANNER_APLICA_A.push({ tipo, id, nombre, emoji });
+      cb.closest('label').style.background = 'var(--blush)';
+      cb.closest('label').style.border = '1px solid var(--rose-lt)';
+    } else {
+      BANNER_APLICA_A = BANNER_APLICA_A.filter(a => !(a.tipo === tipo && a.id === id));
+      cb.closest('label').style.background = 'white';
+      cb.closest('label').style.border = '1px solid transparent';
+    }
+    _bnActualizarResumen();
+  };
+
+  function _bnActualizarResumen() {
+    const el = document.getElementById('bn-selec-resumen');
+    if (!el) return;
+    const n = BANNER_APLICA_A.length;
+    el.textContent = n === 0 ? '⚠️ No hay nada seleccionado — el descuento no se mostrará en ningún ítem.'
+                   : `✅ Descuento aplicará a ${n} ítem${n !== 1 ? 's' : ''}: ${BANNER_APLICA_A.map(a => a.nombre).join(', ')}`;
+    el.style.color = n === 0 ? 'var(--red)' : 'var(--muted)';
+  }
+
+  // Toggle visible del selector al cambiar radio
+  document.querySelectorAll('input[name="bn-aplica-tipo"]').forEach(r => {
+    r.addEventListener('change', async () => {
+      const isSelec = document.getElementById('bn-aplica-selec').checked;
+      const wrap    = document.getElementById('bn-selec-wrap');
+      BANNER_APLICA_TODOS = !isSelec;
+      wrap.style.display  = isSelec ? '' : 'none';
+      if (isSelec) await loadBannerSelects();
+    });
+  });
 
   // ── PROMOCIONES ───────────────────────────────────────────
   let PROMO_ITEMS = [];       // items actuales en el modal
@@ -2900,12 +3020,14 @@
 
   document.getElementById('saveBannerBtn')?.addEventListener('click', async () => {
     const body = {
-      activo:      document.getElementById('bn-activo').checked,
-      texto:       document.getElementById('bn-texto').value.trim(),
-      subtexto:    document.getElementById('bn-subtexto').value.trim() || null,
-      color_fondo: document.getElementById('bn-color-fondo').value,
-      color_texto: document.getElementById('bn-color-texto').value,
-      descuento:   parseInt(document.getElementById('bn-descuento').value) || null,
+      activo:        document.getElementById('bn-activo').checked,
+      texto:         document.getElementById('bn-texto').value.trim(),
+      subtexto:      document.getElementById('bn-subtexto').value.trim() || null,
+      color_fondo:   document.getElementById('bn-color-fondo').value,
+      color_texto:   document.getElementById('bn-color-texto').value,
+      descuento:     parseInt(document.getElementById('bn-descuento').value) || null,
+      aplica_todos:  BANNER_APLICA_TODOS,
+      aplica_a:      BANNER_APLICA_TODOS ? [] : BANNER_APLICA_A,
     };
     try {
       const r = await fetch(`${SB_URL}/rest/v1/banner?id=eq.1`, {

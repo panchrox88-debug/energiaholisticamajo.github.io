@@ -330,12 +330,34 @@
 
   // updateNavAuth viene de js/auth.js — dropdown con nombre usuario
 
+  // Banner descuento
+  let BANNER_DESCUENTO    = 0;
+  let BANNER_APLICA_TODOS = true;
+  let BANNER_APLICA_A     = [];
+  function tieneBannerDesc(tipo, id) {
+    if (!BANNER_DESCUENTO) return false;
+    if (BANNER_APLICA_TODOS) return true;
+    return BANNER_APLICA_A.some(a => a.tipo === tipo && a.id === id);
+  }
+  async function loadBannerData() {
+    try {
+      const res  = await sbFetch('/banner?id=eq.1&select=descuento,aplica_todos,aplica_a,activo');
+      const rows = await res.json();
+      const b    = rows && rows[0];
+      if (!b || !b.activo) return;
+      BANNER_DESCUENTO    = b.descuento    || 0;
+      BANNER_APLICA_TODOS = b.aplica_todos !== false;
+      BANNER_APLICA_A     = b.aplica_a     || [];
+    } catch(e) { /* silencioso */ }
+  }
+
   let todosLosCursos = [];
   let catActual = '';
   let paginaActual = 1;
   const POR_PAGINA = 6;
 
   async function loadCursos() {
+    await loadBannerData();
     const res  = await sbFetch('/cursos?activo=eq.true&order=orden.asc,created_at.desc');
     const rows = await res.json();
     todosLosCursos = rows || [];
@@ -413,8 +435,14 @@
           ? `<a href="${c.link_pago}" target="_blank" rel="noopener" class="curso-cta">${c.gratuito ? 'Acceder gratis' : 'Inscribirme'} →</a>`
           : `<span class="curso-cta ghost" style="cursor:default">Próximamente</span>`;
 
+      const conDesc   = tieneBannerDesc('curso', c.id);
+      const descBadge = conDesc
+        ? `<div style="position:absolute;top:12px;left:12px;background:var(--rose);color:white;font-size:0.65rem;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:0.06em;z-index:2">${BANNER_DESCUENTO}% OFF</div>`
+        : '';
+
       return `
-        <article class="curso-card">
+        <article class="curso-card" style="position:relative">
+          ${descBadge}
           ${imgHTML}
           <div class="curso-body">
             ${tags ? `<div class="curso-tags">${tags}</div>` : ''}
