@@ -1893,6 +1893,25 @@
 
     // Render services (llamado dinámicamente desde buildBookingServices)
 
+    // Retorna la fecha del lunes de la semana de `date` (YYYY-MM-DD)
+    function getMondayKey(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const dow = d.getDay(); // 0=Dom,1=Lun,...6=Sáb
+      d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+      return d.toISOString().slice(0, 10);
+    }
+
+    // Resuelve la modalidad efectiva de un día: semana > día-de-semana > null
+    function getModalidadDia(date) {
+      const weekKey  = getMondayKey(date);
+      const weekMod  = (AGENDA.planificacion_semanas || {})[weekKey];
+      if (weekMod) return weekMod;
+      const dow = date.getDay();
+      const dayMod = (AGENDA.horarios_por_dia || {})[String(dow)]?.modalidad;
+      return dayMod || null;
+    }
+
     // Alerta de modalidad por día ─────────────────────────────
     function showModalidadAlerta(diaModalidad) {
       const el = document.getElementById('bkDiaMod');
@@ -1949,10 +1968,9 @@
         }
       }
       days.forEach((d, i) => {
-        const dow = d.getDay();
-        const ov  = (AGENDA.horarios_por_dia || {})[String(dow)] || {};
-        const modBadge = ov.modalidad === 'presencial' ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">🌸</span>'
-                       : ov.modalidad === 'online'     ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">💻</span>'
+        const mod      = getModalidadDia(d);
+        const modBadge = mod === 'presencial' ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">🌸</span>'
+                       : mod === 'online'     ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">💻</span>'
                        : '';
         const el = document.createElement('div');
         el.className = 'bk-day';
@@ -2016,12 +2034,11 @@
       updateSummary();
       // Si ya hay un día seleccionado, re-verificar conflicto de modalidad
       if (state.day !== null && days[state.day]) {
-        const dow = days[state.day].getDay();
-        const ov  = (AGENDA.horarios_por_dia || {})[String(dow)] || {};
-        if (ov.modalidad && ov.modalidad !== 'ambas' && ov.modalidad !== mod) {
+        const diaModalidad = getModalidadDia(days[state.day]);
+        if (diaModalidad && diaModalidad !== 'ambas' && diaModalidad !== mod) {
           // El nuevo mod no es compatible con el día → avisar (sin auto-cambiar día)
-          const icon  = ov.modalidad === 'presencial' ? '🌸' : '💻';
-          const texto = ov.modalidad === 'presencial' ? 'Presencial' : 'Online';
+          const icon  = diaModalidad === 'presencial' ? '🌸' : '💻';
+          const texto = diaModalidad === 'presencial' ? 'Presencial' : 'Online';
           const alertEl = document.getElementById('bkDiaMod');
           if (alertEl) {
             alertEl.style.display = '';
@@ -2048,8 +2065,8 @@
       // Horario propio del día de la semana (ej: sábado con horario reducido)
       const dow = days[idx].getDay(); // 0=dom,1=lun,...,6=sáb
       AGENDA_DIA_OVERRIDE = (AGENDA.horarios_por_dia || {})[String(dow)] || null;
-      // Verificar restricción de modalidad del día seleccionado
-      showModalidadAlerta(AGENDA_DIA_OVERRIDE?.modalidad);
+      // Verificar restricción de modalidad (semana tiene prioridad sobre día-de-semana)
+      showModalidadAlerta(getModalidadDia(days[idx]));
       // Cargar slots ocupados desde Supabase
       try {
         const d = days[idx];

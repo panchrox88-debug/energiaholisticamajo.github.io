@@ -470,7 +470,31 @@
           </div>
           <button class="btn btn-primary" id="saveAgendaBtn">Guardar cambios</button>
         </div>
+
+      <!-- PLANIFICACIÓN SEMANAL -->
+      <div class="card" style="margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);margin-bottom:2px">Planificación</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--dark)">Modalidad por semana</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:2px">Planificá con tiempo — sobrescribe la configuración por día</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button type="button" onclick="window._planNavMes(-1)"
+              style="background:none;border:1.5px solid var(--beige);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:var(--dark)">‹</button>
+            <span id="planMesLabel" style="font-size:.88rem;font-weight:600;color:var(--dark);min-width:130px;text-align:center"></span>
+            <button type="button" onclick="window._planNavMes(1)"
+              style="background:none;border:1.5px solid var(--beige);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:var(--dark)">›</button>
+          </div>
+        </div>
+        <div id="planSemanalWrap" style="display:flex;flex-direction:column;gap:6px"></div>
+        <p style="font-size:.72rem;color:var(--muted);margin-top:12px;line-height:1.6">
+          💡 <em>Sin restricción</em> significa que aplica la configuración por día. Los cambios se guardan con el botón de abajo.
+        </p>
+        <button class="btn btn-primary" id="savePlanBtn" style="margin-top:14px">Guardar planificación</button>
       </div>
+
+      </div><!-- /tab-agenda -->
 
       <!-- SOBRE MÍ -->
       <div id="tab-sobremi" class="section">
@@ -959,8 +983,21 @@
   let AGENDA_DATA = {};
   let FECHAS_BLOQUEADAS = [];
   let DIAS_HABILES = [1,2,3,4,5,6];
-  let HORARIOS_POR_DIA = {}; // { "6": { hora_inicio:"10:00", hora_fin:"14:00" } }
+  let HORARIOS_POR_DIA = {};       // { "6": { hora_inicio:"10:00", hora_fin:"14:00", modalidad:"presencial" } }
+  let PLANIFICACION_SEMANAS = {};  // { "2026-04-21": "presencial", "2026-04-28": "online" }
+  let _planMesOffset = 0;          // 0 = mes actual, 1 = próximo, etc.
   const DAY_NAMES_ADMIN = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const MESES_C  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  // Retorna la fecha del lunes de la semana que contiene `date` (YYYY-MM-DD)
+  function getMondayKey(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const dow = d.getDay(); // 0=Dom,1=Lun,...6=Sáb
+    d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+    return d.toISOString().slice(0, 10);
+  }
 
   // ── REST helpers ──────────────────────────────────────────
   function authHeaders(extra = {}) {
@@ -1492,9 +1529,11 @@
         pill.classList.toggle('sel', DIAS_HABILES.includes(d));
       });
 
-      HORARIOS_POR_DIA = a.horarios_por_dia || {};
+      HORARIOS_POR_DIA      = a.horarios_por_dia      || {};
+      PLANIFICACION_SEMANAS = a.planificacion_semanas || {};
       renderDayOverrides();
       renderFechasBloqueadas();
+      renderPlanSemanal();
     } catch(e) { showMsg('agendaMsg', 'Error al cargar agenda: ' + e.message, 'err'); }
   }
 
@@ -1535,6 +1574,121 @@
       delete HORARIOS_POR_DIA[String(d)];
     }
   };
+
+  // ── Planificación semanal ─────────────────────────────────
+
+  function renderPlanSemanal() {
+    const el = document.getElementById('planSemanalWrap');
+    if (!el) return;
+
+    const now     = new Date();
+    const mesBase = new Date(now.getFullYear(), now.getMonth() + _planMesOffset, 1);
+    const mes     = mesBase.getMonth();
+    const año     = mesBase.getFullYear();
+
+    document.getElementById('planMesLabel').textContent = `${MESES_ES[mes]} ${año}`;
+
+    // Semanas que se superponen con este mes
+    const firstDay = new Date(año, mes, 1);
+    const lastDay  = new Date(año, mes + 1, 0);
+    // Lunes de la semana que contiene el primer día del mes
+    const dow0 = firstDay.getDay();
+    let weekCursor = new Date(firstDay);
+    weekCursor.setDate(weekCursor.getDate() - (dow0 === 0 ? 6 : dow0 - 1));
+    const semanas = [];
+    while (weekCursor <= lastDay) {
+      semanas.push(new Date(weekCursor));
+      weekCursor.setDate(weekCursor.getDate() + 7);
+    }
+
+    const MOD_LABELS = {
+      '':           '— Sin restricción',
+      'ambas':      '🌐 Ambas modalidades',
+      'presencial': '🌸 Solo Presencial',
+      'online':     '💻 Solo Online',
+    };
+
+    el.innerHTML = semanas.map((lunes, idx) => {
+      const domingo  = new Date(lunes);
+      domingo.setDate(domingo.getDate() + 6);
+      const key       = lunes.toISOString().slice(0, 10);
+      const mod       = PLANIFICACION_SEMANAS[key] || '';
+      const lunesStr  = `${lunes.getDate()} ${MESES_C[lunes.getMonth()]}`;
+      const domStr    = `${domingo.getDate()} ${MESES_C[domingo.getMonth()]}`;
+      const hasConfig = mod !== '';
+
+      // Badge de color según modalidad
+      const dotColor  = mod === 'presencial' ? 'var(--rose)'
+                      : mod === 'online'     ? '#6aadcb'
+                      : mod === 'ambas'      ? 'var(--gold)'
+                      : 'transparent';
+
+      return `
+        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+          background:${hasConfig ? 'white' : 'var(--cream)'};
+          border:1.5px solid ${hasConfig ? 'var(--beige)' : 'transparent'};
+          border-radius:12px;padding:11px 16px;transition:background .2s">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
+            <span style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap">Sem ${idx + 1}</span>
+          </div>
+          <span style="font-size:0.83rem;color:var(--dark)">
+            <span style="color:var(--muted);font-size:.75rem">Lun</span> ${lunesStr}
+            <span style="color:var(--muted)"> – </span>
+            <span style="color:var(--muted);font-size:.75rem">Dom</span> ${domStr}
+          </span>
+          <select onchange="window._setPlanSemana('${key}', this.value)"
+            style="padding:7px 10px;border-radius:9px;border:1.5px solid var(--beige);
+              background:${hasConfig ? 'var(--cream)' : 'white'};
+              font-size:0.78rem;font-family:'Nunito',sans-serif;color:var(--dark);cursor:pointer;
+              min-width:175px">
+            <option value=""           ${mod===''           ? 'selected':''}>— Sin restricción</option>
+            <option value="ambas"      ${mod==='ambas'      ? 'selected':''}>🌐 Ambas modalidades</option>
+            <option value="presencial" ${mod==='presencial' ? 'selected':''}>🌸 Solo Presencial</option>
+            <option value="online"     ${mod==='online'     ? 'selected':''}>💻 Solo Online</option>
+          </select>
+        </div>`;
+    }).join('');
+  }
+
+  window._planNavMes = function(dir) {
+    _planMesOffset += dir;
+    renderPlanSemanal();
+  };
+
+  window._setPlanSemana = function(key, val) {
+    if (val) {
+      PLANIFICACION_SEMANAS[key] = val;
+    } else {
+      delete PLANIFICACION_SEMANAS[key];
+    }
+    renderPlanSemanal(); // re-render para actualizar estilos
+  };
+
+  // Botón guardar planificación (guarda toda la agenda incluyendo planificacion_semanas)
+  document.getElementById('savePlanBtn').addEventListener('click', async () => {
+    const body = {
+      hora_inicio:          document.getElementById('ag-inicio').value.trim(),
+      hora_fin:             document.getElementById('ag-fin').value.trim(),
+      duracion_sesion:      parseInt(document.getElementById('ag-dur').value) || 60,
+      pausa_minutos:        parseInt(document.getElementById('ag-pausa').value) || 15,
+      descanso_desde:       document.getElementById('ag-break-desde').value.trim() || null,
+      descanso_hasta:       document.getElementById('ag-break-hasta').value.trim() || null,
+      dias_habiles:          DIAS_HABILES,
+      fechas_bloqueadas:     FECHAS_BLOQUEADAS,
+      horarios_por_dia:      HORARIOS_POR_DIA,
+      planificacion_semanas: PLANIFICACION_SEMANAS,
+    };
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/agenda?id=eq.1`, {
+        method: 'PATCH',
+        headers: authHeaders({ 'Prefer': 'return=minimal' }),
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) await sbPost('/agenda', { id: 1, ...body });
+      showMsg('agendaMsg', 'Planificación guardada ✓');
+    } catch(e) { showMsg('agendaMsg', 'Error: ' + e.message, 'err'); }
+  });
 
   // Toggle día
   document.querySelectorAll('.day-pill').forEach(pill => {
@@ -1585,9 +1739,10 @@
       pausa_minutos:    parseInt(document.getElementById('ag-pausa').value) || 15,
       descanso_desde:   document.getElementById('ag-break-desde').value.trim() || null,
       descanso_hasta:   document.getElementById('ag-break-hasta').value.trim() || null,
-      dias_habiles:      DIAS_HABILES,
-      fechas_bloqueadas: FECHAS_BLOQUEADAS,
-      horarios_por_dia:  HORARIOS_POR_DIA,
+      dias_habiles:          DIAS_HABILES,
+      fechas_bloqueadas:     FECHAS_BLOQUEADAS,
+      horarios_por_dia:      HORARIOS_POR_DIA,
+      planificacion_semanas: PLANIFICACION_SEMANAS,
     };
     try {
       // upsert: update if exists, insert if not
