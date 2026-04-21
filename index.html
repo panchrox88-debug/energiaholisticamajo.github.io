@@ -1902,33 +1902,82 @@
       return d.toISOString().slice(0, 10);
     }
 
-    // Resuelve la modalidad efectiva de un día: semana > día-de-semana > null
+    // Resuelve la config completa de modalidad de un día: semana > día-de-semana > null
+    // Retorna objeto { modalidad, manana?, tarde?, corte? } o null
+    function getModalidadConfig(date) {
+      const weekKey = getMondayKey(date);
+      let plan = (AGENDA.planificacion_semanas || {})[weekKey];
+      // Backward compat: string → object
+      if (typeof plan === 'string') plan = { modalidad: plan };
+      if (plan && plan.modalidad) return plan;
+      const dow   = date.getDay();
+      const dayOv = (AGENDA.horarios_por_dia || {})[String(dow)];
+      if (dayOv?.modalidad && dayOv.modalidad !== 'ambas') return dayOv;
+      return null;
+    }
+
+    // Resuelve la modalidad para un slot específico ('presencial'|'online'|'ambas')
+    function getModalidadParaSlot(date, hora) {
+      const conf = getModalidadConfig(date);
+      if (!conf || !conf.modalidad || conf.modalidad === 'ambas') return 'ambas';
+      if (conf.modalidad !== 'mixta') return conf.modalidad;
+      // Mixta: comparar hora vs corte (en minutos)
+      const toMin = t => { const [h, m] = (t || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+      return toMin(hora) < toMin(conf.corte || '13:00') ? (conf.manana || 'presencial') : (conf.tarde || 'online');
+    }
+
+    // Alias legado para compatibilidad interna
     function getModalidadDia(date) {
-      const weekKey  = getMondayKey(date);
-      const weekMod  = (AGENDA.planificacion_semanas || {})[weekKey];
-      if (weekMod) return weekMod;
-      const dow = date.getDay();
-      const dayMod = (AGENDA.horarios_por_dia || {})[String(dow)]?.modalidad;
-      return dayMod || null;
+      const conf = getModalidadConfig(date);
+      return conf ? conf.modalidad : null;
     }
 
     // Alerta de modalidad por día ─────────────────────────────
-    function showModalidadAlerta(diaModalidad) {
+    function showModalidadAlerta(conf) {
       const el = document.getElementById('bkDiaMod');
       if (!el) return;
-      if (!diaModalidad || diaModalidad === 'ambas') {
+      if (!conf || !conf.modalidad || conf.modalidad === 'ambas') {
         el.style.display = 'none';
         return;
       }
-      const icon  = diaModalidad === 'presencial' ? '🌸' : '💻';
-      const texto = diaModalidad === 'presencial' ? 'Presencial' : 'Online';
-      const haConflicto = state.modality && state.modality !== diaModalidad;
+
+      // ── Día mixto: mañana distinta a tarde ──────────────────
+      if (conf.modalidad === 'mixta') {
+        const manIcon = conf.manana === 'presencial' ? '🌸' : '💻';
+        const tarIcon = conf.tarde  === 'presencial' ? '🌸' : '💻';
+        const manTxt  = conf.manana === 'presencial' ? 'Presencial' : 'Online';
+        const tarTxt  = conf.tarde  === 'presencial' ? 'Presencial' : 'Online';
+        const corte   = conf.corte  || '13:00';
+        // Limpiar modalidad → se asignará automáticamente al elegir horario
+        state.modality = null;
+        elModality.querySelectorAll('.bk-mod').forEach(m => m.classList.remove('selected'));
+        updateSummary();
+        el.style.display = '';
+        el.innerHTML = `
+          <div style="display:flex;align-items:flex-start;gap:14px;background:var(--blush);border:1px solid var(--rose-lt);border-radius:16px;padding:18px 20px;margin-bottom:16px">
+            <span style="font-size:1.4rem;line-height:1">🌓</span>
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:500;color:var(--dark);margin-bottom:6px">Día con modalidad mixta</div>
+              <div style="font-size:0.82rem;color:var(--muted);line-height:1.75">
+                ${manIcon} <strong>Mañana</strong> (hasta las ${corte}): <strong style="color:var(--dark)">${manTxt}</strong><br>
+                ${tarIcon} <strong>Tarde</strong> (desde las ${corte}): <strong style="color:var(--dark)">${tarTxt}</strong>
+              </div>
+              <div style="font-size:0.78rem;color:var(--muted);margin-top:7px;font-style:italic">La modalidad se asignará automáticamente según el horario que elijas ✨</div>
+            </div>
+          </div>`;
+        return;
+      }
+
+      // ── Modalidad fija (presencial u online) ────────────────
+      const icon  = conf.modalidad === 'presencial' ? '🌸' : '💻';
+      const texto = conf.modalidad === 'presencial' ? 'Presencial' : 'Online';
+      const haConflicto = state.modality && state.modality !== conf.modalidad;
 
       // Si hay conflicto o no hay modalidad elegida → ajustar al del día
       if (haConflicto || !state.modality) {
-        state.modality = diaModalidad;
+        state.modality = conf.modalidad;
         elModality.querySelectorAll('.bk-mod').forEach(m =>
-          m.classList.toggle('selected', m.dataset.mod === diaModalidad));
+          m.classList.toggle('selected', m.dataset.mod === conf.modalidad));
         updateSummary();
       }
 
@@ -1968,9 +2017,10 @@
         }
       }
       days.forEach((d, i) => {
-        const mod      = getModalidadDia(d);
+        const mod      = getModalidadConfig(d)?.modalidad;
         const modBadge = mod === 'presencial' ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">🌸</span>'
                        : mod === 'online'     ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">💻</span>'
+                       : mod === 'mixta'      ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">🌓</span>'
                        : '';
         const el = document.createElement('div');
         el.className = 'bk-day';
@@ -1984,12 +2034,22 @@
     // Renderiza los horarios generados automáticamente
     function renderTimes() {
       elTimes.innerHTML = '';
+      const conf    = state.day !== null ? getModalidadConfig(days[state.day]) : null;
+      const isMixta = conf?.modalidad === 'mixta';
       generarHorarios().forEach(t => {
         const el = document.createElement('div');
         const ocupado = SLOTS_OCUPADOS.includes(t);
         el.className = 'bk-time' + (ocupado ? ' occupied' : '');
         el.dataset.time = t;
-        el.textContent = t + (ocupado ? ' · Ocupado' : '');
+        if (ocupado) {
+          el.textContent = t + ' · Ocupado';
+        } else if (isMixta) {
+          const slotMod = getModalidadParaSlot(days[state.day], t);
+          const icon    = slotMod === 'presencial' ? ' 🌸' : slotMod === 'online' ? ' 💻' : '';
+          el.textContent = t + icon;
+        } else {
+          el.textContent = t;
+        }
         if (!ocupado) el.addEventListener('click', () => selectTime(t));
         elTimes.appendChild(el);
       });
@@ -2034,8 +2094,12 @@
       updateSummary();
       // Si ya hay un día seleccionado, re-verificar conflicto de modalidad
       if (state.day !== null && days[state.day]) {
-        const diaModalidad = getModalidadDia(days[state.day]);
-        if (diaModalidad && diaModalidad !== 'ambas' && diaModalidad !== mod) {
+        const diaConf = getModalidadConfig(days[state.day]);
+        const diaModalidad = diaConf?.modalidad;
+        if (diaModalidad === 'mixta') {
+          // Día mixto: no hay conflicto, la modalidad se asigna al elegir horario
+          showModalidadAlerta(diaConf);
+        } else if (diaModalidad && diaModalidad !== 'ambas' && diaModalidad !== mod) {
           // El nuevo mod no es compatible con el día → avisar (sin auto-cambiar día)
           const icon  = diaModalidad === 'presencial' ? '🌸' : '💻';
           const texto = diaModalidad === 'presencial' ? 'Presencial' : 'Online';
@@ -2066,7 +2130,7 @@
       const dow = days[idx].getDay(); // 0=dom,1=lun,...,6=sáb
       AGENDA_DIA_OVERRIDE = (AGENDA.horarios_por_dia || {})[String(dow)] || null;
       // Verificar restricción de modalidad (semana tiene prioridad sobre día-de-semana)
-      showModalidadAlerta(getModalidadDia(days[idx]));
+      showModalidadAlerta(getModalidadConfig(days[idx]));
       // Cargar slots ocupados desde Supabase
       try {
         const d = days[idx];
@@ -2083,6 +2147,28 @@
     function selectTime(t) {
       state.time = t;
       elTimes.querySelectorAll('.bk-time').forEach(c => c.classList.toggle('selected', c.dataset.time === t));
+      // En días mixtos, asignar modalidad automáticamente según el slot elegido
+      if (state.day !== null) {
+        const conf = getModalidadConfig(days[state.day]);
+        if (conf?.modalidad === 'mixta') {
+          const slotMod = getModalidadParaSlot(days[state.day], t);
+          state.modality = slotMod;
+          elModality.querySelectorAll('.bk-mod').forEach(m =>
+            m.classList.toggle('selected', m.dataset.mod === slotMod));
+          // Actualizar el aviso con la modalidad asignada
+          const bkDiaMod = document.getElementById('bkDiaMod');
+          if (bkDiaMod) {
+            const icon  = slotMod === 'presencial' ? '🌸' : '💻';
+            const texto = slotMod === 'presencial' ? 'Presencial' : 'Online';
+            bkDiaMod.style.display = '';
+            bkDiaMod.innerHTML = `
+              <div style="display:flex;align-items:center;gap:12px;background:var(--blush);border:1px solid var(--rose-lt);border-radius:14px;padding:14px 18px;margin-bottom:14px">
+                <span style="font-size:1.3rem">${icon}</span>
+                <span style="font-size:0.82rem;color:var(--dark);line-height:1.5">Modalidad asignada automáticamente: <strong>${texto}</strong> según el horario elegido.</span>
+              </div>`;
+          }
+        }
+      }
       updateSummary();
       setTimeout(() => scrollToStep('stepSummary'), 200);
     }

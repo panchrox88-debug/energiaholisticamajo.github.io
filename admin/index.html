@@ -284,6 +284,28 @@
     @media (max-width: 700px) { .day-override-row { grid-template-columns: 1fr 1fr; row-gap: 8px; }
       .day-override-row label { grid-column: 1 / -1; font-weight: 600; }
       .day-override-row select { grid-column: 1 / -1; } }
+    /* Sub-fila mixta mañana/tarde */
+    .day-mixta-row {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      gap: 10px; align-items: end;
+      background: var(--blush); border: 1px solid var(--rose);
+      border-radius: 10px; padding: 10px 14px;
+      margin-top: -6px;
+    }
+    .day-mixta-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+    .day-mixta-row select { font-size: 0.78rem; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--beige); background: white; color: var(--dark); font-family: 'Nunito', sans-serif; cursor: pointer; width: 100%; }
+    .day-mixta-row input[type="text"] { font-size: 0.82rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--beige); background: white; width: 70px; text-align: center; display: block; }
+    .day-mixta-center { text-align: center; }
+    /* Sub-fila mixta semanal */
+    .plan-mixta-row {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      gap: 8px; align-items: end;
+      background: var(--blush); border: 1px solid var(--rose);
+      border-radius: 10px; padding: 10px 14px;
+      margin-top: 6px;
+    }
+    .plan-mixta-row select { font-size: 0.78rem; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--beige); background: white; color: var(--dark); font-family: 'Nunito', sans-serif; cursor: pointer; width: 100%; }
+    .plan-mixta-row input[type="text"] { font-size: 0.8rem; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--beige); background: white; width: 64px; text-align: center; display: block; }
 
     /* Loading spinner */
     .loading {
@@ -1554,6 +1576,12 @@
 
       HORARIOS_POR_DIA      = a.horarios_por_dia      || {};
       PLANIFICACION_SEMANAS = a.planificacion_semanas || {};
+      // Normalizar formato legado (string → object)
+      Object.keys(PLANIFICACION_SEMANAS).forEach(k => {
+        if (typeof PLANIFICACION_SEMANAS[k] === 'string') {
+          PLANIFICACION_SEMANAS[k] = { modalidad: PLANIFICACION_SEMANAS[k] };
+        }
+      });
       renderDayOverrides();
       renderFechasBloqueadas();
       renderPlanSemanal();
@@ -1564,11 +1592,14 @@
   function renderDayOverrides() {
     const el = document.getElementById('dayOverrideList');
     if (!el) return;
-    // Solo días activos, ordenados
     const diasOrdenados = [...DIAS_HABILES].sort((a,b) => a - b);
     el.innerHTML = diasOrdenados.map(d => {
-      const ov  = HORARIOS_POR_DIA[String(d)] || {};
-      const mod = ov.modalidad || 'ambas';
+      const ov     = HORARIOS_POR_DIA[String(d)] || {};
+      const mod    = ov.modalidad || 'ambas';
+      const isMix  = mod === 'mixta';
+      const manana = ov.manana || 'presencial';
+      const tarde  = ov.tarde  || 'online';
+      const corte  = ov.corte  || '13:00';
       return `
         <div class="day-override-row">
           <label>${DAY_NAMES_ADMIN[d]}</label>
@@ -1578,21 +1609,56 @@
           <input type="text" placeholder="Fin (ej: 14:00)"
             id="ov-fin-${d}" value="${ov.hora_fin || ''}"
             oninput="window._updateOverride(${d})"/>
-          <select id="ov-mod-${d}" onchange="window._updateOverride(${d})">
-            <option value="ambas"      ${mod==='ambas'      ? 'selected' : ''}>🌐 Ambas modalidades</option>
-            <option value="presencial" ${mod==='presencial' ? 'selected' : ''}>🌸 Solo Presencial</option>
-            <option value="online"     ${mod==='online'     ? 'selected' : ''}>💻 Solo Online</option>
+          <select id="ov-mod-${d}" onchange="window._toggleMixtaDay(${d})">
+            <option value="ambas"      ${mod==='ambas'      ? 'selected':''}>🌐 Ambas modalidades</option>
+            <option value="presencial" ${mod==='presencial' ? 'selected':''}>🌸 Solo Presencial</option>
+            <option value="online"     ${mod==='online'     ? 'selected':''}>💻 Solo Online</option>
+            <option value="mixta"      ${mod==='mixta'      ? 'selected':''}>🌓 Mixta mañana/tarde</option>
           </select>
+        </div>
+        <div id="ov-mixta-${d}" class="day-mixta-row" style="${isMix ? '' : 'display:none'}">
+          <div>
+            <div class="day-mixta-label">Mañana</div>
+            <select id="ov-man-${d}" onchange="window._updateOverride(${d})">
+              <option value="presencial" ${manana==='presencial' ? 'selected':''}>🌸 Presencial</option>
+              <option value="online"     ${manana==='online'     ? 'selected':''}>💻 Online</option>
+            </select>
+          </div>
+          <div class="day-mixta-center">
+            <div class="day-mixta-label">Corte</div>
+            <input type="text" id="ov-corte-${d}" value="${corte}" placeholder="13:00"
+              oninput="window._updateOverride(${d})" style="width:70px;text-align:center"/>
+          </div>
+          <div>
+            <div class="day-mixta-label">Tarde</div>
+            <select id="ov-tar-${d}" onchange="window._updateOverride(${d})">
+              <option value="presencial" ${tarde==='presencial' ? 'selected':''}>🌸 Presencial</option>
+              <option value="online"     ${tarde==='online'     ? 'selected':''}>💻 Online</option>
+            </select>
+          </div>
         </div>`;
     }).join('');
   }
+
+  window._toggleMixtaDay = d => {
+    const mod = document.getElementById(`ov-mod-${d}`)?.value || 'ambas';
+    const row = document.getElementById(`ov-mixta-${d}`);
+    if (row) row.style.display = mod === 'mixta' ? '' : 'none';
+    window._updateOverride(d);
+  };
 
   window._updateOverride = d => {
     const inicio    = document.getElementById(`ov-inicio-${d}`)?.value.trim();
     const fin       = document.getElementById(`ov-fin-${d}`)?.value.trim();
     const modalidad = document.getElementById(`ov-mod-${d}`)?.value || 'ambas';
     if (inicio || fin || modalidad !== 'ambas') {
-      HORARIOS_POR_DIA[String(d)] = { hora_inicio: inicio || '', hora_fin: fin || '', modalidad };
+      const entry = { hora_inicio: inicio || '', hora_fin: fin || '', modalidad };
+      if (modalidad === 'mixta') {
+        entry.manana = document.getElementById(`ov-man-${d}`)?.value || 'presencial';
+        entry.tarde  = document.getElementById(`ov-tar-${d}`)?.value || 'online';
+        entry.corte  = document.getElementById(`ov-corte-${d}`)?.value.trim() || '13:00';
+      }
+      HORARIOS_POR_DIA[String(d)] = entry;
     } else {
       delete HORARIOS_POR_DIA[String(d)];
     }
@@ -1624,18 +1690,16 @@
       weekCursor.setDate(weekCursor.getDate() + 7);
     }
 
-    const MOD_LABELS = {
-      '':           '— Sin restricción',
-      'ambas':      '🌐 Ambas modalidades',
-      'presencial': '🌸 Solo Presencial',
-      'online':     '💻 Solo Online',
-    };
-
     el.innerHTML = semanas.map((lunes, idx) => {
       const domingo  = new Date(lunes);
       domingo.setDate(domingo.getDate() + 6);
       const key       = lunes.toISOString().slice(0, 10);
-      const mod       = PLANIFICACION_SEMANAS[key] || '';
+      const plan      = PLANIFICACION_SEMANAS[key] || null;
+      const mod       = plan ? (plan.modalidad || '') : '';
+      const isMixta   = mod === 'mixta';
+      const manana    = plan?.manana || 'presencial';
+      const tarde     = plan?.tarde  || 'online';
+      const corte     = plan?.corte  || '13:00';
       const lunesStr  = `${lunes.getDate()} ${MESES_C[lunes.getMonth()]}`;
       const domStr    = `${domingo.getDate()} ${MESES_C[domingo.getMonth()]}`;
       const hasConfig = mod !== '';
@@ -1644,32 +1708,60 @@
       const dotColor  = mod === 'presencial' ? 'var(--rose)'
                       : mod === 'online'     ? '#6aadcb'
                       : mod === 'ambas'      ? 'var(--gold)'
+                      : mod === 'mixta'      ? 'var(--muted)'
                       : 'transparent';
 
-      return `
-        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
-          background:${hasConfig ? 'white' : 'var(--cream)'};
-          border:1.5px solid ${hasConfig ? 'var(--beige)' : 'transparent'};
-          border-radius:12px;padding:11px 16px;transition:background .2s">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
-            <span style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap">Sem ${idx + 1}</span>
+      const mixtaSubRow = `
+        <div id="ps-mixta-${key}" class="plan-mixta-row" style="${isMixta ? '' : 'display:none'}">
+          <div>
+            <div class="day-mixta-label">Mañana</div>
+            <select id="ps-man-${key}" onchange="window._updatePlanMixta('${key}')">
+              <option value="presencial" ${manana==='presencial' ? 'selected':''}>🌸 Presencial</option>
+              <option value="online"     ${manana==='online'     ? 'selected':''}>💻 Online</option>
+            </select>
           </div>
-          <span style="font-size:0.83rem;color:var(--dark)">
-            <span style="color:var(--muted);font-size:.75rem">Lun</span> ${lunesStr}
-            <span style="color:var(--muted)"> – </span>
-            <span style="color:var(--muted);font-size:.75rem">Dom</span> ${domStr}
-          </span>
-          <select onchange="window._setPlanSemana('${key}', this.value)"
-            style="padding:7px 10px;border-radius:9px;border:1.5px solid var(--beige);
-              background:${hasConfig ? 'var(--cream)' : 'white'};
-              font-size:0.78rem;font-family:'Nunito',sans-serif;color:var(--dark);cursor:pointer;
-              min-width:175px">
-            <option value=""           ${mod===''           ? 'selected':''}>— Sin restricción</option>
-            <option value="ambas"      ${mod==='ambas'      ? 'selected':''}>🌐 Ambas modalidades</option>
-            <option value="presencial" ${mod==='presencial' ? 'selected':''}>🌸 Solo Presencial</option>
-            <option value="online"     ${mod==='online'     ? 'selected':''}>💻 Solo Online</option>
-          </select>
+          <div class="day-mixta-center">
+            <div class="day-mixta-label">Corte</div>
+            <input type="text" id="ps-corte-${key}" value="${corte}" placeholder="13:00"
+              oninput="window._updatePlanMixta('${key}')" style="width:64px;text-align:center"/>
+          </div>
+          <div>
+            <div class="day-mixta-label">Tarde</div>
+            <select id="ps-tar-${key}" onchange="window._updatePlanMixta('${key}')">
+              <option value="presencial" ${tarde==='presencial' ? 'selected':''}>🌸 Presencial</option>
+              <option value="online"     ${tarde==='online'     ? 'selected':''}>💻 Online</option>
+            </select>
+          </div>
+        </div>`;
+
+      return `
+        <div>
+          <div style="display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+            background:${hasConfig ? 'white' : 'var(--cream)'};
+            border:1.5px solid ${hasConfig ? 'var(--beige)' : 'transparent'};
+            border-radius:12px;padding:11px 16px;transition:background .2s">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
+              <span style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap">Sem ${idx + 1}</span>
+            </div>
+            <span style="font-size:0.83rem;color:var(--dark)">
+              <span style="color:var(--muted);font-size:.75rem">Lun</span> ${lunesStr}
+              <span style="color:var(--muted)"> – </span>
+              <span style="color:var(--muted);font-size:.75rem">Dom</span> ${domStr}
+            </span>
+            <select onchange="window._setPlanSemana('${key}', this.value)"
+              style="padding:7px 10px;border-radius:9px;border:1.5px solid var(--beige);
+                background:${hasConfig ? 'var(--cream)' : 'white'};
+                font-size:0.78rem;font-family:'Nunito',sans-serif;color:var(--dark);cursor:pointer;
+                min-width:185px">
+              <option value=""           ${mod===''           ? 'selected':''}>— Sin restricción</option>
+              <option value="ambas"      ${mod==='ambas'      ? 'selected':''}>🌐 Ambas modalidades</option>
+              <option value="presencial" ${mod==='presencial' ? 'selected':''}>🌸 Solo Presencial</option>
+              <option value="online"     ${mod==='online'     ? 'selected':''}>💻 Solo Online</option>
+              <option value="mixta"      ${mod==='mixta'      ? 'selected':''}>🌓 Mixta mañana/tarde</option>
+            </select>
+          </div>
+          ${mixtaSubRow}
         </div>`;
     }).join('');
   }
@@ -1681,11 +1773,26 @@
 
   window._setPlanSemana = function(key, val) {
     if (val) {
-      PLANIFICACION_SEMANAS[key] = val;
+      const prev = PLANIFICACION_SEMANAS[key] || {};
+      PLANIFICACION_SEMANAS[key] = { ...prev, modalidad: val };
+      if (val !== 'mixta') {
+        // Limpiar campos mixta si ya no aplican
+        delete PLANIFICACION_SEMANAS[key].manana;
+        delete PLANIFICACION_SEMANAS[key].tarde;
+        delete PLANIFICACION_SEMANAS[key].corte;
+      }
     } else {
       delete PLANIFICACION_SEMANAS[key];
     }
     renderPlanSemanal(); // re-render para actualizar estilos
+  };
+
+  window._updatePlanMixta = function(key) {
+    if (!PLANIFICACION_SEMANAS[key]) return;
+    const manana = document.getElementById(`ps-man-${key}`)?.value   || 'presencial';
+    const tarde  = document.getElementById(`ps-tar-${key}`)?.value   || 'online';
+    const corte  = document.getElementById(`ps-corte-${key}`)?.value.trim() || '13:00';
+    PLANIFICACION_SEMANAS[key] = { ...PLANIFICACION_SEMANAS[key], manana, tarde, corte };
   };
 
   // Botón guardar planificación (guarda toda la agenda incluyendo planificacion_semanas)
