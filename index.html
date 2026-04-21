@@ -895,6 +895,16 @@
       font-size: 0.88rem; color: var(--dark);
     }
     .bk-time:hover:not(.disabled) { border-color: var(--rose-lt); background: white; }
+    .bk-time.mod-online    { background: #eaf5fb; border-color: #9dcde0; }
+    .bk-time.mod-online:hover    { background: #d8edf7; border-color: #6aadcb; }
+    .bk-time.mod-presencial { background: var(--blush); border-color: var(--rose-lt); }
+    .bk-time.mod-presencial:hover { background: #e8c8cb; border-color: var(--rose); }
+    .bk-time-label {
+      display: block; font-size: 0.58rem; letter-spacing: 0.1em;
+      text-transform: uppercase; font-weight: 600; margin-top: 3px;
+    }
+    .bk-time.mod-online    .bk-time-label { color: #4a90b8; }
+    .bk-time.mod-presencial .bk-time-label { color: var(--rose); }
     .bk-time.selected {
       border-color: var(--rose); background: var(--blush);
       color: var(--rose); font-weight: 400;
@@ -2069,8 +2079,9 @@
           el.textContent = t + ' · Ocupado';
         } else if (isMixta) {
           const slotMod = getModalidadParaSlot(days[state.day], t);
-          const icon    = slotMod === 'presencial' ? ' 🌸' : slotMod === 'online' ? ' 💻' : '';
-          el.textContent = t + icon;
+          const label   = slotMod === 'presencial' ? 'Presencial' : slotMod === 'online' ? 'Online' : '';
+          el.classList.add(slotMod === 'presencial' ? 'mod-presencial' : slotMod === 'online' ? 'mod-online' : '');
+          el.innerHTML  = `${t}<span class="bk-time-label">${label}</span>`;
         } else {
           el.textContent = t;
         }
