@@ -1909,7 +1909,7 @@
       let plan = (AGENDA.planificacion_semanas || {})[weekKey];
       // Backward compat: string → object
       if (typeof plan === 'string') plan = { modalidad: plan };
-      if (plan && plan.modalidad) return plan;
+      if (plan && plan.modalidad && plan.modalidad !== 'bloqueada') return plan;
       const dow   = date.getDay();
       const dayOv = (AGENDA.horarios_por_dia || {})[String(dow)];
       if (dayOv?.modalidad && dayOv.modalidad !== 'ambas') return dayOv;
@@ -2015,7 +2015,11 @@
         cursor.setDate(cursor.getDate() + 1);
         const dow     = cursor.getDay();
         const dateStr = cursor.toISOString().slice(0, 10);
-        if (cursor <= maxDate && habiles.includes(dow) && !bloqueadas.has(dateStr)) {
+        // Verificar si la semana completa está bloqueada
+        const weekPlanRaw = (AGENDA.planificacion_semanas || {})[getMondayKey(cursor)];
+        const weekPlan = typeof weekPlanRaw === 'string' ? { modalidad: weekPlanRaw } : weekPlanRaw;
+        const semBloqueada = weekPlan?.modalidad === 'bloqueada';
+        if (cursor <= maxDate && habiles.includes(dow) && !bloqueadas.has(dateStr) && !semBloqueada) {
           days.push(new Date(cursor));
         }
       }

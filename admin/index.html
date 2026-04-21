@@ -1709,12 +1709,18 @@
       const domStr    = `${domingo.getDate()} ${MESES_C[domingo.getMonth()]}`;
       const hasConfig = mod !== '';
 
+      const isBloqueada = mod === 'bloqueada';
+
       // Badge de color según modalidad
-      const dotColor  = mod === 'presencial' ? 'var(--rose)'
-                      : mod === 'online'     ? '#6aadcb'
-                      : mod === 'ambas'      ? 'var(--gold)'
-                      : mod === 'mixta'      ? 'var(--muted)'
+      const dotColor  = mod === 'presencial'  ? 'var(--rose)'
+                      : mod === 'online'      ? '#6aadcb'
+                      : mod === 'ambas'       ? 'var(--gold)'
+                      : mod === 'mixta'       ? 'var(--muted)'
+                      : mod === 'bloqueada'   ? 'var(--red)'
                       : 'transparent';
+
+      const rowBg     = isBloqueada ? '#fde8e8' : (hasConfig ? 'white' : 'var(--cream)');
+      const rowBorder = isBloqueada ? 'var(--red)' : (hasConfig ? 'var(--beige)' : 'transparent');
 
       const mixtaSubRow = `
         <div id="ps-mixta-${key}" class="plan-mixta-row" style="${isMixta ? '' : 'display:none'}">
@@ -1742,17 +1748,18 @@
       return `
         <div>
           <div style="display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
-            background:${hasConfig ? 'white' : 'var(--cream)'};
-            border:1.5px solid ${hasConfig ? 'var(--beige)' : 'transparent'};
+            background:${rowBg};
+            border:1.5px solid ${rowBorder};
             border-radius:12px;padding:11px 16px;transition:background .2s">
             <div style="display:flex;align-items:center;gap:8px">
               <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
               <span style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap">Sem ${idx + 1}</span>
             </div>
-            <span style="font-size:0.83rem;color:var(--dark)">
+            <span style="font-size:0.83rem;color:${isBloqueada ? 'var(--red)' : 'var(--dark)'}">
               <span style="color:var(--muted);font-size:.75rem">Lun</span> ${lunesStr}
               <span style="color:var(--muted)"> – </span>
               <span style="color:var(--muted);font-size:.75rem">Dom</span> ${domStr}
+              ${isBloqueada ? '<span style="font-size:0.75rem;margin-left:6px;color:var(--red);font-weight:600">🚫 Bloqueada</span>' : ''}
             </span>
             <select onchange="window._setPlanSemana('${key}', this.value)"
               style="padding:7px 10px;border-radius:9px;border:1.5px solid var(--beige);
@@ -1764,6 +1771,7 @@
               <option value="presencial" ${mod==='presencial' ? 'selected':''}>🌸 Solo Presencial</option>
               <option value="online"     ${mod==='online'     ? 'selected':''}>💻 Solo Online</option>
               <option value="mixta"      ${mod==='mixta'      ? 'selected':''}>🌓 Mixta mañana/tarde</option>
+              <option value="bloqueada"  ${mod==='bloqueada'  ? 'selected':''}>🚫 Semana bloqueada</option>
             </select>
           </div>
           ${mixtaSubRow}
