@@ -2006,13 +2006,16 @@
       days = [];
       const today  = new Date();
       const cursor = new Date(today); cursor.setHours(0,0,0,0);
-      const bloqueadas = new Set(AGENDA.fechas_bloqueadas || []);
-      const habiles    = AGENDA.dias_habiles || [1,2,3,4,5,6];
-      while (days.length < 12) {
+      const bloqueadas  = new Set(AGENDA.fechas_bloqueadas || []);
+      const habiles     = AGENDA.dias_habiles || [1,2,3,4,5,6];
+      const diasAdelanteMax = AGENDA.dias_adelante || 30;
+      const maxDate     = new Date(today);
+      maxDate.setDate(maxDate.getDate() + diasAdelanteMax);
+      while (cursor <= maxDate) {
         cursor.setDate(cursor.getDate() + 1);
         const dow     = cursor.getDay();
         const dateStr = cursor.toISOString().slice(0, 10);
-        if (habiles.includes(dow) && !bloqueadas.has(dateStr)) {
+        if (cursor <= maxDate && habiles.includes(dow) && !bloqueadas.has(dateStr)) {
           days.push(new Date(cursor));
         }
       }
