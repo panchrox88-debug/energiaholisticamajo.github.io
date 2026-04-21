@@ -2711,7 +2711,7 @@
       const btn = document.getElementById('detailReserve');
       if (data.precio) {
         const original  = Number(data.precio);
-        const descuento = BANNER_DESCUENTO || 0;
+        const descuento = tieneBannerDesc('servicio', data.id) ? (BANNER_DESCUENTO || 0) : 0;
         let precioHTML;
         if (descuento > 0) {
           const final = Math.round(original * (1 - descuento / 100) / 1000) * 1000;
