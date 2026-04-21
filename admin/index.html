@@ -274,13 +274,16 @@
     /* Horarios por día */
     .day-override-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
     .day-override-row {
-      display: grid; grid-template-columns: 100px 1fr 1fr;
+      display: grid; grid-template-columns: 90px 1fr 1fr 1.4fr;
       gap: 10px; align-items: center;
       background: var(--cream); border-radius: 10px; padding: 10px 14px;
     }
     .day-override-row label { font-size: 0.8rem; font-weight: 400; color: var(--dark); }
     .day-override-row input { font-size: 0.82rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--beige); background: white; }
-    @media (max-width: 600px) { .day-override-row { grid-template-columns: 1fr 1fr 1fr; } }
+    .day-override-row select { font-size: 0.78rem; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--beige); background: white; color: var(--dark); font-family: 'Nunito', sans-serif; cursor: pointer; }
+    @media (max-width: 700px) { .day-override-row { grid-template-columns: 1fr 1fr; row-gap: 8px; }
+      .day-override-row label { grid-column: 1 / -1; font-weight: 600; }
+      .day-override-row select { grid-column: 1 / -1; } }
 
     /* Loading spinner */
     .loading {
@@ -454,7 +457,7 @@
             </div>
           </div>
           <div class="field" style="margin-top:8px">
-            <label>Horario personalizado por día <span style="font-weight:300;color:var(--muted)">(opcional — dejar en blanco para usar el horario general)</span></label>
+            <label>Horario y modalidad por día <span style="font-weight:300;color:var(--muted)">(horario opcional — modalidad aplica aunque no cambies los horarios)</span></label>
             <div class="day-override-list" id="dayOverrideList"></div>
           </div>
           <div class="field" style="margin-top:8px">
@@ -1502,7 +1505,8 @@
     // Solo días activos, ordenados
     const diasOrdenados = [...DIAS_HABILES].sort((a,b) => a - b);
     el.innerHTML = diasOrdenados.map(d => {
-      const ov = HORARIOS_POR_DIA[String(d)] || {};
+      const ov  = HORARIOS_POR_DIA[String(d)] || {};
+      const mod = ov.modalidad || 'ambas';
       return `
         <div class="day-override-row">
           <label>${DAY_NAMES_ADMIN[d]}</label>
@@ -1512,15 +1516,21 @@
           <input type="text" placeholder="Fin (ej: 14:00)"
             id="ov-fin-${d}" value="${ov.hora_fin || ''}"
             oninput="window._updateOverride(${d})"/>
+          <select id="ov-mod-${d}" onchange="window._updateOverride(${d})">
+            <option value="ambas"      ${mod==='ambas'      ? 'selected' : ''}>🌐 Ambas modalidades</option>
+            <option value="presencial" ${mod==='presencial' ? 'selected' : ''}>🌸 Solo Presencial</option>
+            <option value="online"     ${mod==='online'     ? 'selected' : ''}>💻 Solo Online</option>
+          </select>
         </div>`;
     }).join('');
   }
 
   window._updateOverride = d => {
-    const inicio = document.getElementById(`ov-inicio-${d}`)?.value.trim();
-    const fin    = document.getElementById(`ov-fin-${d}`)?.value.trim();
-    if (inicio || fin) {
-      HORARIOS_POR_DIA[String(d)] = { hora_inicio: inicio, hora_fin: fin };
+    const inicio    = document.getElementById(`ov-inicio-${d}`)?.value.trim();
+    const fin       = document.getElementById(`ov-fin-${d}`)?.value.trim();
+    const modalidad = document.getElementById(`ov-mod-${d}`)?.value || 'ambas';
+    if (inicio || fin || modalidad !== 'ambas') {
+      HORARIOS_POR_DIA[String(d)] = { hora_inicio: inicio || '', hora_fin: fin || '', modalidad };
     } else {
       delete HORARIOS_POR_DIA[String(d)];
     }

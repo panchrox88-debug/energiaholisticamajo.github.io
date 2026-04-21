@@ -1651,6 +1651,7 @@
       <!-- Step 4: Time -->
       <div class="step" id="step4">
         <span class="step-label"><span class="step-num">4 ·</span> Elige tu horario</span>
+        <div id="bkDiaMod" style="display:none"></div>
         <div class="bk-times" id="bkTimes"></div>
       </div>
 
@@ -1892,6 +1893,45 @@
 
     // Render services (llamado dinámicamente desde buildBookingServices)
 
+    // Alerta de modalidad por día ─────────────────────────────
+    function showModalidadAlerta(diaModalidad) {
+      const el = document.getElementById('bkDiaMod');
+      if (!el) return;
+      if (!diaModalidad || diaModalidad === 'ambas') {
+        el.style.display = 'none';
+        return;
+      }
+      const icon  = diaModalidad === 'presencial' ? '🌸' : '💻';
+      const texto = diaModalidad === 'presencial' ? 'Presencial' : 'Online';
+      const haConflicto = state.modality && state.modality !== diaModalidad;
+
+      // Si hay conflicto o no hay modalidad elegida → ajustar al del día
+      if (haConflicto || !state.modality) {
+        state.modality = diaModalidad;
+        elModality.querySelectorAll('.bk-mod').forEach(m =>
+          m.classList.toggle('selected', m.dataset.mod === diaModalidad));
+        updateSummary();
+      }
+
+      el.style.display = '';
+      if (haConflicto) {
+        el.innerHTML = `
+          <div style="display:flex;align-items:flex-start;gap:14px;background:#fff8e1;border:1.5px solid #f5c518;border-radius:16px;padding:18px 20px;margin-bottom:16px">
+            <span style="font-size:1.6rem;line-height:1">⚠️</span>
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:500;color:var(--dark);margin-bottom:5px">Este día es solo ${icon} <em style="color:var(--rose);font-style:italic">${texto}</em></div>
+              <div style="font-size:0.8rem;color:var(--muted);line-height:1.65">Tu modalidad fue cambiada a <strong style="color:var(--dark)">${texto}</strong> automáticamente para este día. Si preferís otra modalidad, elegí un día diferente.</div>
+            </div>
+          </div>`;
+      } else {
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;gap:12px;background:var(--blush);border:1px solid var(--rose-lt);border-radius:14px;padding:14px 18px;margin-bottom:14px">
+            <span style="font-size:1.3rem">${icon}</span>
+            <span style="font-size:0.82rem;color:var(--dark);line-height:1.5">Este día está disponible solo en modalidad <strong>${texto}</strong>.</span>
+          </div>`;
+      }
+    }
+
     // Construye el calendario según dias_habiles y fechas_bloqueadas
     function buildCalendar() {
       elDays.innerHTML = '';
@@ -1909,10 +1949,15 @@
         }
       }
       days.forEach((d, i) => {
+        const dow = d.getDay();
+        const ov  = (AGENDA.horarios_por_dia || {})[String(dow)] || {};
+        const modBadge = ov.modalidad === 'presencial' ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">🌸</span>'
+                       : ov.modalidad === 'online'     ? '<span style="font-size:0.72rem;margin-top:1px;opacity:0.8">💻</span>'
+                       : '';
         const el = document.createElement('div');
         el.className = 'bk-day';
         el.dataset.idx = i;
-        el.innerHTML = `<span class="bk-day-name">${DAY_NAMES[d.getDay()]}</span><span class="bk-day-num">${d.getDate()}</span>`;
+        el.innerHTML = `<span class="bk-day-name">${DAY_NAMES[d.getDay()]}</span><span class="bk-day-num">${d.getDate()}</span>${modBadge}`;
         el.addEventListener('click', () => selectDay(i));
         elDays.appendChild(el);
       });
@@ -1969,7 +2014,30 @@
         m.classList.toggle('selected', m.dataset.mod === mod);
       });
       updateSummary();
-      if (state.service && !state.day) setTimeout(() => scrollToStep('step3'), 200);
+      // Si ya hay un día seleccionado, re-verificar conflicto de modalidad
+      if (state.day !== null && days[state.day]) {
+        const dow = days[state.day].getDay();
+        const ov  = (AGENDA.horarios_por_dia || {})[String(dow)] || {};
+        if (ov.modalidad && ov.modalidad !== 'ambas' && ov.modalidad !== mod) {
+          // El nuevo mod no es compatible con el día → avisar (sin auto-cambiar día)
+          const icon  = ov.modalidad === 'presencial' ? '🌸' : '💻';
+          const texto = ov.modalidad === 'presencial' ? 'Presencial' : 'Online';
+          const alertEl = document.getElementById('bkDiaMod');
+          if (alertEl) {
+            alertEl.style.display = '';
+            alertEl.innerHTML = `
+              <div style="display:flex;align-items:flex-start;gap:14px;background:#fff8e1;border:1.5px solid #f5c518;border-radius:16px;padding:18px 20px;margin-bottom:16px">
+                <span style="font-size:1.6rem;line-height:1">⚠️</span>
+                <div>
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:500;color:var(--dark);margin-bottom:5px">El día elegido es solo ${icon} <em style="color:var(--rose);font-style:italic">${texto}</em></div>
+                  <div style="font-size:0.8rem;color:var(--muted);line-height:1.65">Para elegir otra modalidad, primero seleccioná un día diferente.</div>
+                </div>
+              </div>`;
+          }
+        }
+      } else if (state.day === null && state.service) {
+        setTimeout(() => scrollToStep('step3'), 200);
+      }
     }
 
     async function selectDay(idx) {
@@ -1980,6 +2048,8 @@
       // Horario propio del día de la semana (ej: sábado con horario reducido)
       const dow = days[idx].getDay(); // 0=dom,1=lun,...,6=sáb
       AGENDA_DIA_OVERRIDE = (AGENDA.horarios_por_dia || {})[String(dow)] || null;
+      // Verificar restricción de modalidad del día seleccionado
+      showModalidadAlerta(AGENDA_DIA_OVERRIDE?.modalidad);
       // Cargar slots ocupados desde Supabase
       try {
         const d = days[idx];
