@@ -428,25 +428,18 @@
       ${introHTML}
       ${indiceHTML}
       ${c.pdf_url ? `
-      <section class="intro" style="padding-top:0;padding-bottom:0">
-        <div style="max-width:600px;margin:0 auto;padding:28px 32px;background:var(--blush);border-radius:16px;display:flex;align-items:center;gap:16px">
-          <span style="font-size:2rem;flex-shrink:0">📄</span>
-          <div style="flex:1;text-align:left">
-            <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--dark);margin-bottom:4px">Material de apoyo</div>
-            <div style="font-size:0.75rem;color:var(--muted);letter-spacing:0.05em">Documento PDF incluido en este curso</div>
-          </div>
-          <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
-            <a href="${c.pdf_url}" target="_blank" rel="noopener"
-               style="padding:9px 18px;border-radius:24px;background:white;border:1.5px solid var(--beige);color:var(--dark);font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;font-family:'Nunito',sans-serif">
-              Ver PDF
-            </a>
-            <a href="${c.pdf_url}" download
-               style="padding:9px 18px;border-radius:24px;background:${tema};color:white;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;font-family:'Nunito',sans-serif">
-              Descargar
-            </a>
-          </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:18px 48px;background:var(--cream);border-top:1px solid var(--gold-lt);border-bottom:1px solid var(--gold-lt)">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0"></div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--dark);flex:1">
+          Material de apoyo <span style="font-family:'Nunito',sans-serif;font-size:0.68rem;color:var(--muted);letter-spacing:0.06em;margin-left:6px">PDF adjunto</span>
         </div>
-      </section>` : ''}
+        <div style="display:flex;gap:16px;align-items:center">
+          <a href="${c.pdf_url}" target="_blank" rel="noopener"
+             style="font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;color:var(--muted);border-bottom:1px solid var(--beige);padding-bottom:1px">Ver</a>
+          <a href="${c.pdf_url}" download
+             style="font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;color:var(--rose);border-bottom:1px solid var(--rose-lt);padding-bottom:1px">Descargar ↓</a>
+        </div>
+      </div>` : ''}
       ${seccionesHTML}
       <section class="cierre">
         <p class="eyebrow">¿Lista para el siguiente paso?</p>
