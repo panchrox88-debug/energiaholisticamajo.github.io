@@ -122,43 +122,101 @@
     .nav-toggle.open span:nth-child(2) { opacity: 0; }
     .nav-toggle.open span:nth-child(3) { top: 19px; transform: rotate(-45deg); }
 
-    /* Mobile menu overlay */
-    .mobile-menu {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(250,245,240,0.98);
-      backdrop-filter: blur(20px);
-      z-index: 105;
-      flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 32px;
+    /* Mobile menu — panel lateral */
+    .mobile-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(61,43,43,0.35);
+      backdrop-filter: blur(3px);
+      z-index: 104;
       opacity: 0; pointer-events: none;
       transition: opacity 0.35s ease;
     }
-    .mobile-menu.open { opacity: 1; pointer-events: auto; }
-    .mobile-menu ul {
-      list-style: none; display: flex; flex-direction: column;
-      gap: 28px; text-align: center;
+    .mobile-backdrop.open { opacity: 1; pointer-events: auto; }
+    .mobile-menu {
+      display: none; position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: min(82vw, 320px);
+      background: var(--white);
+      border-left: 1px solid var(--beige);
+      z-index: 105;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: -8px 0 40px rgba(61,43,43,0.12);
     }
-    .mobile-menu a {
+    .mobile-menu.open { transform: translateX(0); }
+
+    /* Header del panel */
+    .mobile-menu-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 24px 20px;
+      border-bottom: 1px solid var(--beige);
+    }
+    .mobile-menu-brand {
+      display: flex; flex-direction: column; line-height: 1.2;
+    }
+    .mobile-menu-brand span:first-child {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.8rem; font-weight: 300;
+      font-size: 1.05rem; font-weight: 400;
+      letter-spacing: 0.1em; color: var(--rose);
+    }
+    .mobile-menu-brand span:last-child {
+      font-size: 0.55rem; letter-spacing: 0.35em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .mobile-close {
+      background: var(--cream); border: 1px solid var(--beige);
+      border-radius: 50%; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--muted); font-size: 1.1rem;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .mobile-close:hover { background: var(--blush); color: var(--rose); border-color: var(--rose-lt); }
+
+    /* Links */
+    .mobile-menu-nav {
+      flex: 1; overflow-y: auto;
+      padding: 12px 0;
+    }
+    .mobile-menu-nav a {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 24px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem; font-weight: 300;
       color: var(--dark); text-decoration: none;
-      letter-spacing: 0.05em;
-      transition: color 0.3s;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
     }
-    .mobile-menu a:hover, .mobile-menu a:active { color: var(--rose); }
-    .mobile-menu .mobile-cta {
-      margin-top: 16px;
-      background: var(--rose); color: white;
-      padding: 14px 36px; border-radius: 40px;
-      font-family: 'Nunito', sans-serif;
-      font-size: 0.75rem; letter-spacing: 0.25em;
-      text-transform: uppercase;
+    .mobile-menu-nav a:hover, .mobile-menu-nav a:active {
+      color: var(--rose); background: var(--cream);
+      border-left-color: var(--rose);
     }
+    .mobile-menu-nav .nav-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--gold-lt); flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .mobile-menu-nav a:hover .nav-dot { background: var(--rose); }
     .mobile-menu-divider {
-      width: 40px; height: 1px; background: var(--gold-lt);
+      height: 1px; background: var(--beige); margin: 8px 24px;
     }
+
+    /* Footer del panel */
+    .mobile-menu-footer {
+      padding: 20px 24px 32px;
+      border-top: 1px solid var(--beige);
+    }
+    .mobile-cta {
+      display: block; text-align: center;
+      background: var(--rose); color: white;
+      padding: 14px 24px; border-radius: 14px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.75rem; letter-spacing: 0.22em;
+      text-transform: uppercase; text-decoration: none;
+      transition: all 0.2s;
+    }
+    .mobile-cta:hover { background: var(--dark); }
     body.menu-open { overflow: hidden; }
     .nav-logo {
       display: flex; flex-direction: column; line-height: 1.1;
@@ -1298,6 +1356,7 @@
       .nav-links, .nav-btn { display: none; }
       .nav-toggle { display: block; }
       .mobile-menu { display: flex; }
+      .mobile-backdrop { display: block; }
       .nav-logo-main { font-size: 1.1rem; letter-spacing: 0.1em; }
       .nav-logo-sub { font-size: 0.55rem; letter-spacing: 0.3em; }
 
@@ -1477,18 +1536,33 @@
     </button>
   </nav>
 
-  <!-- Mobile menu -->
+  <!-- Mobile menu backdrop -->
+  <div class="mobile-backdrop" id="mobileBackdrop"></div>
+
+  <!-- Mobile menu panel -->
   <div class="mobile-menu" id="mobileMenu">
-    <ul>
-      <li><a href="#about">Sobre mí</a></li>
-      <li><a href="#services">Servicios</a></li>
-      <li><a href="cursos.html">Cursos</a></li>
-      <li><a href="promociones.html">Promociones</a></li>
-      <li><a href="blog.html">Blog</a></li>
-      <li><a href="#contact">Contacto</a></li>
-    </ul>
-    <div class="mobile-menu-divider"></div>
-    <a href="#booking" class="mobile-cta">Agendar sesión</a>
+    <div class="mobile-menu-header">
+      <div class="mobile-menu-brand">
+        <span>Energía Holística Majo</span>
+        <span>Psicóloga &amp; Terapeuta</span>
+      </div>
+      <button class="mobile-close" id="mobileClose" aria-label="Cerrar menú">✕</button>
+    </div>
+
+    <nav class="mobile-menu-nav">
+      <a href="index.html"><span class="nav-dot"></span>Inicio</a>
+      <a href="#about"   ><span class="nav-dot"></span>Sobre mí</a>
+      <a href="#services"><span class="nav-dot"></span>Servicios</a>
+      <a href="cursos.html"><span class="nav-dot"></span>Cursos</a>
+      <a href="promociones.html"><span class="nav-dot"></span>Promociones</a>
+      <a href="blog.html"><span class="nav-dot"></span>Blog</a>
+      <div class="mobile-menu-divider"></div>
+      <a href="#contact"><span class="nav-dot"></span>Contacto</a>
+    </nav>
+
+    <div class="mobile-menu-footer">
+      <a href="#booking" class="mobile-cta">Agendar sesión ✨</a>
+    </div>
   </div>
 
   <!-- HERO -->
@@ -1801,20 +1875,31 @@
     }
 
     // Mobile menu
-    const navToggle = document.getElementById('navToggle');
-    const mobileMenu = document.getElementById('mobileMenu');
+    const navToggle    = document.getElementById('navToggle');
+    const mobileMenu   = document.getElementById('mobileMenu');
+    const mobileBackdrop = document.getElementById('mobileBackdrop');
+    const mobileClose  = document.getElementById('mobileClose');
+
     const closeMenu = () => {
       navToggle.classList.remove('open');
       mobileMenu.classList.remove('open');
+      mobileBackdrop.classList.remove('open');
       document.body.classList.remove('menu-open');
       navToggle.setAttribute('aria-expanded', 'false');
     };
+    const openMenu = () => {
+      navToggle.classList.add('open');
+      mobileMenu.classList.add('open');
+      mobileBackdrop.classList.add('open');
+      document.body.classList.add('menu-open');
+      navToggle.setAttribute('aria-expanded', 'true');
+    };
+
     navToggle.addEventListener('click', () => {
-      const isOpen = navToggle.classList.toggle('open');
-      mobileMenu.classList.toggle('open', isOpen);
-      document.body.classList.toggle('menu-open', isOpen);
-      navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      mobileMenu.classList.contains('open') ? closeMenu() : openMenu();
     });
+    mobileClose.addEventListener('click', closeMenu);
+    mobileBackdrop.addEventListener('click', closeMenu);
     mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
     window.addEventListener('resize', () => { if (window.innerWidth > 900) closeMenu(); });
 
