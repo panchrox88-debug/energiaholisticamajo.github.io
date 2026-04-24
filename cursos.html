@@ -358,7 +358,7 @@
 
   async function loadCursos() {
     await loadBannerData();
-    const res  = await sbFetch('/cursos?activo=eq.true&order=orden.asc,created_at.desc');
+    const res  = await sbFetch('/cursos?activo=eq.true&order=orden.asc,created_at.desc&select=*');
     const rows = await res.json();
     todosLosCursos = rows || [];
     buildFiltros();
