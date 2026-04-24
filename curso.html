@@ -427,9 +427,8 @@
       </section>
       ${introHTML}
       ${indiceHTML}
-      ${seccionesHTML}
       ${c.pdf_url ? `
-      <section class="intro" style="padding-top:0">
+      <section class="intro" style="padding-top:0;padding-bottom:0">
         <div style="max-width:600px;margin:0 auto;padding:28px 32px;background:var(--blush);border-radius:16px;display:flex;align-items:center;gap:16px">
           <span style="font-size:2rem;flex-shrink:0">📄</span>
           <div style="flex:1;text-align:left">
@@ -448,6 +447,7 @@
           </div>
         </div>
       </section>` : ''}
+      ${seccionesHTML}
       <section class="cierre">
         <p class="eyebrow">¿Lista para el siguiente paso?</p>
         <h2>Tu energía merece<br>atención <em>personalizada</em></h2>
