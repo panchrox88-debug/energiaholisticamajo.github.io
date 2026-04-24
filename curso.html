@@ -428,6 +428,26 @@
       ${introHTML}
       ${indiceHTML}
       ${seccionesHTML}
+      ${c.pdf_url ? `
+      <section class="intro" style="padding-top:0">
+        <div style="max-width:600px;margin:0 auto;padding:28px 32px;background:var(--blush);border-radius:16px;display:flex;align-items:center;gap:16px">
+          <span style="font-size:2rem;flex-shrink:0">📄</span>
+          <div style="flex:1;text-align:left">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--dark);margin-bottom:4px">Material de apoyo</div>
+            <div style="font-size:0.75rem;color:var(--muted);letter-spacing:0.05em">Documento PDF incluido en este curso</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+            <a href="${c.pdf_url}" target="_blank" rel="noopener"
+               style="padding:9px 18px;border-radius:24px;background:white;border:1.5px solid var(--beige);color:var(--dark);font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;font-family:'Nunito',sans-serif">
+              Ver PDF
+            </a>
+            <a href="${c.pdf_url}" download
+               style="padding:9px 18px;border-radius:24px;background:${tema};color:white;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;font-family:'Nunito',sans-serif">
+              Descargar
+            </a>
+          </div>
+        </div>
+      </section>` : ''}
       <section class="cierre">
         <p class="eyebrow">¿Lista para el siguiente paso?</p>
         <h2>Tu energía merece<br>atención <em>personalizada</em></h2>

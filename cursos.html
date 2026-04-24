@@ -504,25 +504,6 @@
       ? `<a href="${c.link_pago}" target="_blank" rel="noopener" class="btn-comprar" style="background:${color}">Comprar acceso →</a>`
       : `<a href="curso.html?id=${c.id}" class="btn-comprar" style="background:${color}">Acceder al curso →</a>`;
 
-    const pdfHTML = c.pdf_url ? `
-      <div style="margin-top:16px;padding:14px 16px;background:var(--blush);border-radius:12px;display:flex;align-items:center;gap:12px">
-        <span style="font-size:1.4rem">📄</span>
-        <div style="flex:1">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--dark);margin-bottom:2px">Material de apoyo</div>
-          <div style="font-size:0.72rem;color:var(--muted);letter-spacing:0.05em">Documento PDF adjunto</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <a href="${c.pdf_url}" target="_blank" rel="noopener"
-             style="padding:7px 13px;border-radius:20px;background:white;border:1.5px solid var(--beige);color:var(--dark);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;font-family:'Nunito',sans-serif">
-            Ver
-          </a>
-          <a href="${c.pdf_url}" download
-             style="padding:7px 13px;border-radius:20px;background:${color};color:white;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;font-family:'Nunito',sans-serif">
-            Descargar
-          </a>
-        </div>
-      </div>` : '';
-
     document.getElementById('previewContent').innerHTML = `
       ${heroHTML}
       <div class="preview-body">
@@ -533,7 +514,6 @@
           <p class="preview-aprender-titulo">¿Qué vas a aprender?</p>
           <ul class="preview-lista">${listaHTML}</ul>
         ` : ''}
-        ${pdfHTML}
         <div class="preview-divider"></div>
         <div class="preview-footer">
           ${precioHTML}
