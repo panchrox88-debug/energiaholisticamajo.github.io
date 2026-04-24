@@ -1749,13 +1749,7 @@
       </div>
       <div>
         <div class="footer-col-title">Servicios</div>
-        <ul class="footer-links">
-          <li><a href="#">Psicoterapia</a></li>
-          <li><a href="#">Reiki Usui</a></li>
-          <li><a href="#">Limpiezas Energéticas</a></li>
-          <li><a href="#">Masajes</a></li>
-          <li><a href="#">Círculos de Mujeres</a></li>
-        </ul>
+        <ul class="footer-links" id="footerServicios"></ul>
       </div>
       <div>
         <div class="footer-col-title">Información</div>
@@ -2741,6 +2735,13 @@
           modes:  modoToModes(s.modo),
         }));
         SERVICES = SERVICIOS_DATA; // sincroniza con el array de booking
+        // Actualizar lista de servicios en el footer
+        const footerEl = document.getElementById('footerServicios');
+        if (footerEl && SERVICIOS_DATA.length) {
+          footerEl.innerHTML = SERVICIOS_DATA
+            .map(s => `<li><a href="#servicios">${s.titulo}</a></li>`)
+            .join('');
+        }
       } catch (e) {
         console.warn('No se pudo cargar servicios', e);
       }
