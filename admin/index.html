@@ -1320,9 +1320,10 @@
         ? 'border-left: 4px solid #f0a500;'
         : '';
 
-      const notaReagendar = r.notas_reagendar
-        ? `<div style="margin-top:8px;padding:8px 12px;background:#fff8e1;border-radius:8px;font-size:0.78rem;color:#7a6000">
-             💬 Nota del cliente: <em>"${r.notas_reagendar}"</em>
+      const notaReagendar = r.estado === 'reagendar_solicitado'
+        ? `<div style="margin-top:8px;padding:10px 14px;background:#fff8e1;border-radius:8px;font-size:0.8rem;color:#7a6000;line-height:1.6">
+             ${r.nueva_fecha_propuesta ? `📅 <strong>Nueva fecha propuesta:</strong> ${r.nueva_fecha_propuesta}<br>` : ''}
+             ${r.notas_reagendar ? `💬 <em>"${r.notas_reagendar}"</em>` : ''}
            </div>`
         : '';
 
@@ -1369,8 +1370,8 @@
 
   window._confirmarReserva = async id => {
     try {
-      await sbPatch(`/reservas?id=eq.${id}`, { estado: 'confirmada', notas_reagendar: null });
-      showMsg('reservasMsg', 'Reserva confirmada — contacta al cliente para acordar el nuevo horario');
+      await sbPatch(`/reservas?id=eq.${id}`, { estado: 'confirmada', notas_reagendar: null, nueva_fecha_propuesta: null });
+      showMsg('reservasMsg', 'Reserva confirmada ✓');
       loadReservas();
     } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
   };

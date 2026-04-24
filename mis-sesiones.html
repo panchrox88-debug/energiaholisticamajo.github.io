@@ -148,8 +148,34 @@
     .btn-modal-cancel:hover  { opacity: 0.8; }
     .btn-modal-confirm { background: var(--red); color: white; padding: 10px 24px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
     .btn-modal-confirm:hover { opacity: 0.8; }
-    .btn-modal-reagendar { background: #f0a500; color: white; padding: 10px 24px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
+    .btn-modal-reagendar { background: var(--rose); color: white; padding: 10px 24px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
     .btn-modal-reagendar:hover { opacity: 0.8; }
+    .btn-modal-reagendar:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Calendario reagendamiento */
+    .rag-label { font-size:0.6rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:10px; margin-top:18px; }
+    .rag-dias  { display:flex; gap:7px; flex-wrap:wrap; }
+    .rag-dia   {
+      display:flex; flex-direction:column; align-items:center;
+      padding:8px 10px; border-radius:10px; border:1.5px solid var(--beige);
+      background:white; cursor:pointer; transition:all 0.18s; min-width:48px;
+    }
+    .rag-dia:hover { border-color:var(--rose-lt); background:var(--blush); }
+    .rag-dia.sel   { background:var(--rose); border-color:var(--rose); }
+    .rag-dia .rdow { font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:2px; }
+    .rag-dia.sel .rdow { color:rgba(255,255,255,0.75); }
+    .rag-dia .rnum { font-family:'Cormorant Garamond',serif; font-size:1.15rem; color:var(--dark); line-height:1; }
+    .rag-dia.sel .rnum { color:white; }
+    .rag-slots { display:flex; gap:7px; flex-wrap:wrap; }
+    .rag-slot  {
+      padding:7px 13px; border-radius:8px; border:1.5px solid var(--beige);
+      background:white; cursor:pointer; transition:all 0.18s;
+      font-family:'Nunito',sans-serif; font-size:0.8rem; color:var(--dark);
+    }
+    .rag-slot:hover { border-color:var(--rose-lt); background:var(--blush); }
+    .rag-slot.sel   { background:var(--rose); border-color:var(--rose); color:white; }
+    .rag-slot.ocu   { opacity:0.35; cursor:not-allowed; text-decoration:line-through; }
+    .rag-loading    { text-align:center; padding:14px 0; font-size:0.82rem; color:var(--muted); }
 
     /* FOOTER */
     footer { text-align: center; padding: 32px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--beige); }
@@ -193,13 +219,26 @@
 
 <!-- Modal reagendamiento -->
 <div class="modal-overlay" id="modalReagendar">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:520px;max-height:90vh;overflow-y:auto">
     <h3>Solicitar reagendamiento</h3>
-    <p id="modalReagendarTexto">Cuéntale a Majo qué días o horarios te acomodan mejor y ella se pondrá en contacto contigo.</p>
-    <textarea id="modalReagendarNota" placeholder="Ej: Prefiero la próxima semana por la tarde, o el lunes a las 10h…" maxlength="300"></textarea>
-    <div class="modal-btns">
+    <p id="modalReagendarTexto" style="margin-bottom:4px"></p>
+
+    <div class="rag-label">Elige una nueva fecha</div>
+    <div id="ragDias" class="rag-dias"></div>
+
+    <div id="ragHorasWrap" style="display:none">
+      <div class="rag-label">Elige un horario</div>
+      <div id="ragSlots" class="rag-slots"></div>
+    </div>
+
+    <div id="ragNotaWrap" style="display:none">
+      <div class="rag-label" style="margin-bottom:6px">Nota para Majo <span style="text-transform:none;letter-spacing:0;font-size:0.75rem;color:var(--muted)">(opcional)</span></div>
+      <textarea id="modalReagendarNota" placeholder="Ej: prefiero por las mañanas o martes…" maxlength="300" style="margin-bottom:0;min-height:70px"></textarea>
+    </div>
+
+    <div class="modal-btns" style="margin-top:20px">
       <button class="btn-modal-cancel" onclick="cerrarModal('reagendar')">Cancelar</button>
-      <button class="btn-modal-reagendar" id="modalReagendarBtn">Enviar solicitud</button>
+      <button class="btn-modal-reagendar" id="modalReagendarBtn" disabled>Enviar solicitud</button>
     </div>
   </div>
 </div>
@@ -274,43 +313,187 @@
   }
 
   // ── Reagendar ──
-  function abrirModalReagendar(id, servicio, fecha) {
+  // ── Reagendamiento con calendario ──────────────────────────
+  let AGENDA_R = null;
+  let _ragState = { dia: null, hora: null, label: null };
+
+  const DIAS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MESES_ES  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const MESES_CAP = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  function getMondayKeyR(date) {
+    const d = new Date(date); d.setHours(0,0,0,0);
+    const dow = d.getDay();
+    d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+    return d.toISOString().slice(0,10);
+  }
+
+  async function loadAgendaR() {
+    if (AGENDA_R) return;
+    AGENDA_R = { hora_inicio:'9:00', hora_fin:'19:00', duracion_sesion:60, pausa_minutos:15,
+                 descanso_desde:'', descanso_hasta:'', dias_habiles:[1,2,3,4,5,6],
+                 fechas_bloqueadas:[], horarios_por_dia:{}, planificacion_semanas:{}, dias_adelante:30 };
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/agenda?id=eq.1&select=*`,
+        { headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY } });
+      const rows = await res.json();
+      if (rows?.[0]) AGENDA_R = { ...AGENDA_R, ...rows[0] };
+    } catch(e) {}
+  }
+
+  function esDiaHabil(date) {
+    const toMin = t => { const [h,m]=(t||'0:0').split(':').map(Number); return h*60+(m||0); };
+    const dow = date.getDay();
+    if (!(AGENDA_R.dias_habiles||[1,2,3,4,5,6]).includes(dow)) return false;
+    const ds = date.toISOString().slice(0,10);
+    if ((AGENDA_R.fechas_bloqueadas||[]).includes(ds)) return false;
+    const wk = getMondayKeyR(date);
+    let plan = (AGENDA_R.planificacion_semanas||{})[wk];
+    if (typeof plan === 'string') plan = { modalidad: plan };
+    if (plan?.modalidad === 'bloqueada') return false;
+    return true;
+  }
+
+  function generarHorariosPara(date) {
+    const toMin = t => { const [h,m]=(t||'0:0').split(':').map(Number); return h*60+(m||0); };
+    const toStr = m => `${Math.floor(m/60)}:${(m%60).toString().padStart(2,'0')}`;
+    const dow = date.getDay();
+    const ov  = (AGENDA_R.horarios_por_dia||{})[String(dow)] || {};
+    const inicio = toMin(ov.hora_inicio || AGENDA_R.hora_inicio);
+    const fin    = toMin(ov.hora_fin    || AGENDA_R.hora_fin);
+    const dur    = AGENDA_R.duracion_sesion || 60;
+    const pausa  = AGENDA_R.pausa_minutos  || 0;
+    const bkFrom = AGENDA_R.descanso_desde ? toMin(AGENDA_R.descanso_desde) : null;
+    const bkTo   = AGENDA_R.descanso_hasta ? toMin(AGENDA_R.descanso_hasta) : null;
+    const slots = []; let cursor = inicio;
+    while (cursor + dur <= fin) {
+      if (bkFrom !== null && cursor < bkTo && cursor + dur > bkFrom) { cursor = bkTo; continue; }
+      slots.push(toStr(cursor)); cursor += dur + pausa;
+    }
+    return slots;
+  }
+
+  async function abrirModalReagendar(id, servicio, fecha) {
     _modalId = id;
+    _ragState = { dia: null, hora: null, label: null };
     document.getElementById('modalReagendarTexto').innerHTML =
-      `Solicitud para <strong>${servicio}</strong> del <strong>${fecha}</strong>.<br>Cuéntale a Majo qué días o horarios te acomodan mejor.`;
+      `Reagendando <strong>${servicio}</strong> del <strong>${fecha}</strong>`;
     document.getElementById('modalReagendarNota').value = '';
-    document.getElementById('modalReagendarBtn').onclick = confirmarReagendar;
+    document.getElementById('ragHorasWrap').style.display = 'none';
+    document.getElementById('ragNotaWrap').style.display  = 'none';
+    document.getElementById('modalReagendarBtn').disabled = true;
+    document.getElementById('modalReagendarBtn').onclick  = confirmarReagendar;
+    document.getElementById('ragDias').innerHTML = '<div class="rag-loading">Cargando disponibilidad…</div>';
     document.getElementById('modalReagendar').classList.add('active');
-    setTimeout(() => document.getElementById('modalReagendarNota').focus(), 100);
+
+    await loadAgendaR();
+    buildReagendarCalendar();
+  }
+
+  function buildReagendarCalendar() {
+    const container = document.getElementById('ragDias');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const max   = new Date(today); max.setDate(today.getDate() + (AGENDA_R.dias_adelante || 30));
+    const dias  = [];
+    for (let d = new Date(today); d < max; d.setDate(d.getDate()+1)) {
+      if (esDiaHabil(new Date(d))) dias.push(new Date(d));
+    }
+    if (!dias.length) { container.innerHTML = '<div class="rag-loading">No hay días disponibles próximamente.</div>'; return; }
+    container.innerHTML = dias.map(d => {
+      const ds  = d.toISOString().slice(0,10);
+      const dow = DIAS_ES[d.getDay()];
+      const num = d.getDate();
+      const mes = MESES_ES[d.getMonth()].slice(0,3);
+      return `<button class="rag-dia" onclick="selectReagendarDia('${ds}',this)" data-date="${ds}">
+        <span class="rdow">${dow}</span>
+        <span class="rnum">${num}</span>
+        <span class="rdow">${mes}</span>
+      </button>`;
+    }).join('');
+  }
+
+  async function selectReagendarDia(ds, el) {
+    _ragState.dia  = ds;
+    _ragState.hora = null;
+    _ragState.label = null;
+    document.querySelectorAll('.rag-dia').forEach(b => b.classList.remove('sel'));
+    el.classList.add('sel');
+
+    const horasWrap = document.getElementById('ragHorasWrap');
+    const slotsEl  = document.getElementById('ragSlots');
+    horasWrap.style.display = '';
+    document.getElementById('ragNotaWrap').style.display = 'none';
+    document.getElementById('modalReagendarBtn').disabled = true;
+    slotsEl.innerHTML = '<div class="rag-loading">Cargando horarios…</div>';
+
+    const date  = new Date(ds + 'T12:00:00');
+    const slots = generarHorariosPara(date);
+
+    // Fetch slots ocupados ese día
+    let ocupados = [];
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/reservas?fecha=eq.${ds}&estado=in.(confirmada,reagendar_solicitado)&select=hora`,
+        { headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY } });
+      const rows = await res.json();
+      ocupados = (rows||[]).map(r => r.hora);
+    } catch(e) {}
+
+    if (!slots.length) { slotsEl.innerHTML = '<div class="rag-loading">Sin horarios disponibles ese día.</div>'; return; }
+
+    slotsEl.innerHTML = slots.map(h => {
+      const ocu = ocupados.includes(h);
+      const [hh, mm] = h.split(':');
+      const label = `${hh}:${mm.padStart(2,'0')}`;
+      return `<button class="rag-slot${ocu?' ocu':''}" ${ocu?'disabled':''} onclick="selectReagendarSlot('${h}','${ds}',this)">${label}</button>`;
+    }).join('');
+  }
+
+  function selectReagendarSlot(hora, ds, el) {
+    _ragState.hora = hora;
+    const date  = new Date(ds + 'T12:00:00');
+    const [hh, mm] = hora.split(':');
+    _ragState.label = `${DIAS_ES[date.getDay()]} ${date.getDate()} de ${MESES_CAP[date.getMonth()]} · ${hh}:${mm.padStart(2,'0')}`;
+    document.querySelectorAll('.rag-slot').forEach(b => b.classList.remove('sel'));
+    el.classList.add('sel');
+    document.getElementById('ragNotaWrap').style.display = '';
+    document.getElementById('modalReagendarBtn').disabled = false;
   }
 
   async function confirmarReagendar() {
-    if (!_modalId) return;
+    if (!_modalId || !_ragState.dia || !_ragState.hora) return;
     const btn  = document.getElementById('modalReagendarBtn');
     const nota = document.getElementById('modalReagendarNota').value.trim();
     btn.textContent = 'Enviando…'; btn.disabled = true;
     try {
-      await sbPatch(SB_KEY, _modalId, { estado: 'reagendar_solicitado', notas_reagendar: nota || null });
+      await sbPatch(SB_KEY, _modalId, {
+        estado: 'reagendar_solicitado',
+        nueva_fecha_propuesta: _ragState.label,
+        notas_reagendar: nota || null
+      });
       cerrarModal();
       const card = document.getElementById(`sesion-${_modalId}`);
       if (card) {
         card.querySelectorAll('.badge').forEach(b => {
-          if (b.classList.contains('badge-confirmada')) { b.textContent = '🔄 Reagendar solicitado'; b.className = 'badge'; b.style.cssText = 'background:#fff3e0;color:#b07800;border:1px solid #f0a500'; }
+          if (b.classList.contains('badge-confirmada')) {
+            b.textContent = '🔄 Reagendar solicitado'; b.className = 'badge';
+            b.style.cssText = 'background:var(--blush);color:var(--rose);border:1px solid var(--rose-lt)';
+          }
         });
         card.querySelector('.acciones-sesion')?.remove();
         const body = card.querySelector('.sesion-body');
-        if (body && nota) {
-          const notaEl = document.createElement('div');
-          notaEl.style.cssText = 'font-size:0.78rem;color:var(--muted);margin-top:8px;font-style:italic';
-          notaEl.textContent = `Tu nota: "${nota}"`;
-          body.appendChild(notaEl);
+        if (body) {
+          const el = document.createElement('div');
+          el.style.cssText = 'font-size:0.78rem;color:var(--muted);margin-top:8px';
+          el.innerHTML = `Nueva fecha propuesta: <strong>${_ragState.label}</strong>${nota ? `<br><em>"${nota}"</em>` : ''}`;
+          body.appendChild(el);
+          const aviso = document.createElement('div');
+          aviso.style.cssText = 'font-size:0.78rem;color:var(--rose);margin-top:4px';
+          aviso.textContent = 'Majo confirmará tu nueva sesión pronto ✨';
+          body.appendChild(aviso);
         }
-        const avisoEl = document.createElement('div');
-        avisoEl.style.cssText = 'font-size:0.78rem;color:#b07800;margin-top:6px';
-        avisoEl.textContent = 'Majo se pondrá en contacto contigo pronto ✨';
-        card.querySelector('.sesion-body')?.appendChild(avisoEl);
       }
-    } catch(e) { cerrarModal(); alert('Error al enviar. Intenta de nuevo.'); }
+    } catch(e) { alert('Error al enviar. Intenta de nuevo.'); }
     btn.textContent = 'Enviar solicitud'; btn.disabled = false;
   }
 
