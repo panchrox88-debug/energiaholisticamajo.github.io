@@ -837,6 +837,15 @@
         </div>
         <div class="field"><label>Link de pago (opcional · solo si no tiene secciones)</label><input type="text" id="curso-link" placeholder="https://..."/></div>
         <div class="field">
+          <label>PDF adjunto <span style="color:var(--muted);font-size:.78rem;font-weight:300">(opcional · las alumnas podrán verlo y descargarlo)</span></label>
+          <div id="cursoPdfActual" style="display:none;margin-bottom:8px;padding:10px 14px;background:var(--blush);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:.83rem;color:var(--dark)">
+            <span>📄</span>
+            <span id="cursoPdfNombre" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+            <button type="button" onclick="_removeCursoPdf()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1">✕</button>
+          </div>
+          <label class="upload-zone" id="cursoPdfZone"><input type="file" id="cursoPdfInput" accept="application/pdf"/>📁 Subir PDF</label>
+        </div>
+        <div class="field">
           <label>Imagen de portada</label>
           <div id="cursoImgPositioner" style="display:none;margin-bottom:8px">
             <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">↔ Arrastra para reposicionar</div>
@@ -2174,6 +2183,7 @@
   const cursoModal = document.getElementById('cursoModal');
   let cursoImgUrl  = '';
   let cursoImgPos  = '50% 50%';
+  let cursoPdfUrl  = '';
   let CURSO_SECCIONES = [];
 
   // ── Drag para reposicionar imagen ────────────────────────
@@ -2387,9 +2397,26 @@
     if (/^#[0-9a-fA-F]{6}$/.test(this.value)) document.getElementById('curso-color-pick').value = this.value;
   });
 
+  function _setCursoPdf(url) {
+    cursoPdfUrl = url || '';
+    const zona   = document.getElementById('cursoPdfActual');
+    const nombre = document.getElementById('cursoPdfNombre');
+    if (cursoPdfUrl) {
+      const partes = cursoPdfUrl.split('/');
+      nombre.textContent = decodeURIComponent(partes[partes.length - 1].replace(/^\d+-[a-z0-9]+\./, ''));
+      zona.style.display = 'flex';
+      document.getElementById('cursoPdfZone').style.display = 'none';
+    } else {
+      zona.style.display = 'none';
+      document.getElementById('cursoPdfZone').style.display = '';
+    }
+  }
+  window._removeCursoPdf = () => _setCursoPdf('');
+
   function openCursoModal(c = null) {
     cursoImgUrl = c?.imagen || '';
     cursoImgPos = c?.imagen_posicion || '50% 50%';
+    _setCursoPdf(c?.pdf_url || '');
     document.getElementById('curso-id').value      = c?.id || '';
     document.getElementById('curso-titulo').value  = c?.titulo || '';
     document.getElementById('curso-desc').value    = c?.descripcion || '';
@@ -2442,6 +2469,18 @@
     showMsg('cursosMsg', 'Curso eliminado');
   };
 
+  document.getElementById('cursoPdfInput').addEventListener('change', async function() {
+    const msgEl = document.getElementById('cursoModalMsg');
+    msgEl.textContent = 'Subiendo PDF…'; msgEl.className = 'msg-banner ok';
+    try {
+      const url = await uploadFile(this.files[0], 'cursos/pdfs');
+      _setCursoPdf(url);
+      msgEl.textContent = 'PDF subido ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 2500);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    this.value = '';
+  });
+
   document.getElementById('cursoImgInput').addEventListener('change', async function() {
     const msgEl = document.getElementById('cursoModalMsg');
     msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
@@ -2471,6 +2510,7 @@
       activo:           document.getElementById('curso-activo').checked,
       imagen:           cursoImgUrl || null,
       imagen_posicion:  cursoImgPos,
+      pdf_url:          cursoPdfUrl || null,
       secciones:        CURSO_SECCIONES,
     };
     if (!body.titulo) {
