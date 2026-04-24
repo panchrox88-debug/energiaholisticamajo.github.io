@@ -144,6 +144,16 @@
     }
     .mobile-menu.open { transform: translateX(0); }
 
+    /* Sakura decorativa */
+    .menu-sakura {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 0;
+      overflow: hidden;
+    }
+    .mobile-menu-header,
+    .mobile-menu-nav,
+    .mobile-menu-footer { position: relative; z-index: 1; }
+
     /* Header del panel */
     .mobile-menu-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -1537,6 +1547,74 @@
 
   <!-- Mobile menu panel -->
   <div class="mobile-menu" id="mobileMenu">
+
+    <!-- Decoración sakura -->
+    <div class="menu-sakura" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 290 750" preserveAspectRatio="xMidYMid slice">
+        <!-- Rama sutil -->
+        <path d="M 262 30 Q 210 180 165 330 Q 120 480 48 700" stroke="#dba8ac" stroke-width="0.8" fill="none" opacity="0.18"/>
+
+        <!-- Flor 1 — arriba derecha, grande -->
+        <g transform="translate(252,58) rotate(18)" opacity="0.32">
+          <ellipse cx="0" cy="-14" rx="7" ry="12" fill="#f0dada"/>
+          <ellipse cx="0" cy="-14" rx="7" ry="12" fill="#f0dada" transform="rotate(72)"/>
+          <ellipse cx="0" cy="-14" rx="7" ry="12" fill="#dba8ac" transform="rotate(144)"/>
+          <ellipse cx="0" cy="-14" rx="7" ry="12" fill="#dba8ac" transform="rotate(216)"/>
+          <ellipse cx="0" cy="-14" rx="7" ry="12" fill="#f0dada" transform="rotate(288)"/>
+          <circle r="4" fill="#c9a96e" opacity="0.9"/>
+        </g>
+        <!-- Pétalos sueltos cerca de flor 1 -->
+        <ellipse cx="228" cy="96" rx="4" ry="7" fill="#f0dada" opacity="0.22" transform="rotate(-35,228,96)"/>
+        <ellipse cx="268" cy="105" rx="3" ry="6" fill="#dba8ac" opacity="0.18" transform="rotate(20,268,105)"/>
+
+        <!-- Flor 2 — medio-alta, pequeña -->
+        <g transform="translate(198,205) rotate(-8)" opacity="0.26">
+          <ellipse cx="0" cy="-10" rx="5" ry="9" fill="#f0dada"/>
+          <ellipse cx="0" cy="-10" rx="5" ry="9" fill="#dba8ac" transform="rotate(72)"/>
+          <ellipse cx="0" cy="-10" rx="5" ry="9" fill="#f0dada" transform="rotate(144)"/>
+          <ellipse cx="0" cy="-10" rx="5" ry="9" fill="#f0dada" transform="rotate(216)"/>
+          <ellipse cx="0" cy="-10" rx="5" ry="9" fill="#dba8ac" transform="rotate(288)"/>
+          <circle r="3" fill="#c9a96e" opacity="0.9"/>
+        </g>
+
+        <!-- Flor 3 — centro, la más grande -->
+        <g transform="translate(158,335) rotate(22)" opacity="0.3">
+          <ellipse cx="0" cy="-15" rx="8" ry="14" fill="#f0dada"/>
+          <ellipse cx="0" cy="-15" rx="8" ry="14" fill="#f0dada" transform="rotate(72)"/>
+          <ellipse cx="0" cy="-15" rx="8" ry="14" fill="#dba8ac" transform="rotate(144)"/>
+          <ellipse cx="0" cy="-15" rx="8" ry="14" fill="#dba8ac" transform="rotate(216)"/>
+          <ellipse cx="0" cy="-15" rx="8" ry="14" fill="#f0dada" transform="rotate(288)"/>
+          <circle r="5" fill="#c9a96e" opacity="0.9"/>
+        </g>
+        <!-- Pétalos sueltos cerca de flor 3 -->
+        <ellipse cx="182" cy="372" rx="4" ry="7" fill="#dba8ac" opacity="0.2" transform="rotate(50,182,372)"/>
+        <ellipse cx="130" cy="302" rx="3" ry="6" fill="#f0dada" opacity="0.2" transform="rotate(-15,130,302)"/>
+
+        <!-- Flor 4 — bajo-izquierda -->
+        <g transform="translate(102,472) rotate(-5)" opacity="0.24">
+          <ellipse cx="0" cy="-11" rx="6" ry="10" fill="#f0dada"/>
+          <ellipse cx="0" cy="-11" rx="6" ry="10" fill="#f0dada" transform="rotate(72)"/>
+          <ellipse cx="0" cy="-11" rx="6" ry="10" fill="#dba8ac" transform="rotate(144)"/>
+          <ellipse cx="0" cy="-11" rx="6" ry="10" fill="#dba8ac" transform="rotate(216)"/>
+          <ellipse cx="0" cy="-11" rx="6" ry="10" fill="#f0dada" transform="rotate(288)"/>
+          <circle r="3.5" fill="#c9a96e" opacity="0.9"/>
+        </g>
+
+        <!-- Flor 5 — fondo izquierda, pequeña -->
+        <g transform="translate(52,618) rotate(12)" opacity="0.2">
+          <ellipse cx="0" cy="-9" rx="5" ry="8" fill="#f0dada"/>
+          <ellipse cx="0" cy="-9" rx="5" ry="8" fill="#dba8ac" transform="rotate(72)"/>
+          <ellipse cx="0" cy="-9" rx="5" ry="8" fill="#f0dada" transform="rotate(144)"/>
+          <ellipse cx="0" cy="-9" rx="5" ry="8" fill="#f0dada" transform="rotate(216)"/>
+          <ellipse cx="0" cy="-9" rx="5" ry="8" fill="#dba8ac" transform="rotate(288)"/>
+          <circle r="3" fill="#c9a96e" opacity="0.9"/>
+        </g>
+        <!-- Pétalos sueltos abajo -->
+        <ellipse cx="74" cy="555" rx="4" ry="6" fill="#f0dada" opacity="0.17" transform="rotate(30,74,555)"/>
+        <ellipse cx="30" cy="660" rx="3" ry="5" fill="#dba8ac" opacity="0.17" transform="rotate(-20,30,660)"/>
+      </svg>
+    </div>
+
     <div class="mobile-menu-header">
       <div class="mobile-menu-brand">
         <span>Energía Holística Majo</span>
