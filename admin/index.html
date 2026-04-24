@@ -1369,11 +1369,23 @@
   };
 
   window._confirmarReserva = async id => {
+    const card = document.getElementById(`reserva-${id}`);
+    // Feedback instantáneo — quitar la card antes de esperar la red
+    if (card) card.style.cssText = 'opacity:0.4;pointer-events:none;transition:opacity 0.2s';
     try {
       await sbPatch(`/reservas?id=eq.${id}`, { estado: 'confirmada', notas_reagendar: null, nueva_fecha_propuesta: null });
+      card?.remove();
+      // Actualizar alerta de solicitudes pendientes
+      const sec = document.getElementById('secSolicitudes');
+      const remaining = document.querySelectorAll('#reservasSolicitudes [id^="reserva-"]').length;
+      if (sec && remaining === 0) sec.style.display = 'none';
+      const alert = document.getElementById('reservasAlert');
+      if (alert && remaining === 0) alert.style.display = 'none';
       showMsg('reservasMsg', 'Reserva confirmada ✓');
-      loadReservas();
-    } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
+    } catch(e) {
+      if (card) card.style.cssText = '';
+      showMsg('reservasMsg', 'Error: ' + e.message, 'err');
+    }
   };
 
   // ── TESTIMONIOS ───────────────────────────────────────────
