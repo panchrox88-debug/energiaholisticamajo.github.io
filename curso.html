@@ -197,6 +197,20 @@
     });
   }
 
+  async function descargarPdf(url) {
+    try {
+      const res  = await fetch(url);
+      const blob = await res.blob();
+      const tmp  = document.createElement('a');
+      tmp.href     = URL.createObjectURL(blob);
+      tmp.download = 'material-de-apoyo.pdf';
+      tmp.click();
+      URL.revokeObjectURL(tmp.href);
+    } catch(e) {
+      window.open(url, '_blank');
+    }
+  }
+
   let _cursoCache = null;
 
   async function load(user) {
@@ -437,8 +451,8 @@
         <div style="display:flex;gap:8px;flex-shrink:0">
           <a href="${c.pdf_url}" target="_blank" rel="noopener"
              style="padding:8px 16px;border-radius:20px;border:1.5px solid var(--beige);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none">Ver</a>
-          <a href="${c.pdf_url}" download
-             style="padding:8px 16px;border-radius:20px;background:var(--gold);color:white;font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;border:none">Descargar ↓</a>
+          <a href="#" onclick="event.preventDefault();descargarPdf('${c.pdf_url}')"
+             style="padding:8px 16px;border-radius:20px;background:var(--gold);color:white;font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;cursor:pointer">Descargar ↓</a>
         </div>
       </div>` : ''}
       ${seccionesHTML}
