@@ -401,6 +401,12 @@
       <div id="tab-reservas" class="section active">
         <h2 class="section-title">Reservas</h2>
         <div id="reservasMsg" class="msg-banner"></div>
+        <div id="reservasAlert" style="display:none;background:#fff3e0;border:1.5px solid #f0a500;border-radius:12px;padding:12px 18px;font-size:0.83rem;color:#7a4f00;margin-bottom:20px"></div>
+        <!-- Solicitudes de reagendamiento -->
+        <div id="secSolicitudes" style="display:none">
+          <div class="section-subtitle" style="color:#e67e22">🔄 Solicitudes de reagendamiento</div>
+          <div id="reservasSolicitudes"></div>
+        </div>
         <div class="section-subtitle">Próximas</div>
         <div id="reservasProximas"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
         <div class="section-subtitle">Historial</div>
@@ -1245,26 +1251,73 @@
     try {
       const today = new Date().toISOString().slice(0, 10);
       const all   = await sbGet('/reservas?select=*&order=fecha.asc,hora_inicio.asc');
-      const proximas  = all.filter(r => r.fecha >= today && r.estado !== 'cancelada');
-      const historial = all.filter(r => r.fecha <  today || r.estado === 'cancelada');
-      renderReservasGroup('reservasProximas',  proximas,  true);
-      renderReservasGroup('reservasHistorial', historial, false);
+      const solicitudes = all.filter(r => r.estado === 'reagendar_solicitado');
+      const proximas    = all.filter(r => r.fecha >= today && r.estado === 'confirmada');
+      const historial   = all.filter(r => r.fecha <  today || r.estado === 'cancelada');
+
+      // Alerta de solicitudes pendientes
+      const alertEl = document.getElementById('reservasAlert');
+      if (alertEl) {
+        if (solicitudes.length) {
+          alertEl.style.display = '';
+          alertEl.innerHTML = `⚠️ <strong>${solicitudes.length} solicitud${solicitudes.length > 1 ? 'es' : ''} de reagendamiento</strong> pendiente${solicitudes.length > 1 ? 's' : ''} — revisa la sección de abajo.`;
+        } else {
+          alertEl.style.display = 'none';
+        }
+      }
+
+      renderReservasGroup('reservasSolicitudes', solicitudes, 'reagendar');
+      renderReservasGroup('reservasProximas',    proximas,    'proxima');
+      renderReservasGroup('reservasHistorial',   historial,   false);
+
+      // Mostrar/ocultar sección de solicitudes
+      const secEl = document.getElementById('secSolicitudes');
+      if (secEl) secEl.style.display = solicitudes.length ? '' : 'none';
     } catch(e) {
       document.getElementById('reservasProximas').innerHTML =
         `<p style="color:var(--red);font-size:.8rem">Error: ${e.message}</p>`;
     }
   }
 
-  function renderReservasGroup(containerId, items, showCancel) {
+  function renderReservasGroup(containerId, items, mode) {
     const el = document.getElementById(containerId);
+    if (!el) return;
     if (!items.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.8rem;padding:8px 0">— Ninguna —</p>'; return; }
     el.innerHTML = items.map(r => {
       const fecha = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+
       const badge = r.estado === 'cancelada'
         ? '<span class="badge" style="background:#fde8e8;color:var(--red)">Cancelada</span>'
-        : '<span class="badge green">Confirmada</span>';
+        : r.estado === 'reagendar_solicitado'
+          ? '<span class="badge" style="background:#fff3e0;color:#e67e22;border:1px solid #f0a500">🔄 Reagendar solicitado</span>'
+          : '<span class="badge green">Confirmada</span>';
+
+      const borderStyle = r.estado === 'reagendar_solicitado'
+        ? 'border-left: 4px solid #f0a500;'
+        : '';
+
+      const notaReagendar = r.notas_reagendar
+        ? `<div style="margin-top:8px;padding:8px 12px;background:#fff8e1;border-radius:8px;font-size:0.78rem;color:#7a6000">
+             💬 Nota del cliente: <em>"${r.notas_reagendar}"</em>
+           </div>`
+        : '';
+
+      const acciones = mode === 'reagendar'
+        ? `<div class="card-actions" style="display:flex;flex-direction:column;gap:6px">
+             <button class="btn btn-green" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
+               onclick="window._confirmarReserva('${r.id}')">✓ Confirmar</button>
+             <button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px"
+               onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
+           </div>`
+        : mode === 'proxima'
+          ? `<div class="card-actions">
+               <button class="btn btn-danger" style="font-size:.75rem;padding:6px 12px"
+                 onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
+             </div>`
+          : '';
+
       return `
-      <div class="card" id="res-${r.id}">
+      <div class="card" id="res-${r.id}" style="${borderStyle}">
         <div class="card-row">
           <div class="card-body">
             <div class="card-name">${r.servicio_nombre} ${badge}</div>
@@ -1273,12 +1326,9 @@
               👤 ${r.nombre_cliente}<br>
               📧 ${r.email_cliente}${r.telefono_cliente ? '<br>📱 ' + r.telefono_cliente : ''}
             </div>
+            ${notaReagendar}
           </div>
-          ${showCancel ? `
-          <div class="card-actions">
-            <button class="btn btn-danger" style="font-size:.75rem;padding:6px 12px"
-              onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
-          </div>` : ''}
+          ${acciones}
         </div>
       </div>`;
     }).join('');
@@ -1289,6 +1339,14 @@
     try {
       await sbPatch(`/reservas?id=eq.${id}`, { estado: 'cancelada' });
       showMsg('reservasMsg', 'Reserva cancelada');
+      loadReservas();
+    } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  window._confirmarReserva = async id => {
+    try {
+      await sbPatch(`/reservas?id=eq.${id}`, { estado: 'confirmada', notas_reagendar: null });
+      showMsg('reservasMsg', 'Reserva confirmada — contacta al cliente para acordar el nuevo horario');
       loadReservas();
     } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
   };

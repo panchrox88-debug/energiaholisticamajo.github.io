@@ -116,7 +116,18 @@
     }
     .empty-state a:hover, .empty-state button:hover { background: var(--dark); }
 
-    /* MODAL CONFIRMACIÓN */
+    .btn-reagendar {
+      flex-shrink: 0; margin-top: 2px;
+      background: none; border: 1.5px solid #f0a500;
+      color: #b07800; padding: 7px 16px; border-radius: 10px;
+      font-family: 'Nunito', sans-serif; font-size: 0.72rem;
+      letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reagendar:hover { background: #fff3e0; }
+    .acciones-sesion { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+
+    /* MODALES */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(61,43,43,0.4); z-index: 200;
@@ -125,16 +136,20 @@
     .modal-overlay.active { display: flex; }
     .modal-box {
       background: white; border-radius: 20px; padding: 36px 32px;
-      max-width: 400px; width: 100%; text-align: center;
+      max-width: 440px; width: 100%;
       box-shadow: 0 20px 60px rgba(61,43,43,0.2);
     }
-    .modal-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; color: var(--dark); margin-bottom: 10px; }
-    .modal-box p  { font-size: 0.85rem; color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
+    .modal-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; color: var(--dark); margin-bottom: 10px; text-align: center; }
+    .modal-box p  { font-size: 0.85rem; color: var(--muted); line-height: 1.7; margin-bottom: 18px; text-align: center; }
+    .modal-box textarea { width: 100%; border: 1.5px solid var(--beige); border-radius: 10px; padding: 10px 14px; font-family: 'Nunito', sans-serif; font-size: 0.85rem; color: var(--dark); background: var(--cream); resize: vertical; min-height: 80px; outline: none; margin-bottom: 20px; }
+    .modal-box textarea:focus { border-color: var(--rose); }
     .modal-btns   { display: flex; gap: 12px; justify-content: center; }
-    .btn-modal-cancel { background: var(--beige); color: var(--dark); padding: 10px 24px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
-    .btn-modal-cancel:hover { opacity: 0.8; }
+    .btn-modal-cancel  { background: var(--beige); color: var(--dark); padding: 10px 24px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
+    .btn-modal-cancel:hover  { opacity: 0.8; }
     .btn-modal-confirm { background: var(--red); color: white; padding: 10px 24px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
     .btn-modal-confirm:hover { opacity: 0.8; }
+    .btn-modal-reagendar { background: #f0a500; color: white; padding: 10px 24px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
+    .btn-modal-reagendar:hover { opacity: 0.8; }
 
     /* FOOTER */
     footer { text-align: center; padding: 32px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--beige); }
@@ -164,14 +179,27 @@
   </div>
 </main>
 
-<!-- Modal de confirmación de cancelación -->
+<!-- Modal cancelación -->
 <div class="modal-overlay" id="modalCancelar">
   <div class="modal-box">
     <h3>Cancelar sesión</h3>
-    <p id="modalTexto">¿Estás segura de que deseas cancelar esta sesión?</p>
+    <p id="modalTexto">¿Deseas cancelar esta sesión?</p>
     <div class="modal-btns">
-      <button class="btn-modal-cancel" onclick="cerrarModal()">No, volver</button>
+      <button class="btn-modal-cancel" onclick="cerrarModal('cancelar')">No, volver</button>
       <button class="btn-modal-confirm" id="modalConfirmBtn">Sí, cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal reagendamiento -->
+<div class="modal-overlay" id="modalReagendar">
+  <div class="modal-box">
+    <h3>Solicitar reagendamiento</h3>
+    <p id="modalReagendarTexto">Cuéntale a Majo qué días o horarios te acomodan mejor y ella se pondrá en contacto contigo.</p>
+    <textarea id="modalReagendarNota" placeholder="Ej: Prefiero la próxima semana por la tarde, o el lunes a las 10h…" maxlength="300"></textarea>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="cerrarModal('reagendar')">Cancelar</button>
+      <button class="btn-modal-reagendar" id="modalReagendarBtn">Enviar solicitud</button>
     </div>
   </div>
 </div>
@@ -205,57 +233,95 @@
     }
   }
 
-  // Modal de cancelación
-  let _cancelarId = null;
+  // Modales
+  let _modalId = null;
+
+  function cerrarModal(which) {
+    document.getElementById('modalCancelar').classList.remove('active');
+    document.getElementById('modalReagendar').classList.remove('active');
+    _modalId = null;
+  }
+  document.getElementById('modalCancelar').addEventListener('click', e => { if (e.target === e.currentTarget) cerrarModal(); });
+  document.getElementById('modalReagendar').addEventListener('click', e => { if (e.target === e.currentTarget) cerrarModal(); });
+
+  // ── Cancelar ──
   function abrirModalCancelar(id, servicio, fecha) {
-    _cancelarId = id;
+    _modalId = id;
     document.getElementById('modalTexto').innerHTML =
       `¿Deseas cancelar la sesión de <strong>${servicio}</strong> del <strong>${fecha}</strong>?<br><br>
-       <span style="font-size:0.78rem;color:var(--muted)">Esta acción no se puede deshacer. Si necesitas reagendar, puedes hacerlo desde la página de inicio.</span>`;
-    document.getElementById('modalCancelar').classList.add('active');
+       <span style="font-size:0.78rem;color:var(--muted)">Esta acción no se puede deshacer.</span>`;
     document.getElementById('modalConfirmBtn').onclick = confirmarCancelacion;
+    document.getElementById('modalCancelar').classList.add('active');
   }
-  function cerrarModal() {
-    document.getElementById('modalCancelar').classList.remove('active');
-    _cancelarId = null;
-  }
-  document.getElementById('modalCancelar').addEventListener('click', e => {
-    if (e.target === e.currentTarget) cerrarModal();
-  });
 
   async function confirmarCancelacion() {
-    if (!_cancelarId) return;
+    if (!_modalId) return;
     const btn = document.getElementById('modalConfirmBtn');
-    btn.textContent = 'Cancelando…';
-    btn.disabled = true;
+    btn.textContent = 'Cancelando…'; btn.disabled = true;
     try {
-      await fetch(`${SB_URL}/rest/v1/reservas?id=eq.${_cancelarId}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SB_KEY,
-          'Authorization': 'Bearer ' + SB_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ estado: 'cancelada' })
-      });
+      await sbPatch(SB_KEY, _modalId, { estado: 'cancelada' });
       cerrarModal();
-      // Actualizar la tarjeta sin recargar todo
-      const card = document.getElementById(`sesion-${_cancelarId}`);
+      const card = document.getElementById(`sesion-${_modalId}`);
       if (card) {
         card.classList.add('cancelada');
-        card.querySelector('.badge-confirmada')?.classList.replace('badge-confirmada', 'badge-cancelada');
-        card.querySelector('.badge-confirmada') || card.querySelectorAll('.badge').forEach(b => {
-          if (b.textContent === 'Confirmada') { b.textContent = 'Cancelada'; b.className = 'badge badge-cancelada'; }
+        card.querySelectorAll('.badge').forEach(b => {
+          if (b.classList.contains('badge-confirmada')) { b.textContent = 'Cancelada'; b.className = 'badge badge-cancelada'; }
         });
-        card.querySelector('.btn-cancelar')?.remove();
+        card.querySelector('.acciones-sesion')?.remove();
       }
-    } catch(e) {
+    } catch(e) { cerrarModal(); alert('Error al cancelar. Intenta de nuevo.'); }
+    btn.textContent = 'Sí, cancelar'; btn.disabled = false;
+  }
+
+  // ── Reagendar ──
+  function abrirModalReagendar(id, servicio, fecha) {
+    _modalId = id;
+    document.getElementById('modalReagendarTexto').innerHTML =
+      `Solicitud para <strong>${servicio}</strong> del <strong>${fecha}</strong>.<br>Cuéntale a Majo qué días o horarios te acomodan mejor.`;
+    document.getElementById('modalReagendarNota').value = '';
+    document.getElementById('modalReagendarBtn').onclick = confirmarReagendar;
+    document.getElementById('modalReagendar').classList.add('active');
+    setTimeout(() => document.getElementById('modalReagendarNota').focus(), 100);
+  }
+
+  async function confirmarReagendar() {
+    if (!_modalId) return;
+    const btn  = document.getElementById('modalReagendarBtn');
+    const nota = document.getElementById('modalReagendarNota').value.trim();
+    btn.textContent = 'Enviando…'; btn.disabled = true;
+    try {
+      await sbPatch(SB_KEY, _modalId, { estado: 'reagendar_solicitado', notas_reagendar: nota || null });
       cerrarModal();
-      alert('Error al cancelar. Intenta de nuevo.');
-    }
-    btn.textContent = 'Sí, cancelar';
-    btn.disabled = false;
+      const card = document.getElementById(`sesion-${_modalId}`);
+      if (card) {
+        card.querySelectorAll('.badge').forEach(b => {
+          if (b.classList.contains('badge-confirmada')) { b.textContent = '🔄 Reagendar solicitado'; b.className = 'badge'; b.style.cssText = 'background:#fff3e0;color:#b07800;border:1px solid #f0a500'; }
+        });
+        card.querySelector('.acciones-sesion')?.remove();
+        const body = card.querySelector('.sesion-body');
+        if (body && nota) {
+          const notaEl = document.createElement('div');
+          notaEl.style.cssText = 'font-size:0.78rem;color:var(--muted);margin-top:8px;font-style:italic';
+          notaEl.textContent = `Tu nota: "${nota}"`;
+          body.appendChild(notaEl);
+        }
+        const avisoEl = document.createElement('div');
+        avisoEl.style.cssText = 'font-size:0.78rem;color:#b07800;margin-top:6px';
+        avisoEl.textContent = 'Majo se pondrá en contacto contigo pronto ✨';
+        card.querySelector('.sesion-body')?.appendChild(avisoEl);
+      }
+    } catch(e) { cerrarModal(); alert('Error al enviar. Intenta de nuevo.'); }
+    btn.textContent = 'Enviar solicitud'; btn.disabled = false;
+  }
+
+  async function sbPatch(key, id, data) {
+    const token = await getAuthToken();
+    const res = await fetch(`${SB_URL}/rest/v1/reservas?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': key, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok && res.status !== 204) throw new Error('Error ' + res.status);
   }
 
   async function loadMisSesiones(user, perfil) {
@@ -299,7 +365,7 @@
       }
 
       const proximas  = reservas.filter(r => r.fecha >= today && r.estado !== 'cancelada');
-      const historial = reservas.filter(r => r.fecha <  today || r.estado === 'cancelada');
+      const historial = reservas.filter(r => r.fecha <  today  || r.estado === 'cancelada');
 
       let html = '';
 
@@ -330,35 +396,47 @@
     }
   }
 
-  function renderSesion(r, today, showCancel) {
-    const esCancelada = r.estado === 'cancelada';
-    const esPasada    = r.fecha < today;
-    const esOnline    = (r.modalidad || '').toLowerCase() === 'online';
-    const iconoMod    = esOnline ? '💻' : '🌸';
-    const fechaStr    = formatFecha(r.fecha);
+  function renderSesion(r, today, showAcciones) {
+    const esCancelada  = r.estado === 'cancelada';
+    const esReagendar  = r.estado === 'reagendar_solicitado';
+    const esPasada     = r.fecha < today;
+    const esOnline     = (r.modalidad || '').toLowerCase() === 'online';
+    const iconoMod     = esOnline ? '💻' : '🌸';
+    const fechaStr     = formatFecha(r.fecha);
 
-    // Permitir cancelar solo si faltan más de 24h
-    const sesionDate  = new Date(r.fecha + 'T' + (r.hora_inicio || '00:00') + ':00');
+    const sesionDate     = new Date(r.fecha + 'T' + (r.hora_inicio || '00:00') + ':00');
     const horasRestantes = (sesionDate - new Date()) / 36e5;
-    const puedeCancelar  = showCancel && !esCancelada && !esPasada && horasRestantes > 24;
+    const puedeAccionar = showAcciones && !esCancelada && !esReagendar && !esPasada && horasRestantes > 24;
 
-    const badgeEstado = esCancelada
-      ? '<span class="badge badge-cancelada">Cancelada</span>'
-      : esPasada
-        ? '<span class="badge badge-pasada">Completada</span>'
-        : '<span class="badge badge-confirmada">Confirmada</span>';
+    // Badge de estado
+    const badgeEstado = esCancelada  ? '<span class="badge badge-cancelada">Cancelada</span>'
+      : esReagendar ? '<span class="badge" style="background:#fff3e0;color:#b07800;border:1px solid #f0a500">🔄 Reagendar solicitado</span>'
+      : esPasada    ? '<span class="badge badge-pasada">Completada</span>'
+      :               '<span class="badge badge-confirmada">Confirmada</span>';
 
     const badgeMod = esOnline
       ? '<span class="badge badge-online">💻 Online</span>'
       : '<span class="badge badge-presencial">🌸 Presencial</span>';
 
-    const btnCancelar = puedeCancelar
-      ? `<button class="btn-cancelar" onclick="abrirModalCancelar('${r.id}','${r.servicio_nombre}','${fechaStr}')">Cancelar</button>`
+    // Nota de reagendamiento enviada por el cliente
+    const notaReagendar = esReagendar && r.notas_reagendar
+      ? `<div style="font-size:0.78rem;color:var(--muted);margin-top:8px;font-style:italic">Tu nota: "${r.notas_reagendar}"</div>
+         <div style="font-size:0.78rem;color:#b07800;margin-top:4px">Majo se pondrá en contacto contigo pronto ✨</div>`
+      : esReagendar
+        ? `<div style="font-size:0.78rem;color:#b07800;margin-top:6px">Majo se pondrá en contacto contigo pronto ✨</div>`
+        : '';
+
+    // Aviso cuando faltan menos de 24h
+    const avisoTiempo = showAcciones && !esCancelada && !esReagendar && !esPasada && horasRestantes <= 24 && horasRestantes > 0
+      ? `<div style="font-size:0.72rem;color:var(--muted);margin-top:6px">Para cancelar o reagendar, contacta directamente a Majo.</div>`
       : '';
 
-    const avisoTiempo = showCancel && !esCancelada && !esPasada && horasRestantes <= 24 && horasRestantes > 0
-      ? `<span style="font-size:0.72rem;color:var(--muted);margin-top:6px;display:block">Para cancelar contacta directamente a Majo.</span>`
-      : '';
+    // Botones de acción
+    const acciones = puedeAccionar ? `
+      <div class="acciones-sesion">
+        <button class="btn-reagendar" onclick="abrirModalReagendar('${r.id}','${r.servicio_nombre.replace(/'/g,"\\'")}','${fechaStr}')">🔄 Reagendar</button>
+        <button class="btn-cancelar"  onclick="abrirModalCancelar('${r.id}','${r.servicio_nombre.replace(/'/g,"\\'")}','${fechaStr}')">Cancelar</button>
+      </div>` : '';
 
     return `
       <div class="sesion-card ${esCancelada ? 'cancelada' : ''}" id="sesion-${r.id}">
@@ -372,9 +450,10 @@
             ${badgeEstado}
             ${badgeMod}
           </div>
+          ${notaReagendar}
           ${avisoTiempo}
         </div>
-        ${btnCancelar}
+        ${acciones}
       </div>`;
   }
 </script>
