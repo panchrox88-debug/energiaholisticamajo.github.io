@@ -1694,7 +1694,7 @@
             <input type="email" id="bkEmail" placeholder="tu@email.com" autocomplete="email"/>
           </div>
           <div class="bk-field">
-            <label>Teléfono (opcional)</label>
+            <label>Teléfono *</label>
             <input type="tel" id="bkTelefono" placeholder="+56 9 1234 5678" autocomplete="tel"/>
           </div>
           <div id="bkFormMsg" class="bk-form-msg" style="display:none"></div>
@@ -2235,8 +2235,8 @@
       const telefono = document.getElementById('bkTelefono').value.trim();
       const msgEl    = document.getElementById('bkFormMsg');
 
-      if (!nombre || !email) {
-        msgEl.textContent = 'Por favor completa nombre y email.';
+      if (!nombre || !email || !telefono) {
+        msgEl.textContent = 'Por favor completa nombre, email y teléfono.';
         msgEl.className = 'bk-form-msg err';
         msgEl.style.display = 'block';
         return;
@@ -2266,7 +2266,7 @@
             hora_fin:         calcHoraFin(state.time),
             nombre_cliente:   nombre,
             email_cliente:    email,
-            telefono_cliente: telefono || null,
+            telefono_cliente: telefono,
             estado:           'confirmada',
           }),
         });
