@@ -135,7 +135,7 @@
       display: none; position: fixed;
       top: 0; right: 0; bottom: 0;
       width: min(78vw, 290px);
-      background: var(--dark);
+      background: #5c3d3d;
       z-index: 1001;
       flex-direction: column;
       transform: translateX(100%);
@@ -200,19 +200,21 @@
 
     /* Footer del panel */
     .mobile-menu-footer {
-      padding: 16px 22px 36px;
+      padding: 14px 22px 32px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
     .mobile-cta {
       display: block; text-align: center;
-      background: var(--rose); color: white;
-      padding: 11px 20px; border-radius: 10px;
+      background: transparent;
+      border: 1px solid rgba(201,133,138,0.6);
+      color: var(--rose-lt);
+      padding: 9px 18px; border-radius: 30px;
       font-family: 'Nunito', sans-serif;
-      font-size: 0.7rem; letter-spacing: 0.2em;
+      font-size: 0.65rem; letter-spacing: 0.22em;
       text-transform: uppercase; text-decoration: none;
-      transition: all 0.2s;
+      transition: all 0.25s;
     }
-    .mobile-cta:hover { background: var(--rose-lt); }
+    .mobile-cta:hover { background: var(--rose); color: white; border-color: var(--rose); }
     body.menu-open { overflow: hidden; }
     /* Ocultar WhatsApp cuando el menú está abierto */
     body.menu-open .wa-float { display: none; }
