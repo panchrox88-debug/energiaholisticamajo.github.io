@@ -177,6 +177,7 @@
     .mobile-menu-nav {
       flex: 1; overflow-y: auto;
       padding: 12px 0;
+      display: flex; flex-direction: column;
     }
     .mobile-menu-nav a {
       display: flex; align-items: center; gap: 14px;
@@ -1549,7 +1550,7 @@
       <button class="mobile-close" id="mobileClose" aria-label="Cerrar menú">✕</button>
     </div>
 
-    <nav class="mobile-menu-nav">
+    <div class="mobile-menu-nav">
       <a href="index.html"><span class="nav-dot"></span>Inicio</a>
       <a href="#about"   ><span class="nav-dot"></span>Sobre mí</a>
       <a href="#services"><span class="nav-dot"></span>Servicios</a>
@@ -1558,7 +1559,7 @@
       <a href="blog.html"><span class="nav-dot"></span>Blog</a>
       <div class="mobile-menu-divider"></div>
       <a href="#contact"><span class="nav-dot"></span>Contacto</a>
-    </nav>
+    </div>
 
     <div class="mobile-menu-footer">
       <a href="#booking" class="mobile-cta">Agendar sesión ✨</a>
