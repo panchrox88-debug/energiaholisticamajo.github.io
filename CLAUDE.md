@@ -1,131 +1,65 @@
 # Energía Holística Majo — Contexto del Proyecto
 
-Sitio web de una sola página (SPA estática) para **Majo**, psicoterapeuta transpersonal y terapeuta holística. El proyecto vive en un solo archivo HTML (`index.html`) con CSS y JS inline, más una carpeta `img/` con imágenes de servicios.
+Sitio web para **Majo**, psicoterapeuta transpersonal. Sistema completo: sitio público + panel admin + reservas con Supabase.
 
 **Repo:** `panchrox88-debug/energiaholisticamajo.github.io` (GitHub Pages, rama `main`)
-**Dominio:** energiaholisticamajo.github.io
-**Idioma:** Español (todo copy, UI y comentarios)
 
 ---
 
-## Stack
+## Stack y reglas inamovibles
 
-- **HTML + CSS + JS vanilla**, todo inline en `index.html` — sin build, sin frameworks, sin dependencias externas más allá de Google Fonts.
-- Fuentes: **Cormorant Garamond** (serif, titulares, énfasis en cursiva) + **Nunito** (sans, cuerpo).
-- Sin scripts de analytics ni tracking.
+- HTML + CSS + JS vanilla inline. **Sin frameworks, sin dependencias externas.**
+- Fuentes: **Cormorant Garamond** (titulares) + **Nunito** (cuerpo). No cambiar.
+- Paleta de colores solo con variables CSS (`--rose`, `--gold`, `--cream`, `--beige`, `--dark`, `--muted`, `--blush`, `--rose-lt`, `--gold-lt`, `--white`, `--green`, `--red`). No inventar colores.
+- Breakpoint responsive: `900px`.
+- **Preguntar antes de añadir secciones o contenido nuevo** — la clienta decide.
 
-## Paleta de colores (CSS variables en `:root`)
+## Supabase
 
-```css
---rose:    #c9858a;  /* primario — CTAs, énfasis, acentos */
---rose-lt: #dba8ac;  /* rosa claro — hover, dots activos */
---blush:   #f0dada;  /* fondos sutiles, chips/tags */
---cream:   #faf5f0;  /* fondo principal */
---beige:   #ede0d4;  /* fondo secciones alternas */
---gold:    #c9a96e;  /* eyebrows, iconos decorativos, divisores */
---gold-lt: #e8d5b0;  /* divisores finos */
---dark:    #3d2b2b;  /* texto principal */
---muted:   #7a5c5c;  /* texto secundario */
---white:   #ffffff;
-```
-
-**Regla:** usar únicamente estas variables. No inventar colores nuevos. Si se necesita variación, usar `rgba()` de una variable existente.
-
-## Sistema tipográfico
-
-- **Titulares + énfasis cursivo** → `Cormorant Garamond`, weight 300–500. Usar `<em>` con `color: var(--rose)` e `font-style: italic` para resaltar palabras clave.
-- **Eyebrows** (kickers de sección) → `Nunito`, `uppercase`, `letter-spacing: 0.45em`, `font-size: 0.65rem`, `color: var(--gold)`.
-- **Cuerpo** → `Nunito` weight 300, `line-height: 1.9–2` para legibilidad.
-- **Handwritten / script** (logo "Energía Holística Majo") → está como imagen, no como fuente.
-
-## Estructura del sitio (secciones en `index.html`)
-
-1. **Nav** — logo + links + CTA "Reservar"
-2. **Hero** — titular grande, eyebrow dorado, CTA
-3. **About** — tarjeta con info de Majo + bio
-4. **Services** — grid 3×2 de tarjetas + **panel inline expandible con carrusel**
-5. **Testimonials** — grid de reseñas con estrellas
-6. **CTA banner** — banner oscuro con gradiente rose
-7. **Contact form** — formulario con datos de contacto
-8. **Booking** — flujo de 4 pasos: servicio → modalidad → día → hora, que envía a WhatsApp
-9. **Footer**
+- URL: `https://yvuzccxqkkytuisgzpqx.supabase.co`
+- Anon key: `sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi`
+- Storage: bucket `uploads` (imágenes), bucket `documentos` (PDFs)
 
 ---
 
-## Componentes clave
+## Archivos principales
 
-### Booking (reserva por WhatsApp)
-- 4 pasos secuenciales, cada uno se habilita al completar el anterior.
-- Servicios con modalidad Online, Presencial o ambas.
-- Calendario inline (lun-sáb) con fechas dinámicas desde hoy.
-- Slots de hora, los ocupados se muestran tachados.
-- Al confirmar, abre WhatsApp (`https://wa.me/...`) con mensaje pre-llenado formato `Etiqueta: valor` (NO usar guiones `-` al inicio — WhatsApp los renderiza como bullets).
-- Número de Majo: revisar en el `href` del botón de confirmación.
-
-### Services + Carrusel inline (último cambio)
-- 6 tarjetas de servicios con `data-service="reiki|psico|limpieza|masaje|utero|circulo"`.
-- Al hacer click en una tarjeta con slides disponibles → el grid colapsa (fade + max-height 0) y aparece un **panel de detalle inline** con:
-  - Eyebrow "Conoce más" + título del servicio + divisor dorado
-  - **Carrusel** con flechas laterales (`‹ ›`), puntitos, contador "N / total"
-  - Botón "Reservar esta sesión →" que cierra el panel y baja a `#booking`
-- Navegación: flechas ← → del teclado, swipe en móvil, Esc para cerrar.
-- Config en `SERVICE_DATA` (objeto JS dentro del `<script>`):
-  ```js
-  const SERVICE_DATA = {
-    reiki:    { title: 'Reiki Usui', slides: ['img/reiki/01-...', ...] },
-    psico:    { title: 'Psicoterapia Transpersonal', slides: [] },
-    limpieza: { title: 'Limpieza Energética', slides: [] },
-    masaje:   { title: 'Masaje Terapéutico', slides: [] },
-    utero:    { title: 'Sanación de Útero', slides: [] },
-    circulo:  { title: 'Círculos de Mujeres', slides: [] },
-  };
-  ```
-- Servicios con `slides: []` reciben atributo `data-empty` y no reaccionan al click.
-
-**Para añadir slides a un nuevo servicio:**
-1. Crear carpeta `img/<servicio>/` y añadir las PNGs ordenadas (01-, 02-, ...).
-2. Llenar el array `slides` en `SERVICE_DATA` con las rutas.
-3. (Si las imágenes traen flechas de navegación del diseño original, quitarlas antes — ver `DESIGN_NOTES.md`.)
+| Archivo | Propósito |
+|---------|-----------|
+| `index.html` | Sitio público (SPA) |
+| `admin/index.html` | Panel admin (solo Majo) |
+| `mis-sesiones.html` | Reservas del usuario autenticado |
+| `mis-cursos.html` | Cursos del usuario autenticado |
+| `cursos.html` / `curso.html` | Listado y vista de curso |
+| `promociones.html` / `blog.html` | Páginas secundarias |
 
 ---
 
-## Convenciones de código
+## Flujo de reservas (decisiones definitivas)
 
-- **CSS:** variables `--*` en `:root`, selectores de clase simples, sin BEM estricto pero con prefijos por sección (`.service-*`, `.hero-*`, `.bk-*` para booking).
-- **Animaciones:** todas con `cubic-bezier(0.22, 1, 0.36, 1)` — easing suave marca de la casa.
-- **Responsive:** breakpoint principal en `900px`. Grids colapsan a 1–2 columnas, paddings se reducen.
-- **`.reveal`** es una clase de intersección-observer para animaciones de entrada al hacer scroll (fade-up).
-- **IDs de DOM** son camelCase (`serviceDetail`, `carouselTrack`, `detailReserve`).
+1. **Cliente reserva en `index.html`** → `INSERT reservas` con `estado='confirmada'`. Campos: `servicio_id, servicio_nombre, modalidad, fecha, hora_inicio, hora_fin, nombre_cliente, email_cliente, telefono_cliente`. Teléfono es **obligatorio**.
 
-## Convenciones de copy
+2. **Slots ocupados** se detectan con `SELECT hora_inicio FROM reservas WHERE fecha=X AND estado != 'cancelada'`. La columna es **`hora_inicio`**, no `hora`.
 
-- **Tono:** cálido, espiritual, femenino, no místico-exagerado. Tratar a la usuaria de "tú".
-- Énfasis con `<strong>` en frases clave (color rose).
-- Firma recurrente: **"Energía Holística Majo"** (en logo y cerraduras).
-- Instagram: `@energiaholisticamajo`.
-- Evitar emojis en el copy del sitio (sí se usan como íconos decorativos en `.service-icon` porque son parte del diseño — 🧠 ✨ 🌊 💆 🌺 🌙).
+3. **Reagendamiento (cliente)** en `mis-sesiones.html` → `PATCH reservas SET estado='reagendar_solicitado', nueva_fecha_propuesta=YYYY-MM-DD, nueva_hora_propuesta='HH:MM|HH:MM', notas_reagendar=texto`.
+
+4. **Confirmar reagendamiento (admin)** → aplica `nueva_fecha_propuesta` → `fecha`, parsea `nueva_hora_propuesta` como `"inicio|fin"` → `hora_inicio` + `hora_fin`, luego limpia esos campos y pone `estado='confirmada'`.
+
+5. Cards de reserva en admin tienen `id="res-${id}"` (prefijo `res-`, no `reserva-`).
 
 ---
 
-## Próximos pasos pendientes
+## Agenda/Horarios (tabla `agenda`, id=1)
 
-- [ ] Obtener imágenes del carrusel para los otros 5 servicios (psico, limpieza, masaje, útero, círculos) y añadirlas a `SERVICE_DATA`.
-- [ ] Cuando el cliente pase imágenes nuevas, limpiar las flechas laterales del diseño original (ver script en `DESIGN_NOTES.md`).
-- [ ] Probar el flujo de reserva en WhatsApp móvil end-to-end.
-
-## Cosas a NO tocar sin consultar
-
-- La paleta de colores y las fuentes — están validadas por la clienta.
-- El formato del mensaje de WhatsApp en booking (sin guiones iniciales — se renderizan como bullets).
-- El número de WhatsApp de Majo en el botón de confirmación.
+- `hora_inicio/fin` global, `duracion_sesion` (min), `pausa_minutos`, `descanso_desde/hasta`
+- `dias_habiles[]` (0=Dom…6=Sáb), `fechas_bloqueadas[]` (YYYY-MM-DD)
+- `horarios_por_dia{}` — override por día: `{ "6": { hora_inicio, hora_fin, modalidad } }`
+- `planificacion_semanas{}` — key = lunes de la semana: `{ "2026-04-28": { modalidad: "presencial" } }`
+- `dias_adelante` — días a futuro en el calendario
 
 ---
 
-## Tips para Claude Code al retomar
+## Pendientes
 
-- Este proyecto se construyó iterativamente con mucho feedback visual. **Preguntar antes de añadir contenido o secciones nuevas** — la clienta es quien decide qué incluir.
-- **No introducir dependencias externas** (React, Tailwind, librerías de carrusel). Todo vanilla.
-- Para cambios pequeños → editar `index.html` directamente.
-- Para añadir imágenes → siempre a `img/<servicio>/` con nombres `01-`, `02-`, etc.
-- Leer `CHANGELOG.md` para contexto de qué se ha hecho.
-- Leer `DESIGN_NOTES.md` para decisiones de diseño y tricks útiles (como limpiar flechas de imágenes).
+- [ ] Google Calendar: widget listo, falta conectar con Apps Script (sin acceso al correo del servicio aún)
+- [ ] Imágenes carrusel para servicios: psico, limpieza, masaje, útero, círculos (solo Reiki tiene imágenes)
