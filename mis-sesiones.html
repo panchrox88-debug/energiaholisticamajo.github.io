@@ -433,10 +433,10 @@
     let ocupados = [];
     try {
       const res = await fetch(
-        `${SB_URL}/rest/v1/reservas?fecha=eq.${ds}&estado=in.(confirmada,reagendar_solicitado)&select=hora`,
+        `${SB_URL}/rest/v1/reservas?fecha=eq.${ds}&estado=in.(confirmada,reagendar_solicitado)&select=hora_inicio`,
         { headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY } });
       const rows = await res.json();
-      ocupados = (rows||[]).map(r => r.hora);
+      ocupados = (rows||[]).map(r => r.hora_inicio);
     } catch(e) {}
 
     if (!slots.length) { slotsEl.innerHTML = '<div class="rag-loading">Sin horarios disponibles ese día.</div>'; return; }
@@ -452,8 +452,11 @@
   function selectReagendarSlot(hora, ds, el) {
     _ragState.hora = hora;
     const date  = new Date(ds + 'T12:00:00');
-    const [hh, mm] = hora.split(':');
-    _ragState.label = `${DIAS_ES[date.getDay()]} ${date.getDate()} de ${MESES_CAP[date.getMonth()]} · ${hh}:${mm.padStart(2,'0')}`;
+    const [hh, mm] = hora.split(':').map(Number);
+    // Calcular hora fin
+    const finMin = hh * 60 + mm + (AGENDA_R.duracion_sesion || 60);
+    _ragState.horaFin = `${Math.floor(finMin/60)}:${(finMin%60).toString().padStart(2,'0')}`;
+    _ragState.label = `${DIAS_ES[date.getDay()]} ${date.getDate()} de ${MESES_CAP[date.getMonth()]} · ${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
     document.querySelectorAll('.rag-slot').forEach(b => b.classList.remove('sel'));
     el.classList.add('sel');
     document.getElementById('ragNotaWrap').style.display = '';
@@ -462,33 +465,37 @@
 
   async function confirmarReagendar() {
     if (!_modalId || !_ragState.dia || !_ragState.hora) return;
+    const reservaId = _modalId; // guardar antes de cerrar modal
     const btn  = document.getElementById('modalReagendarBtn');
     const nota = document.getElementById('modalReagendarNota').value.trim();
     btn.textContent = 'Enviando…'; btn.disabled = true;
     try {
-      await sbPatch(SB_KEY, _modalId, {
+      await sbPatch(SB_KEY, reservaId, {
         estado: 'reagendar_solicitado',
-        nueva_fecha_propuesta: _ragState.label,
+        nueva_fecha_propuesta: _ragState.dia,
+        nueva_hora_propuesta:  _ragState.hora + '|' + _ragState.horaFin,
         notas_reagendar: nota || null
       });
-      cerrarModal();
-      const card = document.getElementById(`sesion-${_modalId}`);
+      cerrarModal(); // ahora sí cerramos (borra _modalId, pero ya guardamos reservaId)
+      // Actualizar card en el DOM
+      const card = document.getElementById(`sesion-${reservaId}`);
       if (card) {
         card.querySelectorAll('.badge').forEach(b => {
           if (b.classList.contains('badge-confirmada')) {
-            b.textContent = '🔄 Reagendar solicitado'; b.className = 'badge';
-            b.style.cssText = 'background:var(--blush);color:var(--rose);border:1px solid var(--rose-lt)';
+            b.textContent = '🔄 Reagendar solicitado';
+            b.className = 'badge';
+            b.style.cssText = 'background:#fff3e0;color:#b07800;border:1px solid #f0a500';
           }
         });
         card.querySelector('.acciones-sesion')?.remove();
         const body = card.querySelector('.sesion-body');
         if (body) {
-          const el = document.createElement('div');
-          el.style.cssText = 'font-size:0.78rem;color:var(--muted);margin-top:8px';
-          el.innerHTML = `Nueva fecha propuesta: <strong>${_ragState.label}</strong>${nota ? `<br><em>"${nota}"</em>` : ''}`;
-          body.appendChild(el);
+          const info = document.createElement('div');
+          info.style.cssText = 'font-size:0.78rem;color:var(--muted);margin-top:8px';
+          info.innerHTML = `Nueva fecha propuesta: <strong>${_ragState.label}</strong>${nota ? `<br><em>"${nota}"</em>` : ''}`;
+          body.appendChild(info);
           const aviso = document.createElement('div');
-          aviso.style.cssText = 'font-size:0.78rem;color:var(--rose);margin-top:4px';
+          aviso.style.cssText = 'font-size:0.78rem;color:#b07800;margin-top:4px';
           aviso.textContent = 'Majo confirmará tu nueva sesión pronto ✨';
           body.appendChild(aviso);
         }
@@ -602,12 +609,18 @@
       : '<span class="badge badge-presencial">🌸 Presencial</span>';
 
     // Nota de reagendamiento enviada por el cliente
-    const notaReagendar = esReagendar && r.notas_reagendar
-      ? `<div style="font-size:0.78rem;color:var(--muted);margin-top:8px;font-style:italic">Tu nota: "${r.notas_reagendar}"</div>
-         <div style="font-size:0.78rem;color:#b07800;margin-top:4px">Majo se pondrá en contacto contigo pronto ✨</div>`
-      : esReagendar
-        ? `<div style="font-size:0.78rem;color:#b07800;margin-top:6px">Majo se pondrá en contacto contigo pronto ✨</div>`
-        : '';
+    let notaReagendar = '';
+    if (esReagendar) {
+      const [nHIn, nHFin] = (r.nueva_hora_propuesta || '').split('|');
+      const nFechaLabel = r.nueva_fecha_propuesta ? formatFecha(r.nueva_fecha_propuesta) : '';
+      const nHoraLabel  = nHIn ? ` · ${nHIn}–${nHFin || ''} hrs` : '';
+      notaReagendar =
+        `<div style="font-size:0.78rem;color:var(--muted);margin-top:8px;padding:8px 12px;background:#fff8e1;border-radius:8px;line-height:1.7">
+           ${nFechaLabel ? `📅 <strong>Nueva fecha solicitada:</strong> ${nFechaLabel}${nHoraLabel}<br>` : ''}
+           ${r.notas_reagendar ? `💬 <em>"${r.notas_reagendar}"</em><br>` : ''}
+           <span style="color:#b07800">Majo se pondrá en contacto contigo pronto ✨</span>
+         </div>`;
+    }
 
     // Aviso cuando faltan menos de 24h
     const avisoTiempo = showAcciones && !esCancelada && !esReagendar && !esPasada && horasRestantes <= 24 && horasRestantes > 0
