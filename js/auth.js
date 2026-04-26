@@ -299,8 +299,11 @@
             style="display:block;padding:13px 20px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);text-decoration:none;font-family:'Nunito',sans-serif;border-bottom:1px solid var(--beige)"
             onmouseover="this.style.background='var(--blush)'" onmouseout="this.style.background=''">Mis Cursos</a>
           <a href="mis-sesiones.html"
-            style="display:block;padding:13px 20px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;font-family:'Nunito',sans-serif;border-bottom:1px solid var(--beige)"
+            style="display:block;padding:13px 20px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);text-decoration:none;font-family:'Nunito',sans-serif;border-bottom:1px solid var(--beige)"
             onmouseover="this.style.background='var(--blush)'" onmouseout="this.style.background=''">Mis Sesiones</a>
+          <a href="mis-encuentros.html"
+            style="display:block;padding:13px 20px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);text-decoration:none;font-family:'Nunito',sans-serif;border-bottom:1px solid var(--beige)"
+            onmouseover="this.style.background='var(--blush)'" onmouseout="this.style.background=''">Mis Encuentros</a>
           <button onclick="doLogout().then(()=>location.reload())"
             style="display:block;width:100%;padding:13px 20px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--rose);background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;text-align:left"
             onmouseover="this.style.background='var(--blush)'" onmouseout="this.style.background=''">Salir</button>

@@ -23,12 +23,13 @@
       --white:   #ffffff;
     }
 
-    html { scroll-behavior: smooth; font-size: 18px; }
+    html { scroll-behavior: smooth; }
 
     body {
       background: var(--cream);
       color: var(--dark);
       font-family: 'Nunito', sans-serif;
+      font-size: 17px;
       font-weight: 300;
       overflow-x: hidden;
       max-width: 100vw;
@@ -1364,7 +1365,7 @@
     /* Tablet small / large mobile */
     @media (max-width: 900px) {
       nav { padding: 16px 24px; }
-      .nav-links, .nav-btn { display: none; }
+      .nav-links, .nav-btn, .nav-user-group { display: none; }
       .nav-toggle { display: block; }
       .mobile-menu { display: flex; }
       .mobile-backdrop { display: block; }
@@ -1534,14 +1535,17 @@
       <li><a href="#about">Sobre mí</a></li>
       <li><a href="#services">Servicios</a></li>
       <li><a href="cursos.html">Cursos</a></li>
+      <li><a href="encuentros.html">Encuentros</a></li>
       <li><a href="promociones.html">Promociones</a></li>
       <li><a href="blog.html">Blog</a></li>
       <li><a href="#contact">Contacto</a></li>
     </ul>
-    <div id="navUserArea" style="display:flex;align-items:center;gap:14px">
-      <button id="navLoginBtn" onclick="openLogin()" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>
+    <div class="nav-user-group" style="display:flex;flex-direction:column;align-items:center;gap:5px">
+      <div id="navUserArea">
+        <button id="navLoginBtn" onclick="openLogin()" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>
+      </div>
+      <a href="#booking" class="nav-btn">Agendar sesión</a>
     </div>
-    <a href="#booking" class="nav-btn">Agendar sesión</a>
     <button class="nav-toggle" id="navToggle" aria-label="Menú" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
@@ -1633,6 +1637,7 @@
       <a href="#about">Sobre mí</a>
       <a href="#services">Servicios</a>
       <a href="cursos.html">Cursos</a>
+      <a href="encuentros.html">Encuentros</a>
       <a href="promociones.html">Promociones</a>
       <a href="blog.html">Blog</a>
       <div class="mobile-menu-divider"></div>
