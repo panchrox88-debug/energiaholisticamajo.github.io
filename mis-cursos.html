@@ -29,7 +29,10 @@
     .nav-logo-sub  { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); }
     .nav-back { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
     .nav-back:hover { color: var(--rose); }
-    @media (max-width: 900px) { nav { padding: 18px 24px; } }
+    @media (max-width: 900px) {
+      nav { padding: 18px 24px; }
+      .nav-back { display: none; }
+    }
 
     /* HEADER */
     .page-header { padding: 160px 64px 60px; background: linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%); }
@@ -104,9 +107,11 @@
       const nombre = perfil?.nombre || user.email.split('@')[0];
       area.innerHTML = `
         <span style="font-size:0.72rem;color:var(--muted);font-family:'Nunito',sans-serif">${nombre}</span>
-        <button onclick="doLogout().then(()=>location.href='cursos.html')" style="background:none;border:1.5px solid var(--beige);padding:6px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);cursor:pointer">Salir</button>`;
+        <button id="navLogoutBtn" style="background:none;border:1.5px solid var(--beige);padding:6px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);cursor:pointer">Salir</button>`;
+      area.querySelector('#navLogoutBtn').addEventListener('click', () => doLogout().then(() => location.href = 'cursos.html'));
     } else {
-      area.innerHTML = `<button onclick="openLogin('Inicia sesión para ver tus cursos')" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>`;
+      area.innerHTML = `<button id="navLoginBtn" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>`;
+      area.querySelector('#navLoginBtn').addEventListener('click', () => openLogin('Inicia sesión para ver tus cursos'));
     }
   }
 
@@ -121,8 +126,9 @@
           <div class="big">🔒</div>
           <h2>Acceso <em style="font-style:italic;color:var(--rose)">privado</em></h2>
           <p>Inicia sesión para ver los cursos que has adquirido.</p>
-          <button onclick="openLogin('Inicia sesión para ver tus cursos')" style="display:inline-flex;align-items:center;gap:8px;background:var(--rose);color:white;padding:12px 28px;border-radius:30px;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.2s">Iniciar sesión →</button>
+          <button id="emptyLoginBtn" style="display:inline-flex;align-items:center;gap:8px;background:var(--rose);color:white;padding:12px 28px;border-radius:30px;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.2s">Iniciar sesión →</button>
         </div>`;
+      document.getElementById('emptyLoginBtn').addEventListener('click', () => openLogin('Inicia sesión para ver tus cursos'));
       return;
     }
 
