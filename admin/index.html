@@ -685,10 +685,13 @@
       <!-- USUARIAS -->
       <div id="tab-usuarias" class="section">
         <h2 class="section-title">Usuarias</h2>
-        <div style="margin-bottom:18px">
+        <div style="margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <input id="usuariasBuscar" type="text" placeholder="Buscar por nombre o correo…"
             oninput="filtrarUsuarias(this.value)"
-            style="width:100%;max-width:420px;padding:10px 16px;border:1.5px solid var(--beige);border-radius:30px;font-family:'Nunito',sans-serif;font-size:0.85rem;background:white;color:var(--dark);outline:none;box-sizing:border-box"/>
+            style="flex:1;min-width:220px;max-width:420px;padding:10px 16px;border:1.5px solid var(--beige);border-radius:30px;font-family:'Nunito',sans-serif;font-size:0.85rem;background:white;color:var(--dark);outline:none;box-sizing:border-box"/>
+          <button onclick="exportarUsuariasCSV()" style="display:inline-flex;align-items:center;gap:7px;background:var(--dark);color:white;border:none;padding:10px 20px;border-radius:30px;font-family:'Nunito',sans-serif;font-size:0.78rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;white-space:nowrap">
+            ⬇ Exportar CSV
+          </button>
         </div>
         <div id="usuariasMsg" class="msg-banner"></div>
         <div id="usuariasLista" style="display:flex;flex-direction:column;gap:16px"></div>
@@ -2595,6 +2598,44 @@
     document.querySelectorAll('#usuariasLista > div[data-search]').forEach(card => {
       card.style.display = !term || card.dataset.search.includes(term) ? '' : 'none';
     });
+  };
+
+  window.exportarUsuariasCSV = async function() {
+    try {
+      const [perfiles, reservas, accesos] = await Promise.all([
+        sbGet('/perfiles?order=created_at.desc&select=*'),
+        sbGet('/reservas?select=email_cliente,nombre_cliente,telefono_cliente&order=created_at.desc'),
+        sbGet('/accesos?select=user_id,curso_id')
+      ]);
+
+      // Combinar usuarias registradas + clientes sin cuenta (solo en reservas)
+      const rows = [];
+      const emailsVistos = new Set();
+
+      perfiles.forEach(u => {
+        emailsVistos.add(u.email);
+        const numReservas = reservas.filter(r => r.email_cliente === u.email).length;
+        const numCursos   = accesos.filter(a => a.user_id === u.id).length;
+        rows.push([u.nombre || '', u.email, u.telefono || '', 'Registrada', numReservas, numCursos, new Date(u.created_at).toLocaleDateString('es-CL')]);
+      });
+
+      reservas.forEach(r => {
+        if (!emailsVistos.has(r.email_cliente)) {
+          emailsVistos.add(r.email_cliente);
+          rows.push([r.nombre_cliente || '', r.email_cliente, r.telefono_cliente || '', 'Solo reserva', 1, 0, '']);
+        }
+      });
+
+      const header = ['Nombre', 'Email', 'Teléfono', 'Tipo', 'Reservas', 'Cursos', 'Fecha registro'];
+      const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `usuarias_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click(); URL.revokeObjectURL(url);
+    } catch(e) {
+      alert('Error al exportar: ' + e.message);
+    }
   };
 
   async function loadUsuarias() {
