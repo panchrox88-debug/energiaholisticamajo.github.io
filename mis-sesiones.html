@@ -520,18 +520,21 @@
           body.appendChild(aviso);
         }
       }
-    } catch(e) { alert('Error al enviar. Intenta de nuevo.'); }
+    } catch(e) { alert('Error al enviar: ' + e.message + '\nIntenta de nuevo o contacta a Majo.'); }
     btn.textContent = 'Enviar solicitud'; btn.disabled = false;
   }
 
   async function sbPatch(key, id, data) {
-    const token = await getAuthToken();
     const res = await fetch(`${SB_URL}/rest/v1/reservas?id=eq.${id}`, {
       method: 'PATCH',
-      headers: { 'apikey': key, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify(data)
     });
-    if (!res.ok && res.status !== 204) throw new Error('Error ' + res.status);
+    if (!res.ok) {
+      let msg = 'Error ' + res.status;
+      try { const j = await res.json(); msg += ': ' + (j?.message || j?.hint || JSON.stringify(j)); } catch(_) {}
+      throw new Error(msg);
+    }
   }
 
   async function loadMisSesiones(user, perfil) {
