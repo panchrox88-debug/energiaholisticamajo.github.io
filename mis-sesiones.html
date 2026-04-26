@@ -342,6 +342,7 @@
   // ── Reagendamiento con calendario ──────────────────────────
   let AGENDA_R = null;
   let _ragState = { dia: null, hora: null, label: null };
+  let HORAS_ANTICIP = 24; // se sobreescribe con el valor de agenda
 
   const DIAS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const MESES_ES  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -562,6 +563,15 @@
     const nombre = perfil?.nombre || user.email.split('@')[0];
     subEl.textContent = `Hola, ${nombre}. Aquí están tus sesiones.`;
 
+    // Cargar tiempo mínimo de anticipación para reagendar
+    try {
+      const agRes = await fetch(`${SB_URL}/rest/v1/agenda?id=eq.1&select=horas_anticipacion_reagendar`,
+        { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } });
+      const agRows = await agRes.json();
+      if (agRows?.[0]?.horas_anticipacion_reagendar != null)
+        HORAS_ANTICIP = agRows[0].horas_anticipacion_reagendar;
+    } catch(_) {}
+
     try {
       const token = await getAuthToken();
       const today = new Date().toISOString().slice(0, 10);
@@ -626,7 +636,7 @@
 
     const sesionDate     = new Date(r.fecha + 'T' + (r.hora_inicio || '00:00') + ':00');
     const horasRestantes = (sesionDate - new Date()) / 36e5;
-    const puedeAccionar = showAcciones && !esCancelada && !esReagendar && !esPasada && horasRestantes > 24;
+    const puedeAccionar = showAcciones && !esCancelada && !esReagendar && !esPasada && horasRestantes > HORAS_ANTICIP;
 
     // Badge de estado
     const badgeEstado = esCancelada  ? '<span class="badge badge-cancelada">Cancelada</span>'
@@ -653,8 +663,8 @@
     }
 
     // Aviso cuando faltan menos de 24h
-    const avisoTiempo = showAcciones && !esCancelada && !esReagendar && !esPasada && horasRestantes <= 24 && horasRestantes > 0
-      ? `<div style="font-size:0.72rem;color:var(--muted);margin-top:6px">Para cancelar o reagendar, contacta directamente a Majo.</div>`
+    const avisoTiempo = showAcciones && !esCancelada && !esReagendar && !esPasada && horasRestantes <= HORAS_ANTICIP && horasRestantes > 0
+      ? `<div style="font-size:0.72rem;color:var(--muted);margin-top:6px">Para cancelar o reagendar con menos de ${HORAS_ANTICIP}h de anticipación, contacta directamente a Majo.</div>`
       : '';
 
     // Botones de acción

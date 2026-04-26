@@ -476,6 +476,10 @@
               <label>Días de antelación máxima</label>
               <input type="number" id="ag-adelante" min="7" max="365" step="1" placeholder="30"/>
             </div>
+            <div class="field">
+              <label>Horas mínimas para reagendar / cancelar</label>
+              <input type="number" id="ag-anticip" min="0" max="168" step="1" placeholder="24" title="Horas de anticipación que necesita el cliente para poder reagendar o cancelar"/>
+            </div>
           </div>
           <div class="field">
             <label>Días de atención</label>
@@ -1682,6 +1686,7 @@
       document.getElementById('ag-break-desde').value = a.descanso_desde || '';
       document.getElementById('ag-break-hasta').value = a.descanso_hasta || '';
       document.getElementById('ag-adelante').value    = a.dias_adelante  || 30;
+      document.getElementById('ag-anticip').value     = a.horas_anticipacion_reagendar ?? 24;
 
       // Días
       document.querySelectorAll('.day-pill').forEach(pill => {
@@ -1928,6 +1933,7 @@
       descanso_desde:       document.getElementById('ag-break-desde').value.trim() || null,
       descanso_hasta:       document.getElementById('ag-break-hasta').value.trim() || null,
       dias_adelante:        parseInt(document.getElementById('ag-adelante').value) || 30,
+      horas_anticipacion_reagendar: parseInt(document.getElementById('ag-anticip').value) ?? 24,
       dias_habiles:          DIAS_HABILES,
       fechas_bloqueadas:     FECHAS_BLOQUEADAS,
       horarios_por_dia:      HORARIOS_POR_DIA,
