@@ -23,7 +23,7 @@
       --white:   #ffffff;
     }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; font-size: 17px; }
 
     body {
       background: var(--cream);
@@ -1275,11 +1275,14 @@
     @media (max-width: 900px) {
       .service-modal { padding: 16px; }
       .service-detail { padding: 24px 20px 28px; }
-      .detail-title { font-size: 1.5rem; }
       .carousel-stage { width: min(360px, 94%); max-height: 58vh; }
-      .detail-title { white-space: normal; }
       .carousel-arrow { display: none; }
       .detail-cta-btn { padding: 12px 24px; font-size: 1rem; }
+      /* Header del modal: título arriba, botones abajo */
+      .detail-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .detail-header-text { width: 100%; }
+      .detail-title { white-space: normal; overflow: visible; text-overflow: unset; font-size: 1.6rem; }
+      .detail-header-actions { width: 100%; justify-content: space-between; flex-direction: row-reverse; }
     }
 
     /* ── FOOTER ── */
