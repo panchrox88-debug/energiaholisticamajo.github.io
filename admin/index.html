@@ -392,6 +392,7 @@
       <div class="sidebar-link" data-tab="sobremi">🌸 Sobre mí</div>
       <div class="sidebar-link" data-tab="banner">🎯 Banner</div>
       <div class="sidebar-link" data-tab="cursos">📚 Cursos</div>
+      <div class="sidebar-link" data-tab="encuentros">🌿 Encuentros</div>
       <div class="sidebar-link" data-tab="promociones">🎁 Promociones</div>
       <div class="sidebar-link" data-tab="usuarias">👤 Usuarias</div>
       <div class="sidebar-link" data-tab="blog">✍️ Blog</div>
@@ -672,6 +673,73 @@
         <div id="cursosMsg" class="msg-banner"></div>
         <button class="btn btn-primary" id="addCursoBtn" style="margin-bottom:16px">+ Nuevo curso</button>
         <div id="cursosList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+      </div>
+
+      <!-- ENCUENTROS -->
+      <div id="tab-encuentros" class="section">
+        <h2 class="section-title">Encuentros</h2>
+        <div id="encuentrosMsg" class="msg-banner"></div>
+        <button class="btn btn-primary" id="addEncuentroBtn" style="margin-bottom:16px">+ Nuevo encuentro</button>
+        <div id="encuentrosList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
+
+        <!-- Formulario encuentro -->
+        <div id="encuentroForm" style="display:none;background:white;border-radius:16px;padding:28px;margin-top:24px;box-shadow:0 2px 16px rgba(61,43,43,0.08)">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:300;margin-bottom:20px" id="encFormTitle">Nuevo encuentro</h3>
+          <input type="hidden" id="encId"/>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Título *</label>
+              <input type="text" id="encTitulo" class="form-control" placeholder="Ej: Círculo de Mujeres · Luna Llena"/>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Motivo / Tema</label>
+              <input type="text" id="encMotivo" class="form-control" placeholder="Ej: Sanación femenina"/>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Descripción</label>
+              <textarea id="encDesc" class="form-control" rows="4" placeholder="Describe el encuentro…" style="resize:vertical"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Fecha *</label>
+              <input type="date" id="encFecha" class="form-control"/>
+            </div>
+            <div class="form-group">
+              <label>Modalidad</label>
+              <select id="encModalidad" class="form-control">
+                <option value="presencial">Presencial</option>
+                <option value="online">Online</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Hora inicio *</label>
+              <input type="time" id="encHoraInicio" class="form-control"/>
+            </div>
+            <div class="form-group">
+              <label>Hora fin *</label>
+              <input type="time" id="encHoraFin" class="form-control"/>
+            </div>
+            <div class="form-group">
+              <label>Precio (CLP)</label>
+              <input type="number" id="encPrecio" class="form-control" placeholder="0 = Gratuito" min="0"/>
+            </div>
+            <div class="form-group">
+              <label>Cupo máximo (vacío = ilimitado)</label>
+              <input type="number" id="encCupo" class="form-control" placeholder="Ej: 15" min="1"/>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Imagen (URL)</label>
+              <input type="text" id="encImagen" class="form-control" placeholder="https://…"/>
+            </div>
+            <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:10px">
+              <input type="checkbox" id="encActivo" checked style="width:16px;height:16px;accent-color:var(--rose)"/>
+              <label for="encActivo" style="margin:0;cursor:pointer">Visible en el sitio</label>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="guardarEncuentro()">Guardar</button>
+            <button class="btn" onclick="cerrarEncuentroForm()">Cancelar</button>
+          </div>
+        </div>
       </div>
 
       <!-- PROMOCIONES -->
@@ -1223,6 +1291,7 @@
       if (link.dataset.tab === 'sobremi')     loadSobreMiAdmin();
       if (link.dataset.tab === 'banner')      loadBannerAdmin();
       if (link.dataset.tab === 'cursos')       loadCursosAdmin();
+      if (link.dataset.tab === 'encuentros')   loadEncuentrosAdmin();
       if (link.dataset.tab === 'usuarias')     loadUsuarias();
       if (link.dataset.tab === 'promociones') loadPromocionesAdmin();
       if (link.dataset.tab === 'blog')        loadBlogAdmin();
@@ -2591,6 +2660,137 @@
     try { await saveCurso(); }
     catch(e) { if (e.message !== 'titulo requerido') document.getElementById('cursoModalMsg').textContent = 'Error: ' + e.message; }
   });
+
+  // ── ENCUENTROS ────────────────────────────────────────────
+  document.getElementById('addEncuentroBtn').addEventListener('click', () => abrirEncuentroForm());
+
+  function abrirEncuentroForm(enc) {
+    const form = document.getElementById('encuentroForm');
+    document.getElementById('encFormTitle').textContent = enc ? 'Editar encuentro' : 'Nuevo encuentro';
+    document.getElementById('encId').value           = enc?.id || '';
+    document.getElementById('encTitulo').value       = enc?.titulo || '';
+    document.getElementById('encMotivo').value       = enc?.motivo || '';
+    document.getElementById('encDesc').value         = enc?.descripcion || '';
+    document.getElementById('encFecha').value        = enc?.fecha || '';
+    document.getElementById('encModalidad').value    = enc?.modalidad || 'presencial';
+    document.getElementById('encHoraInicio').value   = enc?.hora_inicio?.substring(0,5) || '';
+    document.getElementById('encHoraFin').value      = enc?.hora_fin?.substring(0,5) || '';
+    document.getElementById('encPrecio').value       = enc?.precio ?? '';
+    document.getElementById('encCupo').value         = enc?.cupo_maximo ?? '';
+    document.getElementById('encImagen').value       = enc?.imagen || '';
+    document.getElementById('encActivo').checked     = enc ? enc.activo !== false : true;
+    form.style.display = 'block';
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  window.cerrarEncuentroForm = function() {
+    document.getElementById('encuentroForm').style.display = 'none';
+  };
+
+  window.guardarEncuentro = async function() {
+    const id         = document.getElementById('encId').value;
+    const titulo     = document.getElementById('encTitulo').value.trim();
+    const fecha      = document.getElementById('encFecha').value;
+    const horaInicio = document.getElementById('encHoraInicio').value;
+    const horaFin    = document.getElementById('encHoraFin').value;
+    if (!titulo || !fecha || !horaInicio || !horaFin) { showMsg('encuentrosMsg', 'Completa los campos obligatorios (*)','err'); return; }
+
+    const payload = {
+      titulo,
+      motivo:      document.getElementById('encMotivo').value.trim() || null,
+      descripcion: document.getElementById('encDesc').value.trim() || null,
+      fecha,
+      hora_inicio: horaInicio,
+      hora_fin:    horaFin,
+      modalidad:   document.getElementById('encModalidad').value,
+      precio:      parseFloat(document.getElementById('encPrecio').value) || 0,
+      cupo_maximo: parseInt(document.getElementById('encCupo').value) || null,
+      imagen:      document.getElementById('encImagen').value.trim() || null,
+      activo:      document.getElementById('encActivo').checked
+    };
+
+    try {
+      if (id) {
+        await sbPatch(`/encuentros?id=eq.${id}`, payload);
+      } else {
+        await fetch(`${SB_URL}/rest/v1/encuentros`, {
+          method: 'POST',
+          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + _adminToken, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify(payload)
+        });
+      }
+      showMsg('encuentrosMsg', id ? 'Encuentro actualizado ✓' : 'Encuentro creado ✓');
+      cerrarEncuentroForm();
+      loadEncuentrosAdmin();
+    } catch(e) { showMsg('encuentrosMsg', 'Error al guardar', 'err'); }
+  };
+
+  async function loadEncuentrosAdmin() {
+    const list = document.getElementById('encuentrosList');
+    list.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando…</div>';
+    try {
+      const [encuentros, inscripciones] = await Promise.all([
+        sbGet('/encuentros?order=fecha.desc&select=*'),
+        sbGet('/inscripciones?estado=eq.confirmada&select=encuentro_id')
+      ]);
+
+      if (!encuentros.length) { list.innerHTML = '<p style="color:var(--muted);font-size:0.88rem">No hay encuentros aún.</p>'; return; }
+
+      const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      list.innerHTML = encuentros.map(e => {
+        const inscritos = inscripciones.filter(i => i.encuentro_id === e.id).length;
+        const cupoText  = e.cupo_maximo ? `${inscritos}/${e.cupo_maximo}` : `${inscritos} inscritas`;
+        const [y,m,d]   = (e.fecha||'').split('-');
+        const fechaStr  = e.fecha ? `${parseInt(d)} ${MESES[parseInt(m)-1]} ${y}` : '—';
+        return `
+          <div style="background:white;border-radius:14px;padding:18px 20px;box-shadow:0 2px 12px rgba(61,43,43,0.06);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+                <span style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--dark)">${e.titulo}</span>
+                ${!e.activo ? '<span style="font-size:0.6rem;background:var(--beige);color:var(--muted);padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.1em">Oculto</span>' : ''}
+              </div>
+              <div style="font-size:0.78rem;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap">
+                <span>📅 ${fechaStr} · ${(e.hora_inicio||'').substring(0,5)}</span>
+                <span>👥 ${cupoText}</span>
+                <span>${e.precio > 0 ? '$'+Number(e.precio).toLocaleString('es-CL') : 'Gratuito'}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="verInscritas('${e.id}','${e.titulo.replace(/'/g,"\\'")}')" style="padding:5px 12px;background:none;border:1.5px solid var(--beige);border-radius:20px;font-size:0.68rem;letter-spacing:0.12em;color:var(--muted);cursor:pointer">👥 Inscritas</button>
+              <button onclick="editarEncuentro('${e.id}')" style="padding:5px 12px;background:none;border:1.5px solid var(--beige);border-radius:20px;font-size:0.68rem;letter-spacing:0.12em;color:var(--muted);cursor:pointer">✏️ Editar</button>
+              <button onclick="eliminarEncuentro('${e.id}')" style="padding:5px 12px;background:none;border:1.5px solid #f0dada;border-radius:20px;font-size:0.68rem;letter-spacing:0.12em;color:var(--rose);cursor:pointer">Eliminar</button>
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) { list.innerHTML = '<p style="color:var(--rose)">Error al cargar.</p>'; }
+  }
+
+  let _encuentrosCache = [];
+  window.editarEncuentro = async function(id) {
+    if (!_encuentrosCache.length) {
+      _encuentrosCache = await sbGet('/encuentros?select=*');
+    }
+    const enc = _encuentrosCache.find(e => e.id === id);
+    if (enc) abrirEncuentroForm(enc);
+  };
+
+  window.eliminarEncuentro = async function(id) {
+    if (!confirm('¿Eliminar este encuentro? También se eliminarán sus inscripciones.')) return;
+    try {
+      await fetch(`${SB_URL}/rest/v1/encuentros?id=eq.${id}`, { method: 'DELETE', headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + _adminToken } });
+      showMsg('encuentrosMsg', 'Encuentro eliminado');
+      loadEncuentrosAdmin();
+    } catch(e) { showMsg('encuentrosMsg', 'Error al eliminar', 'err'); }
+  };
+
+  window.verInscritas = async function(encuentroId, titulo) {
+    try {
+      const rows = await sbGet(`/inscripciones?encuentro_id=eq.${encuentroId}&estado=eq.confirmada&select=nombre_cliente,email_cliente,telefono_cliente,created_at&order=created_at.asc`);
+      if (!rows.length) { alert(`Sin inscritas en "${titulo}" aún.`); return; }
+      const texto = rows.map((r,i) => `${i+1}. ${r.nombre_cliente} — ${r.email_cliente}${r.telefono_cliente ? ' · '+r.telefono_cliente : ''}`).join('\n');
+      alert(`Inscritas en "${titulo}" (${rows.length}):\n\n${texto}`);
+    } catch(e) { alert('Error al cargar inscritas.'); }
+  };
 
   // ── USUARIAS ──────────────────────────────────────────────
   window.filtrarUsuarias = function(q) {
