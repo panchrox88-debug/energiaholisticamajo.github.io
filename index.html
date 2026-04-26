@@ -2375,7 +2375,18 @@
         <span class="bk-summary-title">${svc.emoji} ${svc.titulo}</span>
         <span>${modLabel} · ${dayLabel} · ${state.time} hrs</span>
       `;
-      if (clientForm) clientForm.style.display = 'block';
+      if (clientForm) {
+        clientForm.style.display = 'block';
+        // Pre-llenar datos si el usuario está logueado y los campos están vacíos
+        const nEl = document.getElementById('bkNombre');
+        const eEl = document.getElementById('bkEmail');
+        const tEl = document.getElementById('bkTelefono');
+        if (_bkUser) {
+          if (!nEl.value) nEl.value = _bkPerfil?.nombre || _bkUser.user_metadata?.nombre || '';
+          if (!eEl.value) eEl.value = _bkUser.email || '';
+          if (!tEl.value) tEl.value = _bkPerfil?.telefono || '';
+        }
+      }
       setTimeout(() => scrollToStep('stepSummary'), 200);
     }
 
@@ -3121,7 +3132,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    initAuth(updateNavAuth);
+    var _bkUser = null, _bkPerfil = null;
+    initAuth(function(user, perfil) {
+      updateNavAuth(user, perfil);
+      _bkUser = user;
+      _bkPerfil = perfil;
+    });
   </script>
   <!-- WhatsApp flotante -->
   <a id="waBtn" class="wa-float" href="#" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
