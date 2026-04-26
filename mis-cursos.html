@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mis Cursos — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -95,9 +97,6 @@
 </footer>
 
 <script>
-  const SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
-  const SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
-
   function updateNavAuth(user, perfil) {
     const area = document.getElementById('navUserArea');
     if (!area) return;

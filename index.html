@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Energía Holística Majo — María José Toro</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
@@ -1916,10 +1917,6 @@
   </footer>
 
   <script>
-    // ── SUPABASE CONFIG ───────────────────────────────────────
-    const SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
-    const SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
-
     async function sbFetch(path, opts = {}) {
       return fetch(SB_URL + '/rest/v1' + path, {
         ...opts,
@@ -2549,7 +2546,8 @@
         });
         if (fotos.length < 2) return; // una sola foto → no rota
         let current = 0;
-        setInterval(() => {
+        clearInterval(window._heroBgInterval);
+        window._heroBgInterval = setInterval(() => {
           const slides = bg.querySelectorAll('.hero-bg-slide');
           slides[current].classList.remove('active');
           current = (current + 1) % slides.length;
@@ -2599,7 +2597,8 @@
           });
           if (fotos.length > 1) {
             let cur = 0;
-            setInterval(() => {
+            clearInterval(window._aboutCarouselInterval);
+            window._aboutCarouselInterval = setInterval(() => {
               const slides = card.querySelectorAll('.about-card-slide');
               slides[cur].classList.remove('active');
               cur = (cur + 1) % slides.length;
@@ -3119,6 +3118,7 @@
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script>
     initAuth(updateNavAuth);

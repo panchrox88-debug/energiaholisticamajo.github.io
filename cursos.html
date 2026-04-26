@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cursos — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -275,7 +277,7 @@
     <li><a href="index.html#contact">Contacto</a></li>
   </ul>
   <div id="navUserArea" style="display:flex;align-items:center;gap:14px">
-    <button id="navLoginBtn" onclick="openLogin()" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>
+    <button id="navLoginBtn" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>
   </div>
   <a href="index.html#booking" class="nav-btn">Agendar sesión</a>
   <button class="nav-toggle" id="navToggle" aria-label="Menú">
@@ -320,8 +322,6 @@
 </footer>
 
 <script>
-  const SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
-  const SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
   async function sbFetch(path) {
     return fetch(SB_URL + '/rest/v1' + path, {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
@@ -357,12 +357,20 @@
   const POR_PAGINA = 6;
 
   async function loadCursos() {
-    await loadBannerData();
-    const res  = await sbFetch('/cursos?activo=eq.true&order=orden.asc,created_at.desc&select=*');
-    const rows = await res.json();
-    todosLosCursos = rows || [];
-    buildFiltros();
-    renderCursos();
+    try {
+      await loadBannerData();
+      const res  = await sbFetch('/cursos?activo=eq.true&order=orden.asc,created_at.desc&select=*');
+      const rows = await res.json();
+      todosLosCursos = rows || [];
+      buildFiltros();
+      renderCursos();
+    } catch(e) {
+      document.getElementById('cursosGrid').innerHTML =
+        `<div class="empty-state" style="grid-column:1/-1">
+          <div class="big">😔</div>
+          No pudimos cargar los cursos.<br>Verifica tu conexión e intenta de nuevo.
+        </div>`;
+    }
   }
 
   function buildFiltros() {
@@ -429,7 +437,7 @@
       const esPago = !c.gratuito && c.precio;
       const cta = hasSecciones
         ? esPago
-          ? `<button class="curso-cta" onclick="openPreview('${c.id}')">Ver curso →</button>`
+          ? `<button class="curso-cta" data-preview-id="${c.id}">Ver curso →</button>`
           : `<a href="curso.html?id=${c.id}" class="curso-cta">Ver gratis →</a>`
         : c.link_pago
           ? `<a href="${c.link_pago}" target="_blank" rel="noopener" class="curso-cta">${c.gratuito ? 'Acceder gratis' : 'Inscribirme'} →</a>`
@@ -459,11 +467,11 @@
     // Paginador
     const pag = document.getElementById('paginador');
     if (totalPags <= 1) { pag.innerHTML = ''; return; }
-    let pagHTML = `<button class="pag-btn pag-arrow" ${paginaActual===1?'disabled':''} onclick="irPagina(${paginaActual-1})">‹</button>`;
+    let pagHTML = `<button class="pag-btn pag-arrow" ${paginaActual===1?'disabled':''} data-page="${paginaActual-1}">‹</button>`;
     for (let i = 1; i <= totalPags; i++) {
-      pagHTML += `<button class="pag-btn ${i===paginaActual?'active':''}" onclick="irPagina(${i})">${i}</button>`;
+      pagHTML += `<button class="pag-btn ${i===paginaActual?'active':''}" data-page="${i}">${i}</button>`;
     }
-    pagHTML += `<button class="pag-btn pag-arrow" ${paginaActual===totalPags?'disabled':''} onclick="irPagina(${paginaActual+1})">›</button>`;
+    pagHTML += `<button class="pag-btn pag-arrow" ${paginaActual===totalPags?'disabled':''} data-page="${paginaActual+1}">›</button>`;
     pag.innerHTML = pagHTML;
   }
 
@@ -537,6 +545,18 @@
   previewClose.addEventListener('click', closePreview);
   overlay.addEventListener('click', e => { if (e.target === overlay) closePreview(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+  document.getElementById('cursosGrid').addEventListener('click', e => {
+    const btn = e.target.closest('[data-preview-id]');
+    if (btn) openPreview(btn.dataset.previewId);
+  });
+
+  document.getElementById('paginador').addEventListener('click', e => {
+    const btn = e.target.closest('[data-page]');
+    if (btn && !btn.disabled) irPagina(Number(btn.dataset.page));
+  });
+
+  document.getElementById('navLoginBtn').addEventListener('click', () => openLogin());
 
   // Mobile menu
   const toggle   = document.getElementById('navToggle');

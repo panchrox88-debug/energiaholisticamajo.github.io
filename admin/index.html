@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel Admin — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap" rel="stylesheet"/>
@@ -841,7 +842,7 @@
           <div id="cursoPdfActual" style="display:none;margin-bottom:8px;padding:10px 14px;background:var(--blush);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:.83rem;color:var(--dark)">
             <span>📄</span>
             <span id="cursoPdfNombre" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-            <button type="button" onclick="_removeCursoPdf()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1">✕</button>
+            <button type="button" onclick="_removeCursoPdf()" aria-label="Eliminar PDF" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1">✕</button>
           </div>
           <label class="upload-zone" id="cursoPdfZone"><input type="file" id="cursoPdfInput" accept="application/pdf"/>📁 Subir PDF</label>
         </div>
@@ -1334,7 +1335,7 @@
       const acciones = mode === 'reagendar'
         ? `<div class="card-actions" style="display:flex;flex-direction:column;gap:6px">
              <button class="btn btn-green" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
-               onclick="window._confirmarReserva('${r.id}', '${r.nueva_fecha_propuesta || ''}', '${r.nueva_hora_propuesta || ''}')">✓ Confirmar</button>
+               onclick="window._confirmarReserva('${r.id}')">✓ Confirmar</button>
              <button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px"
                onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
            </div>`
@@ -1372,33 +1373,30 @@
     } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
   };
 
-  window._confirmarReserva = async (id, nuevaFecha, nuevaHora) => {
+  window._confirmarReserva = async (id) => {
     const card = document.getElementById(`res-${id}`);
-    // Feedback instantáneo — quitar la card antes de esperar la red
     if (card) card.style.cssText = 'opacity:0.4;pointer-events:none;transition:opacity 0.2s';
     try {
-      // Construir patch aplicando la nueva fecha/hora propuesta si existe
+      // Leer datos frescos de Supabase — no confiar en lo que vino del onclick
+      const rows = await sbGet(`/reservas?id=eq.${id}&select=nueva_fecha_propuesta,nueva_hora_propuesta`);
+      const r = rows?.[0];
+      if (!r) throw new Error('Reserva no encontrada');
+
       const patch = {
         estado: 'confirmada',
         notas_reagendar: null,
         nueva_fecha_propuesta: null,
         nueva_hora_propuesta: null,
       };
-      if (nuevaFecha) patch.fecha = nuevaFecha;
-      if (nuevaHora) {
-        const [hIn, hFin] = nuevaHora.split('|');
+      if (r.nueva_fecha_propuesta) patch.fecha = r.nueva_fecha_propuesta;
+      if (r.nueva_hora_propuesta) {
+        const [hIn, hFin] = r.nueva_hora_propuesta.split('|');
         if (hIn)  patch.hora_inicio = hIn;
         if (hFin) patch.hora_fin    = hFin;
       }
       await sbPatch(`/reservas?id=eq.${id}`, patch);
-      card?.remove();
-      // Actualizar alerta de solicitudes pendientes
-      const sec = document.getElementById('secSolicitudes');
-      const remaining = document.querySelectorAll('#reservasSolicitudes [id^="res-"]').length;
-      if (sec && remaining === 0) sec.style.display = 'none';
-      const alertEl2 = document.getElementById('reservasAlert');
-      if (alertEl2 && remaining === 0) alertEl2.style.display = 'none';
-      showMsg('reservasMsg', `Reagendamiento confirmado ✓${nuevaFecha ? ' — nueva fecha: ' + nuevaFecha : ''}`);
+      showMsg('reservasMsg', `Reagendamiento confirmado ✓${r.nueva_fecha_propuesta ? ' — nueva fecha: ' + r.nueva_fecha_propuesta : ''}`);
+      loadReservas();
     } catch(e) {
       if (card) card.style.cssText = '';
       showMsg('reservasMsg', 'Error: ' + e.message, 'err');

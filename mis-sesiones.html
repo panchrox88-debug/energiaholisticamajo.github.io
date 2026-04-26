@@ -2,10 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mis Sesiones — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -211,7 +213,7 @@
     <h3>Cancelar sesión</h3>
     <p id="modalTexto">¿Deseas cancelar esta sesión?</p>
     <div class="modal-btns">
-      <button class="btn-modal-cancel" onclick="cerrarModal('cancelar')">No, volver</button>
+      <button class="btn-modal-cancel" id="btnCerrarCancelar">No, volver</button>
       <button class="btn-modal-confirm" id="modalConfirmBtn">Sí, cancelar</button>
     </div>
   </div>
@@ -237,7 +239,7 @@
     </div>
 
     <div class="modal-btns" style="margin-top:20px">
-      <button class="btn-modal-cancel" onclick="cerrarModal('reagendar')">Cancelar</button>
+      <button class="btn-modal-cancel" id="btnCerrarReagendar">Cancelar</button>
       <button class="btn-modal-reagendar" id="modalReagendarBtn" disabled>Enviar solicitud</button>
     </div>
   </div>
@@ -248,9 +250,6 @@
 </footer>
 
 <script>
-  const SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
-  const SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
-
   const DIAS   = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const MESES  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
@@ -266,9 +265,11 @@
       const nombre = perfil?.nombre || user.email.split('@')[0];
       area.innerHTML = `
         <span style="font-size:0.72rem;color:var(--muted);font-family:'Nunito',sans-serif">${nombre}</span>
-        <button onclick="doLogout().then(()=>location.href='index.html')" style="background:none;border:1.5px solid var(--beige);padding:6px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);cursor:pointer">Salir</button>`;
+        <button id="navLogoutBtn" style="background:none;border:1.5px solid var(--beige);padding:6px 14px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);cursor:pointer">Salir</button>`;
+      area.querySelector('#navLogoutBtn').addEventListener('click', () => doLogout().then(() => location.href = 'index.html'));
     } else {
-      area.innerHTML = `<button onclick="openLogin('Inicia sesión para ver tus sesiones')" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>`;
+      area.innerHTML = `<button id="navLoginBtn" style="background:none;border:1.5px solid var(--rose);padding:7px 20px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);cursor:pointer">Ingresar</button>`;
+      area.querySelector('#navLoginBtn').addEventListener('click', () => openLogin('Inicia sesión para ver tus sesiones'));
     }
   }
 
@@ -276,12 +277,32 @@
   let _modalId = null;
 
   function cerrarModal(which) {
-    document.getElementById('modalCancelar').classList.remove('active');
-    document.getElementById('modalReagendar').classList.remove('active');
+    if (!which || which === 'cancelar') document.getElementById('modalCancelar').classList.remove('active');
+    if (!which || which === 'reagendar') document.getElementById('modalReagendar').classList.remove('active');
     _modalId = null;
   }
   document.getElementById('modalCancelar').addEventListener('click', e => { if (e.target === e.currentTarget) cerrarModal(); });
   document.getElementById('modalReagendar').addEventListener('click', e => { if (e.target === e.currentTarget) cerrarModal(); });
+  document.getElementById('btnCerrarCancelar').addEventListener('click', () => cerrarModal('cancelar'));
+  document.getElementById('btnCerrarReagendar').addEventListener('click', () => cerrarModal('reagendar'));
+
+  document.getElementById('mainWrap').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const { action, id, servicio, fecha } = btn.dataset;
+    if (action === 'reagendar') abrirModalReagendar(id, servicio, fecha);
+    if (action === 'cancelar')  abrirModalCancelar(id, servicio, fecha);
+  });
+
+  document.getElementById('ragDias').addEventListener('click', e => {
+    const btn = e.target.closest('.rag-dia');
+    if (btn) selectReagendarDia(btn.dataset.date);
+  });
+
+  document.getElementById('ragSlots').addEventListener('click', e => {
+    const btn = e.target.closest('.rag-slot:not(.ocu)');
+    if (btn) selectReagendarSlot(btn.dataset.slot, btn.dataset.date);
+  });
 
   // ── Cancelar ──
   function abrirModalCancelar(id, servicio, fecha) {
@@ -404,7 +425,7 @@
       const dow = DIAS_ES[d.getDay()];
       const num = d.getDate();
       const mes = MESES_ES[d.getMonth()].slice(0,3);
-      return `<button class="rag-dia" onclick="selectReagendarDia('${ds}',this)" data-date="${ds}">
+      return `<button class="rag-dia" data-date="${ds}">
         <span class="rdow">${dow}</span>
         <span class="rnum">${num}</span>
         <span class="rdow">${mes}</span>
@@ -412,12 +433,12 @@
     }).join('');
   }
 
-  async function selectReagendarDia(ds, el) {
+  async function selectReagendarDia(ds) {
     _ragState.dia  = ds;
     _ragState.hora = null;
     _ragState.label = null;
     document.querySelectorAll('.rag-dia').forEach(b => b.classList.remove('sel'));
-    el.classList.add('sel');
+    document.querySelector(`.rag-dia[data-date="${ds}"]`)?.classList.add('sel');
 
     const horasWrap = document.getElementById('ragHorasWrap');
     const slotsEl  = document.getElementById('ragSlots');
@@ -445,20 +466,19 @@
       const ocu = ocupados.includes(h);
       const [hh, mm] = h.split(':');
       const label = `${hh}:${mm.padStart(2,'0')}`;
-      return `<button class="rag-slot${ocu?' ocu':''}" ${ocu?'disabled':''} onclick="selectReagendarSlot('${h}','${ds}',this)">${label}</button>`;
+      return `<button class="rag-slot${ocu?' ocu':''}" ${ocu?'disabled':''} data-slot="${h}" data-date="${ds}">${label}</button>`;
     }).join('');
   }
 
-  function selectReagendarSlot(hora, ds, el) {
+  function selectReagendarSlot(hora, ds) {
     _ragState.hora = hora;
     const date  = new Date(ds + 'T12:00:00');
     const [hh, mm] = hora.split(':').map(Number);
-    // Calcular hora fin
     const finMin = hh * 60 + mm + (AGENDA_R.duracion_sesion || 60);
     _ragState.horaFin = `${Math.floor(finMin/60)}:${(finMin%60).toString().padStart(2,'0')}`;
     _ragState.label = `${DIAS_ES[date.getDay()]} ${date.getDate()} de ${MESES_CAP[date.getMonth()]} · ${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
     document.querySelectorAll('.rag-slot').forEach(b => b.classList.remove('sel'));
-    el.classList.add('sel');
+    document.querySelector(`.rag-slot[data-slot="${hora}"][data-date="${ds}"]`)?.classList.add('sel');
     document.getElementById('ragNotaWrap').style.display = '';
     document.getElementById('modalReagendarBtn').disabled = false;
   }
@@ -496,7 +516,7 @@
           body.appendChild(info);
           const aviso = document.createElement('div');
           aviso.style.cssText = 'font-size:0.78rem;color:#b07800;margin-top:4px';
-          aviso.textContent = 'Majo confirmará tu nueva sesión pronto ✨';
+          aviso.innerHTML = 'Majo confirmará tu nueva sesión pronto ✨ — <a href="" onclick="location.reload();return false;" style="color:#b07800;text-decoration:underline">Actualizar página</a> para ver el estado final.';
           body.appendChild(aviso);
         }
       }
@@ -525,8 +545,9 @@
           <div class="big">🔒</div>
           <h2>Acceso <em style="font-style:italic;color:var(--rose)">privado</em></h2>
           <p>Inicia sesión con el correo con el que realizaste tu reserva<br>para ver tus sesiones agendadas.</p>
-          <button onclick="openLogin('Inicia sesión para ver tus sesiones')">Iniciar sesión →</button>
+          <button id="emptyLoginBtn">Iniciar sesión →</button>
         </div>`;
+      document.getElementById('emptyLoginBtn').addEventListener('click', () => openLogin('Inicia sesión para ver tus sesiones'));
       return;
     }
 
@@ -581,8 +602,9 @@
           <div class="big">😔</div>
           <h2>Algo salió mal</h2>
           <p>No pudimos cargar tus sesiones. Intenta de nuevo.</p>
-          <button onclick="location.reload()">Reintentar</button>
+          <button id="emptyReloadBtn">Reintentar</button>
         </div>`;
+      document.getElementById('emptyReloadBtn').addEventListener('click', () => location.reload());
     }
   }
 
@@ -630,8 +652,8 @@
     // Botones de acción
     const acciones = puedeAccionar ? `
       <div class="acciones-sesion">
-        <button class="btn-reagendar" onclick="abrirModalReagendar('${r.id}','${r.servicio_nombre.replace(/'/g,"\\'")}','${fechaStr}')">🔄 Reagendar</button>
-        <button class="btn-cancelar"  onclick="abrirModalCancelar('${r.id}','${r.servicio_nombre.replace(/'/g,"\\'")}','${fechaStr}')">Cancelar</button>
+        <button class="btn-reagendar" data-action="reagendar" data-id="${r.id}" data-servicio="${r.servicio_nombre.replace(/"/g,'&quot;')}" data-fecha="${fechaStr}">🔄 Reagendar</button>
+        <button class="btn-cancelar"  data-action="cancelar"  data-id="${r.id}" data-servicio="${r.servicio_nombre.replace(/"/g,'&quot;')}" data-fecha="${fechaStr}">Cancelar</button>
       </div>` : '';
 
     return `
