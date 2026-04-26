@@ -43,7 +43,23 @@
     .enc-titulo em { font-style: italic; color: var(--rose); }
     .enc-meta-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 28px; }
     .enc-badge { display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid var(--beige); padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; color: var(--muted); }
-    .enc-desc-full { font-size: 0.9rem; line-height: 1.9; color: var(--muted); white-space: pre-wrap; }
+    .enc-desc-full { font-size: 0.9rem; line-height: 1.9; color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+
+    /* ── Carrusel de fotos ── */
+    .enc-galeria { max-width: 900px; margin: 0 auto; padding: 0 64px 0; }
+    @media (max-width: 900px) { .enc-galeria { padding: 0 24px; } }
+    .enc-galeria-titulo { font-size: 0.65rem; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .carrusel { position: relative; border-radius: 16px; overflow: hidden; background: var(--beige); aspect-ratio: 16/7; }
+    .carrusel-track { display: flex; height: 100%; transition: transform 0.45s cubic-bezier(0.22,1,0.36,1); }
+    .carrusel-slide { flex-shrink: 0; width: 100%; height: 100%; }
+    .carrusel-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .carrusel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(250,245,240,0.85); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 2; color: var(--dark); }
+    .carrusel-btn:hover { background: white; }
+    .carrusel-prev { left: 12px; }
+    .carrusel-next { right: 12px; }
+    .carrusel-dots { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+    .carrusel-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--beige); border: none; cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s; }
+    .carrusel-dot.active { background: var(--rose); transform: scale(1.3); }
 
     /* Sidebar */
     .enc-sidebar { background: white; border-radius: 20px; padding: 28px; box-shadow: 0 4px 24px rgba(61,43,43,0.07); position: sticky; top: 100px; }
@@ -86,6 +102,7 @@
 </nav>
 
 <div id="heroArea"></div>
+<div class="enc-galeria" id="encGaleria" style="display:none;margin-bottom:0;padding-bottom:0"></div>
 
 <div class="enc-layout" id="encLayout" style="display:none">
   <div class="enc-main">
@@ -157,7 +174,48 @@
     `;
 
     renderSidebar(agotado);
+    renderGaleria(e.fotos);
     document.getElementById('encLayout').style.display = 'grid';
+  }
+
+  function renderGaleria(fotos) {
+    const el = document.getElementById('encGaleria');
+    if (!fotos || !fotos.length) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.style.paddingBottom = '32px';
+    el.innerHTML = `
+      <p class="enc-galeria-titulo">Galería</p>
+      <div class="carrusel" id="carrusel">
+        <div class="carrusel-track" id="carruselTrack">
+          ${fotos.map(url => `<div class="carrusel-slide"><img src="${url}" alt="foto"/></div>`).join('')}
+        </div>
+        ${fotos.length > 1 ? `
+          <button class="carrusel-btn carrusel-prev" onclick="moverCarrusel(-1)">‹</button>
+          <button class="carrusel-btn carrusel-next" onclick="moverCarrusel(1)">›</button>
+        ` : ''}
+      </div>
+      ${fotos.length > 1 ? `
+        <div class="carrusel-dots" id="carruselDots">
+          ${fotos.map((_,i) => `<button class="carrusel-dot${i===0?' active':''}" onclick="irSlide(${i})"></button>`).join('')}
+        </div>
+      ` : ''}`;
+    _slideActual = 0;
+  }
+
+  let _slideActual = 0;
+  window.moverCarrusel = function(dir) {
+    const fotos = _encuentro?.fotos || [];
+    _slideActual = (_slideActual + dir + fotos.length) % fotos.length;
+    _actualizarCarrusel();
+  };
+  window.irSlide = function(i) {
+    _slideActual = i;
+    _actualizarCarrusel();
+  };
+  function _actualizarCarrusel() {
+    const track = document.getElementById('carruselTrack');
+    if (track) track.style.transform = `translateX(-${_slideActual * 100}%)`;
+    document.querySelectorAll('.carrusel-dot').forEach((d, i) => d.classList.toggle('active', i === _slideActual));
   }
 
   function renderSidebar(agotado) {

@@ -762,6 +762,23 @@
               </div>
             </div>
 
+            <!-- Fotos galería -->
+            <div class="field" style="grid-column:1/-1">
+              <label>Fotos de galería <span style="text-transform:none;letter-spacing:0;font-weight:300">(aparecen como carrusel en la página del encuentro)</span></label>
+              <div id="encFotosList" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px"></div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <label style="display:inline-flex;align-items:center;gap:8px;background:var(--beige);color:var(--dark);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:0.82rem;border:1.5px solid var(--beige);transition:border-color 0.2s" onmouseenter="this.style.borderColor='var(--rose)'" onmouseleave="this.style.borderColor='var(--beige)'">
+                  📷 Agregar foto
+                  <input type="file" id="encFotoFile" accept="image/*" multiple style="display:none" onchange="agregarFotosEnc(this)"/>
+                </label>
+                <span style="font-size:0.72rem;color:var(--muted)">o</span>
+                <div style="display:flex;gap:8px;flex:1;min-width:160px">
+                  <input type="text" id="encFotoUrl" placeholder="Pegar URL de foto…" style="flex:1"/>
+                  <button type="button" onclick="agregarFotoUrlEnc()" style="background:var(--beige);border:1.5px solid var(--beige);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:0.82rem;color:var(--dark);white-space:nowrap" onmouseenter="this.style.borderColor='var(--rose)'" onmouseleave="this.style.borderColor='var(--beige)'">+ Agregar</button>
+                </div>
+              </div>
+            </div>
+
             <!-- Visible -->
             <div class="field" style="grid-column:1/-1;margin-bottom:0">
               <label>Visibilidad</label>
@@ -2721,6 +2738,9 @@
     document.getElementById('encImagenFile').value = '';
     document.getElementById('encImagenFileName').textContent = 'Ningún archivo seleccionado';
     document.getElementById('encFormMsg').className = 'msg-banner';
+    // Cargar fotos galería
+    _encFotos = Array.isArray(enc?.fotos) ? [...enc.fotos] : [];
+    renderEncFotos();
     if (enc?.imagen) {
       document.getElementById('encImgPreviewImg').src = enc.imagen;
       document.getElementById('encImgPreview').style.display = 'block';
@@ -2733,6 +2753,49 @@
 
   window.cerrarEncuentroForm = function() {
     document.getElementById('encuentroForm').style.display = 'none';
+  };
+
+  // ── Fotos galería ──────────────────────────────────────
+  let _encFotos = [];
+
+  function renderEncFotos() {
+    const el = document.getElementById('encFotosList');
+    if (!el) return;
+    if (!_encFotos.length) { el.innerHTML = '<span style="font-size:0.78rem;color:var(--muted)">Sin fotos aún</span>'; return; }
+    el.innerHTML = _encFotos.map((url, i) => `
+      <div style="position:relative;width:90px;height:68px;flex-shrink:0">
+        <img src="${url}" style="width:90px;height:68px;object-fit:cover;border-radius:8px;border:1.5px solid var(--beige);display:block"/>
+        <button onclick="quitarFotoEnc(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--rose);color:white;border:none;cursor:pointer;font-size:0.65rem;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+      </div>`).join('');
+  }
+
+  window.agregarFotosEnc = async function(input) {
+    const files = Array.from(input.files);
+    if (!files.length) return;
+    const btn = input.closest('label');
+    btn.style.opacity = '0.6';
+    try {
+      for (const file of files) {
+        const url = await uploadFile(file, 'encuentros/galeria');
+        _encFotos.push(url);
+      }
+      renderEncFotos();
+    } catch(e) { showEncMsg('Error subiendo foto: ' + e.message, 'err'); }
+    finally { btn.style.opacity = '1'; input.value = ''; }
+  };
+
+  window.agregarFotoUrlEnc = function() {
+    const inp = document.getElementById('encFotoUrl');
+    const url = inp.value.trim();
+    if (!url) return;
+    _encFotos.push(url);
+    inp.value = '';
+    renderEncFotos();
+  };
+
+  window.quitarFotoEnc = function(i) {
+    _encFotos.splice(i, 1);
+    renderEncFotos();
   };
 
   // Imagen preview helpers
@@ -2806,6 +2869,7 @@
         precio:      parseFloat(document.getElementById('encPrecio').value) || 0,
         cupo_maximo: parseInt(document.getElementById('encCupo').value) || null,
         imagen:      imagenUrl,
+        fotos:       _encFotos,
         activo:      document.getElementById('encActivo').checked
       };
 
