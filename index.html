@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <script src="js/config.js"></script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co https://script.google.com https://script.googleusercontent.com; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Energía Holística Majo — María José Toro</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
@@ -2065,6 +2065,8 @@
     const elTimes    = document.getElementById('bkTimes');
     const elSummary  = document.getElementById('bkSummary');
     let SLOTS_OCUPADOS = [];
+    let GCAL_BUSY = []; // eventos del calendario de Cote para el día seleccionado
+    const GCAL_URL = 'https://script.google.com/macros/s/AKfycby8kvLEmtLpPK-QiSFYwi1ld7kb0o7WhWeQn1oDUW7z9ciDmWG3cLSIdEChPsCAlIea/exec';
 
     // Render services (llamado dinámicamente desde buildBookingServices)
 
@@ -2218,13 +2220,28 @@
     }
 
     // Renderiza los horarios generados automáticamente
+    function slotOcupadoEnGcal(t) {
+      if (!GCAL_BUSY.length) return false;
+      const durMin = AGENDA.duracion_sesion || 60;
+      const [sh, sm] = t.split(':').map(Number);
+      const slotStart = sh * 60 + sm;
+      const slotEnd   = slotStart + durMin;
+      return GCAL_BUSY.some(ev => {
+        const [eh, em] = (ev.hora_inicio || '00:00').split(':').map(Number);
+        const [fh, fm] = (ev.hora_fin   || '23:59').split(':').map(Number);
+        const evStart  = eh * 60 + em;
+        const evEnd    = fh * 60 + fm;
+        return slotStart < evEnd && slotEnd > evStart;
+      });
+    }
+
     function renderTimes() {
       elTimes.innerHTML = '';
       const conf    = state.day !== null ? getModalidadConfig(days[state.day]) : null;
       const isMixta = conf?.modalidad === 'mixta';
       generarHorarios().forEach(t => {
         const el = document.createElement('div');
-        const ocupado = SLOTS_OCUPADOS.includes(t);
+        const ocupado = SLOTS_OCUPADOS.includes(t) || slotOcupadoEnGcal(t);
         el.className = 'bk-time' + (ocupado ? ' occupied' : '');
         el.dataset.time = t;
         if (ocupado) {
@@ -2313,19 +2330,31 @@
       [...elDays.children].forEach((c, i) => c.classList.toggle('selected', i === idx));
       state.time = null;
       SLOTS_OCUPADOS = [];
+      GCAL_BUSY = [];
       // Horario propio del día de la semana (ej: sábado con horario reducido)
       const dow = days[idx].getDay(); // 0=dom,1=lun,...,6=sáb
       AGENDA_DIA_OVERRIDE = (AGENDA.horarios_por_dia || {})[String(dow)] || null;
       // Verificar restricción de modalidad (semana tiene prioridad sobre día-de-semana)
       showModalidadAlerta(getModalidadConfig(days[idx]));
-      // Cargar slots ocupados desde Supabase
-      try {
-        const d = days[idx];
-        const fecha = d.toISOString().slice(0, 10);
-        const res = await sbFetch(`/reservas?fecha=eq.${fecha}&estado=neq.cancelada&select=hora_inicio`);
-        const rows = await res.json();
-        SLOTS_OCUPADOS = (rows || []).map(r => r.hora_inicio);
-      } catch(e) { SLOTS_OCUPADOS = []; }
+      const d = days[idx];
+      const fecha = d.toISOString().slice(0, 10);
+      // Cargar slots ocupados desde Supabase y calendario en paralelo
+      await Promise.all([
+        (async () => {
+          try {
+            const res = await sbFetch(`/reservas?fecha=eq.${fecha}&estado=neq.cancelada&select=hora_inicio`);
+            const rows = await res.json();
+            SLOTS_OCUPADOS = (rows || []).map(r => r.hora_inicio);
+          } catch(e) { SLOTS_OCUPADOS = []; }
+        })(),
+        (async () => {
+          try {
+            const res = await fetch(`${GCAL_URL}?start=${fecha}&end=${fecha}`);
+            const data = await res.json();
+            GCAL_BUSY = (data || []).filter(e => e.fecha === fecha);
+          } catch(e) { GCAL_BUSY = []; }
+        })()
+      ]);
       renderTimes();
       updateSummary();
       setTimeout(() => scrollToStep('step4'), 200);
@@ -2463,6 +2492,7 @@
       // Resetear estado
       state.service = null; state.modality = null; state.day = null; state.time = null;
       SLOTS_OCUPADOS = [];
+      GCAL_BUSY = [];
       document.getElementById('bkSuccess').style.display = 'none';
       document.getElementById('stepSummary').style.display = 'block';
       document.getElementById('bkClientForm').style.display = 'none';
