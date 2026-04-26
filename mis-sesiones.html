@@ -31,7 +31,7 @@
     .nav-logo-sub  { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); }
     .nav-back { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
     .nav-back:hover { color: var(--rose); }
-    @media (max-width: 900px) { nav { padding: 18px 24px; } }
+    @media (max-width: 900px) { nav { padding: 18px 24px; } .nav-back { display: none; } }
 
     /* HEADER */
     .page-header { padding: 160px 64px 60px; background: linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%); }
@@ -128,6 +128,11 @@
     }
     .btn-reagendar:hover { background: #fff3e0; }
     .acciones-sesion { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    @media (max-width: 580px) {
+      .sesion-card { flex-wrap: wrap; padding: 18px 18px; gap: 12px; }
+      .acciones-sesion { flex-basis: 100%; flex-direction: row; gap: 8px; }
+      .btn-reagendar, .btn-cancelar { flex: 1; text-align: center; }
+    }
 
     /* MODALES */
     .modal-overlay {
