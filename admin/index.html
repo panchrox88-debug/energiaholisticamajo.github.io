@@ -683,61 +683,99 @@
         <div id="encuentrosList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
 
         <!-- Formulario encuentro -->
-        <div id="encuentroForm" style="display:none;background:white;border-radius:16px;padding:28px;margin-top:24px;box-shadow:0 2px 16px rgba(61,43,43,0.08)">
-          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:300;margin-bottom:20px" id="encFormTitle">Nuevo encuentro</h3>
+        <div id="encuentroForm" style="display:none;background:var(--white);border-radius:14px;padding:24px;margin-top:20px;border:1.5px solid var(--beige)">
+          <h3 class="modal-title" id="encFormTitle">Nuevo encuentro</h3>
           <input type="hidden" id="encId"/>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group" style="grid-column:1/-1">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px">
+
+            <!-- Título -->
+            <div class="field" style="grid-column:1/-1">
               <label>Título *</label>
-              <input type="text" id="encTitulo" class="form-control" placeholder="Ej: Círculo de Mujeres · Luna Llena"/>
+              <input type="text" id="encTitulo" placeholder="Ej: Círculo de Mujeres · Luna Llena"/>
             </div>
-            <div class="form-group" style="grid-column:1/-1">
-              <label>Motivo / Tema</label>
-              <input type="text" id="encMotivo" class="form-control" placeholder="Ej: Sanación femenina"/>
+
+            <!-- Motivo -->
+            <div class="field" style="grid-column:1/-1">
+              <label>Motivo / Tema <span style="text-transform:none;letter-spacing:0;font-weight:300">(etiqueta que aparece sobre el título en el sitio)</span></label>
+              <input type="text" id="encMotivo" placeholder="Ej: Sanación femenina"/>
             </div>
-            <div class="form-group" style="grid-column:1/-1">
+
+            <!-- Descripción -->
+            <div class="field" style="grid-column:1/-1">
               <label>Descripción</label>
-              <textarea id="encDesc" class="form-control" rows="4" placeholder="Describe el encuentro…" style="resize:vertical"></textarea>
+              <textarea id="encDesc" rows="5" placeholder="Describe el encuentro, qué vivirán las participantes, qué incluye…"></textarea>
             </div>
-            <div class="form-group">
+
+            <!-- Fecha + Modalidad -->
+            <div class="field">
               <label>Fecha *</label>
-              <input type="date" id="encFecha" class="form-control"/>
+              <input type="date" id="encFecha"/>
             </div>
-            <div class="form-group">
+            <div class="field">
               <label>Modalidad</label>
-              <select id="encModalidad" class="form-control">
+              <select id="encModalidad">
                 <option value="presencial">Presencial</option>
                 <option value="online">Online</option>
               </select>
             </div>
-            <div class="form-group">
+
+            <!-- Horas -->
+            <div class="field">
               <label>Hora inicio *</label>
-              <input type="time" id="encHoraInicio" class="form-control"/>
+              <input type="time" id="encHoraInicio"/>
             </div>
-            <div class="form-group">
+            <div class="field">
               <label>Hora fin *</label>
-              <input type="time" id="encHoraFin" class="form-control"/>
+              <input type="time" id="encHoraFin"/>
             </div>
-            <div class="form-group">
-              <label>Precio (CLP)</label>
-              <input type="number" id="encPrecio" class="form-control" placeholder="0 = Gratuito" min="0"/>
+
+            <!-- Precio + Cupo -->
+            <div class="field">
+              <label>Precio CLP <span style="text-transform:none;letter-spacing:0;font-weight:300">(0 = Gratuito)</span></label>
+              <input type="number" id="encPrecio" placeholder="0" min="0" step="100"/>
             </div>
-            <div class="form-group">
-              <label>Cupo máximo (vacío = ilimitado)</label>
-              <input type="number" id="encCupo" class="form-control" placeholder="Ej: 15" min="1"/>
+            <div class="field">
+              <label>Cupo máximo <span style="text-transform:none;letter-spacing:0;font-weight:300">(vacío = sin límite)</span></label>
+              <input type="number" id="encCupo" placeholder="Ej: 15" min="1"/>
             </div>
-            <div class="form-group" style="grid-column:1/-1">
-              <label>Imagen (URL)</label>
-              <input type="text" id="encImagen" class="form-control" placeholder="https://…"/>
+
+            <!-- Imagen -->
+            <div class="field" style="grid-column:1/-1">
+              <label>Imagen de portada</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+                <div>
+                  <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Desde tu equipo</div>
+                  <label style="display:inline-flex;align-items:center;gap:8px;background:var(--beige);color:var(--dark);padding:9px 16px;border-radius:10px;cursor:pointer;font-size:0.85rem;border:1.5px solid var(--beige);transition:border-color 0.2s;width:100%;box-sizing:border-box" onmouseenter="this.style.borderColor='var(--rose)'" onmouseleave="this.style.borderColor='var(--beige)'">
+                    📁 Elegir archivo
+                    <input type="file" id="encImagenFile" accept="image/*" style="display:none" onchange="previewEncImg(this)"/>
+                  </label>
+                  <div style="font-size:0.72rem;color:var(--muted);margin-top:5px" id="encImagenFileName">Ningún archivo seleccionado</div>
+                </div>
+                <div>
+                  <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">O pegar URL</div>
+                  <input type="text" id="encImagen" placeholder="https://…" oninput="previewEncUrl(this.value)"/>
+                </div>
+              </div>
+              <div id="encImgPreview" style="display:none;position:relative;width:fit-content">
+                <img id="encImgPreviewImg" src="" alt="preview" style="max-width:240px;height:120px;border-radius:10px;object-fit:cover;border:1.5px solid var(--beige);display:block"/>
+                <button onclick="limpiarEncImg()" style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:var(--rose);color:white;border:none;cursor:pointer;font-size:0.7rem;line-height:1">✕</button>
+              </div>
             </div>
-            <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:10px">
-              <input type="checkbox" id="encActivo" checked style="width:16px;height:16px;accent-color:var(--rose)"/>
-              <label for="encActivo" style="margin:0;cursor:pointer">Visible en el sitio</label>
+
+            <!-- Visible -->
+            <div class="field" style="grid-column:1/-1;margin-bottom:0">
+              <label>Visibilidad</label>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--beige);border-radius:10px;background:var(--cream)">
+                <input type="checkbox" id="encActivo" checked style="width:16px;height:16px;accent-color:var(--rose);flex-shrink:0;cursor:pointer"/>
+                <label for="encActivo" style="margin:0;cursor:pointer;font-size:0.85rem;color:var(--dark);text-transform:none;letter-spacing:0;font-weight:300">Visible en el sitio (desmarca para ocultarlo sin eliminarlo)</label>
+              </div>
             </div>
+
           </div>
-          <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
-            <button class="btn btn-primary" onclick="guardarEncuentro()">Guardar</button>
-            <button class="btn" onclick="cerrarEncuentroForm()">Cancelar</button>
+          <div id="encFormMsg" class="msg-banner" style="margin-top:16px"></div>
+          <div class="modal-footer" style="justify-content:flex-start">
+            <button class="btn btn-primary" onclick="guardarEncuentro()" id="btnGuardarEnc">Guardar encuentro</button>
+            <button class="btn btn-ghost" onclick="cerrarEncuentroForm()">Cancelar</button>
           </div>
         </div>
       </div>
@@ -2679,6 +2717,16 @@
     document.getElementById('encCupo').value         = enc?.cupo_maximo ?? '';
     document.getElementById('encImagen').value       = enc?.imagen || '';
     document.getElementById('encActivo').checked     = enc ? enc.activo !== false : true;
+    // Reset imagen file input y preview
+    document.getElementById('encImagenFile').value = '';
+    document.getElementById('encImagenFileName').textContent = 'Ningún archivo seleccionado';
+    document.getElementById('encFormMsg').className = 'msg-banner';
+    if (enc?.imagen) {
+      document.getElementById('encImgPreviewImg').src = enc.imagen;
+      document.getElementById('encImgPreview').style.display = 'block';
+    } else {
+      document.getElementById('encImgPreview').style.display = 'none';
+    }
     form.style.display = 'block';
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -2687,45 +2735,99 @@
     document.getElementById('encuentroForm').style.display = 'none';
   };
 
+  // Imagen preview helpers
+  window.previewEncImg = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('encImagenFileName').textContent = file.name;
+    document.getElementById('encImagen').value = ''; // limpiar URL si se elige archivo
+    const url = URL.createObjectURL(file);
+    _showEncPreview(url);
+  };
+  window.previewEncUrl = function(url) {
+    document.getElementById('encImagenFile').value = '';
+    document.getElementById('encImagenFileName').textContent = 'Ningún archivo seleccionado';
+    if (url) _showEncPreview(url); else _hideEncPreview();
+  };
+  function _showEncPreview(url) {
+    document.getElementById('encImgPreviewImg').src = url;
+    document.getElementById('encImgPreview').style.display = 'block';
+  }
+  function _hideEncPreview() {
+    document.getElementById('encImgPreview').style.display = 'none';
+    document.getElementById('encImgPreviewImg').src = '';
+  }
+  window.limpiarEncImg = function() {
+    document.getElementById('encImagen').value = '';
+    document.getElementById('encImagenFile').value = '';
+    document.getElementById('encImagenFileName').textContent = 'Ningún archivo seleccionado';
+    _hideEncPreview();
+  };
+
+  function showEncMsg(text, type = 'ok') {
+    const el = document.getElementById('encFormMsg');
+    el.textContent = text;
+    el.className = 'msg-banner ' + type;
+    if (type === 'ok') setTimeout(() => el.className = 'msg-banner', 4000);
+  }
+
   window.guardarEncuentro = async function() {
     const id         = document.getElementById('encId').value;
     const titulo     = document.getElementById('encTitulo').value.trim();
     const fecha      = document.getElementById('encFecha').value;
     const horaInicio = document.getElementById('encHoraInicio').value;
     const horaFin    = document.getElementById('encHoraFin').value;
-    if (!titulo || !fecha || !horaInicio || !horaFin) { showMsg('encuentrosMsg', 'Completa los campos obligatorios (*)','err'); return; }
+    if (!titulo || !fecha || !horaInicio || !horaFin) {
+      showEncMsg('Completa los campos obligatorios: Título, Fecha, Hora inicio y Hora fin.', 'err');
+      return;
+    }
 
-    const payload = {
-      titulo,
-      motivo:      document.getElementById('encMotivo').value.trim() || null,
-      descripcion: document.getElementById('encDesc').value.trim() || null,
-      fecha,
-      hora_inicio: horaInicio,
-      hora_fin:    horaFin,
-      modalidad:   document.getElementById('encModalidad').value,
-      precio:      parseFloat(document.getElementById('encPrecio').value) || 0,
-      cupo_maximo: parseInt(document.getElementById('encCupo').value) || null,
-      imagen:      document.getElementById('encImagen').value.trim() || null,
-      activo:      document.getElementById('encActivo').checked
-    };
+    const btn = document.getElementById('btnGuardarEnc');
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
 
     try {
+      // Subir imagen si se eligió archivo
+      let imagenUrl = document.getElementById('encImagen').value.trim() || null;
+      const fileInput = document.getElementById('encImagenFile');
+      if (fileInput.files[0]) {
+        showEncMsg('Subiendo imagen…');
+        imagenUrl = await uploadFile(fileInput.files[0], 'encuentros');
+      }
+
+      const payload = {
+        titulo,
+        motivo:      document.getElementById('encMotivo').value.trim() || null,
+        descripcion: document.getElementById('encDesc').value.trim() || null,
+        fecha,
+        hora_inicio: horaInicio,
+        hora_fin:    horaFin,
+        modalidad:   document.getElementById('encModalidad').value,
+        precio:      parseFloat(document.getElementById('encPrecio').value) || 0,
+        cupo_maximo: parseInt(document.getElementById('encCupo').value) || null,
+        imagen:      imagenUrl,
+        activo:      document.getElementById('encActivo').checked
+      };
+
       if (id) {
         await sbPatch(`/encuentros?id=eq.${id}`, payload);
       } else {
-        await fetch(`${SB_URL}/rest/v1/encuentros`, {
-          method: 'POST',
-          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + _adminToken, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify(payload)
-        });
+        await sbPost('/encuentros', payload);
       }
       showMsg('encuentrosMsg', id ? 'Encuentro actualizado ✓' : 'Encuentro creado ✓');
       cerrarEncuentroForm();
       loadEncuentrosAdmin();
-    } catch(e) { showMsg('encuentrosMsg', 'Error al guardar', 'err'); }
+    } catch(e) {
+      console.error('guardarEncuentro error:', e);
+      showEncMsg('Error: ' + (e.message || 'No se pudo guardar. Revisa la consola para más detalles.'), 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar encuentro';
+    }
   };
 
   async function loadEncuentrosAdmin() {
+    _encuentrosCache = []; // limpiar caché para que editarEncuentro recargue datos frescos
     const list = document.getElementById('encuentrosList');
     list.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando…</div>';
     try {
@@ -2777,7 +2879,7 @@
   window.eliminarEncuentro = async function(id) {
     if (!confirm('¿Eliminar este encuentro? También se eliminarán sus inscripciones.')) return;
     try {
-      await fetch(`${SB_URL}/rest/v1/encuentros?id=eq.${id}`, { method: 'DELETE', headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + _adminToken } });
+      await sbDelete(`/encuentros?id=eq.${id}`);
       showMsg('encuentrosMsg', 'Encuentro eliminado');
       loadEncuentrosAdmin();
     } catch(e) { showMsg('encuentrosMsg', 'Error al eliminar', 'err'); }
