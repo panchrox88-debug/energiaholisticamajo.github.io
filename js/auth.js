@@ -57,6 +57,11 @@
             style="width:100%;padding:11px;background:transparent;color:#7a5c5c;border:1.5px solid #ede0d4;border-radius:40px;font-family:'Nunito',sans-serif;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer">
             Enviar enlace mágico
           </button>
+          <p style="text-align:center;margin-top:12px">
+            <button onclick="doResetPassword()" style="background:none;border:none;color:#b0948e;font-family:'Nunito',sans-serif;font-size:0.75rem;cursor:pointer;text-decoration:underline;letter-spacing:0.05em">
+              ¿Olvidaste tu contraseña?
+            </button>
+          </p>
         </div>
 
         <div id="authFormReg" style="display:none">
@@ -97,6 +102,21 @@
       });
       const rows = await res.json();
       _perfil = Array.isArray(rows) ? (rows[0] || null) : null;
+
+      // Si no existe perfil, crearlo automáticamente
+      if (!_perfil && _user) {
+        const nombre = _user.user_metadata?.nombre || _user.email?.split('@')[0] || 'Usuario';
+        try {
+          const ins = await fetch(`${SB_URL}/rest/v1/perfiles`, {
+            method: 'POST',
+            headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token,
+                       'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify({ id: userId, nombre, email: _user.email, rol: 'cliente' })
+          });
+          if (ins.ok) { const r = await ins.json(); _perfil = Array.isArray(r) ? (r[0] || null) : null; }
+        } catch(_) {}
+      }
+
       // Si la cuenta está bloqueada, cerrar sesión
       if (_perfil?.bloqueado) {
         _perfil = null;
@@ -138,6 +158,17 @@
     if (msg) msg.textContent = '';
   };
 
+  function _errEs(msg) {
+    if (!msg) return 'Error desconocido. Intenta de nuevo.';
+    if (msg.includes('Invalid') || msg.includes('credentials'))   return 'Correo o contraseña incorrectos.';
+    if (msg.includes('confirmed') || msg.includes('verify'))      return 'Confirma tu correo antes de ingresar. Revisa tu bandeja de entrada.';
+    if (msg.includes('Too many') || msg.includes('rate'))         return 'Demasiados intentos. Espera unos minutos.';
+    if (msg.includes('already registered') || msg.includes('already exists')) return 'Este correo ya tiene una cuenta. Intenta ingresar.';
+    if (msg.includes('valid email') || msg.includes('invalid email')) return 'Ingresa un correo válido.';
+    if (msg.includes('Password') || msg.includes('password'))     return 'La contraseña debe tener al menos 6 caracteres.';
+    return msg;
+  }
+
   window.doLogin = async function () {
     const email = (document.getElementById('authEmail')?.value || '').trim();
     const pass  =  document.getElementById('authPass')?.value || '';
@@ -145,14 +176,17 @@
     const msg   =  document.getElementById('authMsg');
     if (!email || !pass) { _setMsg(msg, 'Completa todos los campos.', 'err'); return; }
     btn.textContent = 'Ingresando…'; btn.disabled = true;
-    const { error } = await _sb.auth.signInWithPassword({ email, password: pass });
-    if (error) {
-      _setMsg(msg, error.message.includes('Invalid') ? 'Correo o contraseña incorrectos.' : error.message, 'err');
-      btn.textContent = 'Ingresar →'; btn.disabled = false;
-    } else {
-      _setMsg(msg, '¡Bienvenida! Cargando…', 'ok');
-      setTimeout(closeLogin, 1200);
-    }
+    try {
+      const { error } = await _sb.auth.signInWithPassword({ email, password: pass });
+      if (error) {
+        _setMsg(msg, _errEs(error.message), 'err');
+      } else {
+        _setMsg(msg, '¡Bienvenida! Cargando…', 'ok');
+        setTimeout(closeLogin, 1200);
+        return; // no re-habilitar botón — modal se cierra
+      }
+    } catch(_) { _setMsg(msg, 'Error de conexión. Intenta de nuevo.', 'err'); }
+    btn.textContent = 'Ingresar →'; btn.disabled = false;
   };
 
   window.doRegister = async function () {
@@ -164,14 +198,32 @@
     if (!nombre || !email || !pass) { _setMsg(msg, 'Completa todos los campos.', 'err'); return; }
     if (pass.length < 6) { _setMsg(msg, 'La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
     btn.textContent = 'Creando cuenta…'; btn.disabled = true;
-    const { error } = await _sb.auth.signUp({ email, password: pass, options: { data: { nombre } } });
-    if (error) {
-      _setMsg(msg, error.message, 'err');
-      btn.textContent = 'Crear cuenta →'; btn.disabled = false;
-    } else {
-      _setMsg(msg, '¡Bienvenida! Cargando…', 'ok');
-      setTimeout(() => closeLogin(), 1200);
-    }
+    try {
+      const { data, error } = await _sb.auth.signUp({ email, password: pass, options: { data: { nombre } } });
+      if (error) {
+        _setMsg(msg, _errEs(error.message), 'err');
+      } else if (!data.session) {
+        // Supabase exige confirmación de correo — el usuario AÚN no está logueado
+        _setMsg(msg, '¡Cuenta creada! Revisa tu correo y confirma para poder ingresar ✉️', 'ok');
+        return;
+      } else {
+        // Confirmación de email desactivada — sesión inmediata
+        _setMsg(msg, '¡Bienvenida! Cargando…', 'ok');
+        setTimeout(closeLogin, 1200);
+        return;
+      }
+    } catch(_) { _setMsg(msg, 'Error de conexión. Intenta de nuevo.', 'err'); }
+    btn.textContent = 'Crear cuenta →'; btn.disabled = false;
+  };
+
+  window.doResetPassword = async function () {
+    const email = (document.getElementById('authEmail')?.value || '').trim();
+    const msg   =  document.getElementById('authMsg');
+    if (!email) { _setMsg(msg, 'Ingresa tu correo primero.', 'err'); return; }
+    const { error } = await _sb.auth.resetPasswordForEmail(email, {
+      redirectTo: location.origin + '/index.html'
+    });
+    _setMsg(msg, error ? 'No pudimos enviar el enlace. Intenta de nuevo.' : '¡Enlace enviado! Revisa tu correo para restablecer tu contraseña.', error ? 'err' : 'ok');
   };
 
   window.doMagicLink = async function () {
