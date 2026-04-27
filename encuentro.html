@@ -73,6 +73,7 @@
     .form-field label { display: block; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
     .form-field input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--beige); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.88rem; color: var(--dark); background: var(--cream); outline: none; transition: border-color 0.2s; }
     .form-field input:focus { border-color: var(--rose-lt); }
+    .form-field input[readonly] { background: white; color: var(--muted); cursor: default; }
 
     .btn-inscribir { width: 100%; padding: 14px; background: var(--rose); color: white; border: none; border-radius: 30px; font-family: 'Nunito', sans-serif; font-size: 0.82rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-top: 6px; }
     .btn-inscribir:hover:not(:disabled) { background: var(--dark); }
@@ -261,6 +262,23 @@
       return;
     }
 
+    const esPago = e.precio > 0;
+
+    // Gate de auth para encuentros de pago
+    if (esPago && !_bkUser) {
+      document.getElementById('encSidebar').innerHTML = `
+        ${precioHTML}${cupoBar}
+        <div style="text-align:center;padding:24px 8px">
+          <p style="font-size:0.88rem;color:var(--dark);margin-bottom:6px">Para inscribirte necesitas iniciar sesión</p>
+          <p style="font-size:0.78rem;color:var(--muted);margin-bottom:18px">Así podrás ver tus inscripciones fácilmente 🌸</p>
+          <button onclick="openLogin('Inicia sesión para inscribirte')"
+            style="background:var(--rose);color:white;border:none;border-radius:20px;padding:10px 28px;font-family:'Nunito',sans-serif;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer">
+            Iniciar sesión →
+          </button>
+        </div>`;
+      return;
+    }
+
     document.getElementById('encSidebar').innerHTML = `
       ${precioHTML}${cupoBar}
       <div id="formInscripcion">
@@ -273,21 +291,23 @@
           <input type="email" id="insEmail" placeholder="tu@email.com" autocomplete="email"/>
         </div>
         <div class="form-field">
-          <label>Teléfono</label>
+          <label>Confirma tu número de teléfono</label>
           <input type="tel" id="insTelefono" placeholder="+56 9 1234 5678" autocomplete="tel"/>
         </div>
         <div id="formMsg" class="form-msg"></div>
         <button class="btn-inscribir" id="btnInscribir" onclick="inscribirse()">Inscribirme →</button>
       </div>`;
 
-    // Pre-llenar si está logueada
+    // Pre-llenar y bloquear campos desde el perfil
     if (_bkUser) {
-      const n = document.getElementById('insNombre');
+      const n  = document.getElementById('insNombre');
       const em = document.getElementById('insEmail');
       const t  = document.getElementById('insTelefono');
-      if (!n.value)  n.value  = _bkPerfil?.nombre || _bkUser.user_metadata?.nombre || '';
-      if (!em.value) em.value = _bkUser.email || '';
-      if (!t.value)  t.value  = _bkPerfil?.telefono || '';
+      n.value  = _bkPerfil?.nombre || _bkUser.user_metadata?.full_name || _bkUser.user_metadata?.nombre || '';
+      n.readOnly = !!n.value;
+      em.value = _bkUser.email || '';
+      em.readOnly = true;
+      if (!t.value) t.value = _bkPerfil?.telefono || '';
     }
   }
 
@@ -386,15 +406,8 @@
     updateNavAuth(user, perfil);
     _bkUser   = user;
     _bkPerfil = perfil;
-    // Pre-fill form if ya estaba renderizado antes de que cargara auth
-    if (user) {
-      const n  = document.getElementById('insNombre');
-      const em = document.getElementById('insEmail');
-      const t  = document.getElementById('insTelefono');
-      if (n  && !n.value)  n.value  = perfil?.nombre || user.user_metadata?.nombre || '';
-      if (em && !em.value) em.value = user.email || '';
-      if (t  && !t.value)  t.value  = perfil?.telefono || '';
-    }
+    // Si hay un encuentro de pago cargado, re-renderizar sidebar con el nuevo estado de auth
+    if (_encuentro) renderEncuentro(_encuentro);
   });
 </script>
 </body>
