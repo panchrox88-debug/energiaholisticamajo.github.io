@@ -1463,15 +1463,30 @@
            </div>`
         : '';
 
+      const waLink = (() => {
+        if (!r.telefono_cliente) return null;
+        let tel = r.telefono_cliente.replace(/\D/g, '');
+        if (tel.startsWith('0')) tel = tel.slice(1);
+        if (!tel.startsWith('56')) tel = '56' + tel;
+        const msg = `Hola ${r.nombre_cliente} 🌸, te recuerdo que tienes tu sesión de *${r.servicio_nombre}* el *${fecha}* a las *${r.hora_inicio} hrs*.\n\n¡Te espero! 💫\n— Majo, Energía Holística`;
+        return `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+      })();
+
+      const waBtnHtml = waLink
+        ? `<a href="${waLink}" target="_blank" class="btn" style="font-size:.72rem;padding:6px 12px;background:#25d366;color:white;text-decoration:none;text-align:center;white-space:nowrap">📲 WhatsApp</a>`
+        : '';
+
       const acciones = mode === 'reagendar'
         ? `<div class="card-actions" style="display:flex;flex-direction:column;gap:6px">
              <button class="btn btn-green" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
                onclick="window._confirmarReserva('${r.id}')">✓ Confirmar</button>
+             ${waBtnHtml}
              <button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px"
                onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
            </div>`
         : mode === 'proxima'
-          ? `<div class="card-actions">
+          ? `<div class="card-actions" style="display:flex;flex-direction:column;gap:6px">
+               ${waBtnHtml}
                <button class="btn btn-danger" style="font-size:.75rem;padding:6px 12px"
                  onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
              </div>`
