@@ -1047,6 +1047,7 @@
       transition: border 0.2s;
     }
     .bk-field input:focus { border-color: var(--rose); }
+    .bk-field input[readonly] { background: var(--cream); color: var(--muted); cursor: default; }
     .bk-form-msg {
       padding: 10px 14px; border-radius: 10px;
       font-size: 0.8rem; margin-bottom: 12px;
@@ -1841,6 +1842,16 @@
         <div class="bk-summary-details" id="bkSummary">
           <span class="bk-summary-empty">Completa los pasos para agendar tu sesión ✨</span>
         </div>
+        <!-- Prompt de login (se muestra si no hay sesión) -->
+        <div id="bkLoginPrompt" style="display:none;text-align:center;padding:24px 8px">
+          <p style="font-size:0.88rem;color:var(--dark);margin-bottom:6px">Para reservar necesitas iniciar sesión</p>
+          <p style="font-size:0.78rem;color:var(--muted);margin-bottom:18px">Así podrás ver y gestionar tus sesiones fácilmente 🌸</p>
+          <button type="button" onclick="openLogin('Inicia sesión para completar tu reserva')"
+            style="background:var(--rose);color:white;border:none;border-radius:20px;padding:10px 28px;font-family:'Nunito',sans-serif;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer">
+            Iniciar sesión →
+          </button>
+        </div>
+
         <form id="bkClientForm" style="display:none" onsubmit="return false">
           <p class="bk-client-title"><span class="step-num">5 ·</span> Tus datos</p>
           <div class="bk-field">
@@ -1852,7 +1863,7 @@
             <input type="email" id="bkEmail" placeholder="tu@email.com" autocomplete="email"/>
           </div>
           <div class="bk-field">
-            <label>Teléfono *</label>
+            <label>Confirma tu número de teléfono *</label>
             <input type="tel" id="bkTelefono" placeholder="+56 9 1234 5678" autocomplete="tel"/>
           </div>
           <div id="bkFormMsg" class="bk-form-msg" style="display:none"></div>
@@ -2413,17 +2424,26 @@
         <span class="bk-summary-title">${svc.emoji} ${svc.titulo}</span>
         <span>${modLabel} · ${dayLabel} · ${state.time} hrs</span>
       `;
+      // ── Auth gate ──────────────────────────────────────────
+      const loginPrompt = document.getElementById('bkLoginPrompt');
+      if (!_bkUser) {
+        if (clientForm) clientForm.style.display = 'none';
+        if (loginPrompt) loginPrompt.style.display = 'block';
+        return;
+      }
+      if (loginPrompt) loginPrompt.style.display = 'none';
+
       if (clientForm) {
         clientForm.style.display = 'block';
-        // Pre-llenar datos si el usuario está logueado y los campos están vacíos
+        // Pre-llenar y bloquear nombre/email desde el perfil
         const nEl = document.getElementById('bkNombre');
         const eEl = document.getElementById('bkEmail');
         const tEl = document.getElementById('bkTelefono');
-        if (_bkUser) {
-          if (!nEl.value) nEl.value = _bkPerfil?.nombre || _bkUser.user_metadata?.nombre || '';
-          if (!eEl.value) eEl.value = _bkUser.email || '';
-          if (!tEl.value) tEl.value = _bkPerfil?.telefono || '';
-        }
+        nEl.value = _bkPerfil?.nombre || _bkUser.user_metadata?.full_name || _bkUser.user_metadata?.nombre || '';
+        nEl.readOnly = !!nEl.value;
+        eEl.value = _bkUser.email || '';
+        eEl.readOnly = true;
+        if (!tEl.value) tEl.value = _bkPerfil?.telefono || '';
       }
       setTimeout(() => scrollToStep('stepSummary'), 200);
     }
@@ -2526,7 +2546,9 @@
       document.getElementById('stepSummary').style.display = 'block';
       document.getElementById('bkClientForm').style.display = 'none';
       document.getElementById('bkNombre').value = '';
+      document.getElementById('bkNombre').readOnly = false;
       document.getElementById('bkEmail').value = '';
+      document.getElementById('bkEmail').readOnly = false;
       document.getElementById('bkTelefono').value = '';
       document.getElementById('bkFormMsg').style.display = 'none';
       document.getElementById('bkConfirmBtn').disabled = false;
@@ -3236,6 +3258,8 @@
       updateNavAuth(user, perfil);
       _bkUser = user;
       _bkPerfil = perfil;
+      // Si ya tenía un horario seleccionado, mostrar el formulario ahora
+      if (typeof updateSummary === 'function') updateSummary();
     });
   </script>
   <!-- WhatsApp flotante -->
