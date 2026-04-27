@@ -1468,7 +1468,8 @@
         let tel = r.telefono_cliente.replace(/\D/g, '');
         if (tel.startsWith('0')) tel = tel.slice(1);
         if (!tel.startsWith('56')) tel = '56' + tel;
-        const msg = `Hola ${r.nombre_cliente} 🌸, te recuerdo que tienes tu sesión de *${r.servicio_nombre}* el *${fecha}* a las *${r.hora_inicio} hrs*.\n\n¡Te espero! 💫\n— Majo, Energía Holística`;
+        const nombre = r.nombre_cliente || r.email_cliente || 'hola';
+        const msg = `Hola ${nombre}, te recuerdo que tienes tu sesión de *${r.servicio_nombre}* el *${fecha}* a las *${r.hora_inicio} hrs*.\n\n¡Te espero!\n— Majo, Energía Holística`;
         return `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
       })();
 
