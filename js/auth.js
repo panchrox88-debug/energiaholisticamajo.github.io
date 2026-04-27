@@ -19,9 +19,16 @@
     if (document.getElementById('authModal')) return;
     const div = document.createElement('div');
     div.id = 'authModal';
-    div.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(61,43,43,0.5);backdrop-filter:blur(6px);z-index:3000;align-items:center;justify-content:center;padding:20px';
+    div.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(61,43,43,0.5);backdrop-filter:blur(6px);z-index:3000;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
     div.innerHTML = `
-      <div style="background:#faf5f0;border-radius:22px;max-width:400px;width:100%;padding:40px 36px 32px;position:relative;box-shadow:0 24px 64px rgba(61,43,43,0.22);font-family:'Nunito',sans-serif">
+      <style>
+        @media (max-width: 480px) {
+          #authModalBox { padding: 28px 22px 24px !important; border-radius: 16px !important; }
+          #authModalBox h2 { font-size: 1.65rem !important; }
+          #authModalBox input { font-size: 16px !important; } /* iOS: evitar zoom */
+        }
+      </style>
+      <div id="authModalBox" style="background:#faf5f0;border-radius:22px;max-width:400px;width:100%;padding:40px 36px 32px;position:relative;box-shadow:0 24px 64px rgba(61,43,43,0.22);font-family:'Nunito',sans-serif;max-height:calc(100dvh - 32px);overflow-y:auto;margin:auto">
         <button onclick="closeLogin()" style="position:absolute;top:14px;right:18px;background:none;border:none;font-size:1.5rem;color:#7a5c5c;cursor:pointer;line-height:1;padding:4px 8px">×</button>
 
         <p style="font-size:0.6rem;letter-spacing:0.38em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px">Energía Holística Majo</p>
