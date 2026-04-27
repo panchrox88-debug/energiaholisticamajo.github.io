@@ -968,13 +968,9 @@
         </div>
         <div class="field"><label>Link de pago (opcional · solo si no tiene secciones)</label><input type="text" id="curso-link" placeholder="https://..."/></div>
         <div class="field">
-          <label>PDF adjunto <span style="color:var(--muted);font-size:.78rem;font-weight:300">(opcional · las alumnas podrán verlo y descargarlo)</span></label>
-          <div id="cursoPdfActual" style="display:none;margin-bottom:8px;padding:10px 14px;background:var(--blush);border-radius:10px;display:flex;align-items:center;gap:10px;font-size:.83rem;color:var(--dark)">
-            <span>📄</span>
-            <span id="cursoPdfNombre" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-            <button type="button" onclick="_removeCursoPdf()" aria-label="Eliminar PDF" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1">✕</button>
-          </div>
-          <label class="upload-zone" id="cursoPdfZone"><input type="file" id="cursoPdfInput" accept="application/pdf"/>📁 Subir PDF</label>
+          <label>PDFs adjuntos <span style="color:var(--muted);font-size:.78rem;font-weight:300">(opcional · las alumnas podrán verlos y descargarlos)</span></label>
+          <div id="cursoPdfsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+          <label class="upload-zone" id="cursoPdfZone"><input type="file" id="cursoPdfInput" accept="application/pdf" multiple/>📁 Añadir PDF</label>
         </div>
         <div class="field">
           <label>Imagen de portada</label>
@@ -2375,7 +2371,7 @@
   const cursoModal = document.getElementById('cursoModal');
   let cursoImgUrl  = '';
   let cursoImgPos  = '50% 50%';
-  let cursoPdfUrl  = '';
+  let cursoPdfs    = [];   // [{nombre, url}]
   let CURSO_SECCIONES = [];
 
   // ── Drag para reposicionar imagen ────────────────────────
@@ -2459,6 +2455,28 @@
     } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
     input.value = '';
   };
+  window.uploadSeccionPdf = async function(input, i) {
+    const msgEl = document.getElementById('cursoModalMsg');
+    const files = Array.from(input.files);
+    if (!files.length) return;
+    msgEl.textContent = `Subiendo PDF…`; msgEl.className = 'msg-banner ok';
+    try {
+      if (!Array.isArray(CURSO_SECCIONES[i].pdfs)) CURSO_SECCIONES[i].pdfs = [];
+      for (const file of files) {
+        const url = await uploadPdf(file);
+        CURSO_SECCIONES[i].pdfs.push({ nombre: file.name.replace(/\.pdf$/i, ''), url });
+      }
+      renderSeccionesList();
+      msgEl.textContent = 'PDF subido ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 2500);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    input.value = '';
+  };
+  window.removeSeccionPdf = function(i, pi) {
+    CURSO_SECCIONES[i].pdfs.splice(pi, 1);
+    renderSeccionesList();
+  };
+
   window.uploadSeccionImg = async function(input, i) {
     const msgEl = document.getElementById('cursoModalMsg');
     msgEl.textContent = 'Subiendo imagen…'; msgEl.className = 'msg-banner ok';
@@ -2525,6 +2543,22 @@
             ${s.video ? `<div style="margin-top:8px;border-radius:10px;overflow:hidden;aspect-ratio:16/9"><iframe src="${_esc(videoEmbed(s.video))}" style="width:100%;height:100%;border:none" allowfullscreen loading="lazy"></iframe></div>` : ''}
           </div>
           <div class="field field-full">
+            <label>PDFs de esta sección <span style="color:var(--muted);font-size:.75rem;font-weight:300">(opcional)</span></label>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+              ${(s.pdfs||[]).map((p, pi) => `
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--blush);border-radius:10px;font-size:.8rem;color:var(--dark)">
+                  <span>📄</span>
+                  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(p.nombre)}</span>
+                  <button type="button" onclick="removeSeccionPdf(${i},${pi})"
+                    style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1">✕</button>
+                </div>`).join('')}
+            </div>
+            <label class="upload-zone" style="padding:10px">
+              <input type="file" accept="application/pdf" multiple onchange="uploadSeccionPdf(this,${i})"/>
+              📁 Añadir PDF
+            </label>
+          </div>
+          <div class="field field-full">
             <label>Imagen de la sección (opcional)</label>
             ${s.imagen ? `
               <div style="margin-bottom:10px;position:relative;border-radius:10px;overflow:hidden;max-height:160px">
@@ -2589,26 +2623,36 @@
     if (/^#[0-9a-fA-F]{6}$/.test(this.value)) document.getElementById('curso-color-pick').value = this.value;
   });
 
-  function _setCursoPdf(url) {
-    cursoPdfUrl = url || '';
-    const zona   = document.getElementById('cursoPdfActual');
-    const nombre = document.getElementById('cursoPdfNombre');
-    if (cursoPdfUrl) {
-      const partes = cursoPdfUrl.split('/');
-      nombre.textContent = decodeURIComponent(partes[partes.length - 1].replace(/^\d+-[a-z0-9]+\./, ''));
-      zona.style.display = 'flex';
-      document.getElementById('cursoPdfZone').style.display = 'none';
-    } else {
-      zona.style.display = 'none';
-      document.getElementById('cursoPdfZone').style.display = '';
-    }
+  function _pdfNombreFromUrl(url) {
+    const partes = url.split('/');
+    return decodeURIComponent(partes[partes.length - 1].replace(/^\d+-[a-z0-9]+\./, '').replace(/\.pdf$/i, '')) || 'Documento';
   }
-  window._removeCursoPdf = () => _setCursoPdf('');
+
+  function renderCursoPdfsList() {
+    const el = document.getElementById('cursoPdfsList');
+    if (!el) return;
+    el.innerHTML = cursoPdfs.map((p, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--blush);border-radius:10px;font-size:.83rem;color:var(--dark)">
+        <span>📄</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(p.nombre)}</span>
+        <button type="button" onclick="window._removeCursoPdf(${i})" aria-label="Eliminar PDF"
+          style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1">✕</button>
+      </div>`).join('');
+  }
+
+  window._removeCursoPdf = (i) => {
+    cursoPdfs.splice(i, 1);
+    renderCursoPdfsList();
+  };
 
   function openCursoModal(c = null) {
     cursoImgUrl = c?.imagen || '';
     cursoImgPos = c?.imagen_posicion || '50% 50%';
-    _setCursoPdf(c?.pdf_url || '');
+    // Cargar PDFs: nuevo campo pdfs[] con fallback a pdf_url legacy
+    cursoPdfs = Array.isArray(c?.pdfs) && c.pdfs.length
+      ? JSON.parse(JSON.stringify(c.pdfs))
+      : (c?.pdf_url ? [{ nombre: _pdfNombreFromUrl(c.pdf_url), url: c.pdf_url }] : []);
+    renderCursoPdfsList();
     document.getElementById('curso-id').value      = c?.id || '';
     document.getElementById('curso-titulo').value  = c?.titulo || '';
     document.getElementById('curso-desc').value    = c?.descripcion || '';
@@ -2663,11 +2707,17 @@
 
   document.getElementById('cursoPdfInput').addEventListener('change', async function() {
     const msgEl = document.getElementById('cursoModalMsg');
-    msgEl.textContent = 'Subiendo PDF…'; msgEl.className = 'msg-banner ok';
+    const files = Array.from(this.files);
+    if (!files.length) return;
+    msgEl.textContent = `Subiendo ${files.length > 1 ? files.length + ' PDFs' : 'PDF'}…`; msgEl.className = 'msg-banner ok';
     try {
-      const url = await uploadPdf(this.files[0]);
-      _setCursoPdf(url);
-      msgEl.textContent = 'PDF subido ✓';
+      for (const file of files) {
+        const url = await uploadPdf(file);
+        const nombre = file.name.replace(/\.pdf$/i, '');
+        cursoPdfs.push({ nombre, url });
+      }
+      renderCursoPdfsList();
+      msgEl.textContent = `PDF${files.length > 1 ? 's' : ''} subido${files.length > 1 ? 's' : ''} ✓`;
       setTimeout(() => msgEl.className = 'msg-banner', 2500);
     } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
     this.value = '';
@@ -2702,7 +2752,8 @@
       activo:           document.getElementById('curso-activo').checked,
       imagen:           cursoImgUrl || null,
       imagen_posicion:  cursoImgPos,
-      pdf_url:          cursoPdfUrl || null,
+      pdfs:             cursoPdfs,
+      pdf_url:          null,
       secciones:        CURSO_SECCIONES,
     };
     if (!body.titulo) {

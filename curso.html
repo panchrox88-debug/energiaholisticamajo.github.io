@@ -478,21 +478,39 @@
 
       const videoEl = s.video ? `<div class="seccion-video"><iframe src="${videoEmbed(s.video)}" allowfullscreen loading="lazy"></iframe></div>` : '';
 
+      const secPdfs = Array.isArray(s.pdfs) && s.pdfs.length ? s.pdfs : [];
+      const pdfEl = secPdfs.length ? `<div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+        ${secPdfs.map(p => `
+        <div class="pdf-card" style="margin:0">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--blush);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">📄</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--dark)">${p.nombre || 'Documento'}</div>
+            <div style="font-family:'Nunito',sans-serif;font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">PDF de esta sección</div>
+          </div>
+          <div class="pdf-btns">
+            <a href="${p.url}" target="_blank" rel="noopener"
+               style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--beige);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none">Ver</a>
+            <a href="#" onclick="event.preventDefault();descargarPdf('${p.url}')"
+               style="padding:6px 14px;border-radius:20px;background:var(--gold);color:white;font-family:'Nunito',sans-serif;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;cursor:pointer">Descargar ↓</a>
+          </div>
+        </div>`).join('')}
+      </div>` : '';
+
       // Ensamblar según posición
       let bodyHTML;
       if (!s.imagen) {
-        bodyHTML = descEl + videoEl + afirEl;
+        bodyHTML = descEl + videoEl + afirEl + pdfEl;
       } else if (pos === 'arriba') {
-        bodyHTML = imgEl + descEl + videoEl + afirEl;
+        bodyHTML = imgEl + descEl + videoEl + afirEl + pdfEl;
       } else if (pos === 'abajo') {
-        bodyHTML = descEl + imgEl + videoEl + afirEl;
+        bodyHTML = descEl + imgEl + videoEl + afirEl + pdfEl;
       } else {
         const dir = pos === 'izquierda' ? 'row' : 'row-reverse';
         const lateralClass = pos === 'izquierda' ? 'seccion-lateral seccion-lateral-izq' : 'seccion-lateral seccion-lateral-der';
         bodyHTML = `<div class="${lateralClass}" style="flex-direction:${dir}">
           ${imgEl}
           <div class="seccion-lateral-text">${descEl}</div>
-        </div>${videoEl}${afirEl}`;
+        </div>${videoEl}${afirEl}${pdfEl}`;
       }
 
       function videoEmbed(url) {
@@ -540,20 +558,26 @@
       </section>
       ${introHTML}
       ${indiceHTML}
-      ${c.pdf_url ? `
-      <div class="pdf-card">
-        <div style="width:42px;height:42px;border-radius:10px;background:var(--blush);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">📄</div>
-        <div style="flex:1">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--dark);margin-bottom:2px">Material de apoyo</div>
-          <div style="font-family:'Nunito',sans-serif;font-size:0.68rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">PDF · Incluido en este curso</div>
-        </div>
-        <div class="pdf-btns">
-          <a href="${c.pdf_url}" target="_blank" rel="noopener"
-             style="padding:8px 16px;border-radius:20px;border:1.5px solid var(--beige);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none">Ver</a>
-          <a href="#" onclick="event.preventDefault();descargarPdf('${c.pdf_url}')"
-             style="padding:8px 16px;border-radius:20px;background:var(--gold);color:white;font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;cursor:pointer">Descargar ↓</a>
-        </div>
-      </div>` : ''}
+      ${(() => {
+        // Compatibilidad: pdfs[] nuevo + pdf_url legacy
+        const pdfs = Array.isArray(c.pdfs) && c.pdfs.length
+          ? c.pdfs
+          : (c.pdf_url ? [{ nombre: 'Material de apoyo', url: c.pdf_url }] : []);
+        return pdfs.map(p => `
+        <div class="pdf-card">
+          <div style="width:42px;height:42px;border-radius:10px;background:var(--blush);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">📄</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--dark);margin-bottom:2px">${p.nombre || 'Material de apoyo'}</div>
+            <div style="font-family:'Nunito',sans-serif;font-size:0.68rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">PDF · Incluido en este curso</div>
+          </div>
+          <div class="pdf-btns">
+            <a href="${p.url}" target="_blank" rel="noopener"
+               style="padding:8px 16px;border-radius:20px;border:1.5px solid var(--beige);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none">Ver</a>
+            <a href="#" onclick="event.preventDefault();descargarPdf('${p.url}')"
+               style="padding:8px 16px;border-radius:20px;background:var(--gold);color:white;font-family:'Nunito',sans-serif;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;cursor:pointer">Descargar ↓</a>
+          </div>
+        </div>`).join('');
+      })()}
       ${seccionesHTML}
       <section class="cierre">
         <p class="eyebrow">¿Lista para el siguiente paso?</p>
