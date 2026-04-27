@@ -1251,6 +1251,10 @@
   }
 
   async function uploadPdf(file) {
+    const MAX_MB = 50;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      throw new Error(`El PDF pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. El máximo permitido es ${MAX_MB} MB.`);
+    }
     const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
     const r = await fetch(`${SB_URL}/storage/v1/object/documentos/${name}`, {
       method: 'POST',
@@ -1261,7 +1265,11 @@
       },
       body: file,
     });
-    if (!r.ok) throw new Error('Error al subir PDF: ' + await r.text());
+    if (!r.ok) {
+      const err = await r.text();
+      if (r.status === 413) throw new Error(`El PDF es demasiado grande para subir. Reduce el tamaño del archivo e intenta de nuevo.`);
+      throw new Error('Error al subir PDF: ' + err);
+    }
     return `${SB_URL}/storage/v1/object/public/documentos/${name}`;
   }
 
