@@ -131,6 +131,7 @@
 
   let _encuentro = null;
   let _inscritos = 0;
+  let _pagoHandled = false; // evita que initAuth sobreescriba el estado de éxito
 
   async function loadEncuentro() {
     const id = new URLSearchParams(location.search).get('id');
@@ -178,28 +179,31 @@
     renderGaleria(e.fotos);
     document.getElementById('encLayout').style.display = 'grid';
 
-    // Verificar retorno desde MP Checkout
-    const _params = new URLSearchParams(window.location.search);
-    if (_params.get('pago') === 'ok') {
-      history.replaceState({}, '', '?id=' + e.id);
-      const ctx = JSON.parse(sessionStorage.getItem('enc_return') || '{}');
-      sessionStorage.removeItem('enc_return');
-      const formEl = document.getElementById('formInscripcion');
-      if (formEl) {
-        formEl.innerHTML = `
-          <div class="success-state">
-            <div class="icon">🌸</div>
-            <h3>¡Pago confirmado!</h3>
-            <p>Tu inscripción para <strong>${e.titulo}</strong> fue procesada.<br>
-            Te esperamos el <strong>${fmtFecha(e.fecha)}</strong> a las <strong>${fmtHora(e.hora_inicio)}</strong>. 🌿</p>
-          </div>`;
-      }
-    } else if (_params.get('pago') === 'error') {
-      history.replaceState({}, '', '?id=' + e.id);
-      const msgEl = document.getElementById('formMsg');
-      if (msgEl) {
-        msgEl.className = 'form-msg err';
-        msgEl.textContent = 'El pago no pudo procesarse. Puedes intentarlo de nuevo.';
+    // Verificar retorno desde MP Checkout (solo una vez)
+    if (!_pagoHandled) {
+      const _params = new URLSearchParams(window.location.search);
+      if (_params.get('pago') === 'ok') {
+        _pagoHandled = true;
+        history.replaceState({}, '', '?id=' + e.id);
+        sessionStorage.removeItem('enc_return');
+        const formEl = document.getElementById('formInscripcion');
+        if (formEl) {
+          formEl.innerHTML = `
+            <div class="success-state">
+              <div class="icon">🌸</div>
+              <h3>¡Pago confirmado!</h3>
+              <p>Tu inscripción para <strong>${e.titulo}</strong> fue procesada.<br>
+              Te esperamos el <strong>${fmtFecha(e.fecha)}</strong> a las <strong>${fmtHora(e.hora_inicio)}</strong>. 🌿</p>
+            </div>`;
+        }
+      } else if (_params.get('pago') === 'error') {
+        _pagoHandled = true;
+        history.replaceState({}, '', '?id=' + e.id);
+        const msgEl = document.getElementById('formMsg');
+        if (msgEl) {
+          msgEl.className = 'form-msg err';
+          msgEl.textContent = 'El pago no pudo procesarse. Puedes intentarlo de nuevo.';
+        }
       }
     }
   }
@@ -407,7 +411,7 @@
     _bkUser   = user;
     _bkPerfil = perfil;
     // Si hay un encuentro de pago cargado, re-renderizar sidebar con el nuevo estado de auth
-    if (_encuentro) renderEncuentro(_encuentro);
+    if (_encuentro && !_pagoHandled) renderEncuentro();
   });
 </script>
 </body>

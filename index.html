@@ -3231,11 +3231,14 @@
         setTimeout(() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' }), 300);
 
       } else if (pago === 'error') {
-        const msgEl = document.getElementById('bkFormMsg');
-        if (msgEl) {
-          msgEl.textContent = 'El pago no pudo procesarse. Puedes intentarlo de nuevo.';
-          msgEl.className = 'bk-form-msg err';
-          msgEl.style.display = 'block';
+        // Mostrar banner de error visible sobre el widget de reservas
+        const agendaEl = document.getElementById('agenda');
+        if (agendaEl) {
+          const banner = document.createElement('div');
+          banner.style.cssText = 'background:#fde8e8;border:1.5px solid var(--red,#c9585a);border-radius:12px;padding:14px 20px;font-size:0.85rem;color:var(--red,#c9585a);margin-bottom:20px;text-align:center';
+          banner.textContent = 'El pago no pudo procesarse. Puedes intentarlo de nuevo seleccionando tu horario.';
+          agendaEl.insertBefore(banner, agendaEl.firstChild);
+          setTimeout(() => banner.remove(), 8000);
         }
         setTimeout(() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' }), 300);
       }

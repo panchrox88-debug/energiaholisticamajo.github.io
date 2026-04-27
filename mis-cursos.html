@@ -138,7 +138,7 @@
     try {
       // 1. Obtener accesos del usuario
       const token = await getAuthToken();
-      const r1 = await fetch(`${SB_URL}/rest/v1/accesos?user_id=eq.${user.id}&select=curso_id`, {
+      const r1 = await fetch(`${SB_URL}/rest/v1/accesos?user_id=eq.${user.id}&or=(estado.eq.activo,estado.is.null)&select=curso_id`, {
         headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token }
       });
       const accesos = await r1.json();
