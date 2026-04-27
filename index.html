@@ -2450,7 +2450,7 @@
 
       const btn = document.getElementById('bkConfirmBtn');
       btn.disabled = true;
-      btn.textContent = 'Confirmando…';
+      btn.textContent = 'Procesando pago…';
       msgEl.style.display = 'none';
 
       const svc = SERVICES.find(s => s.id === state.service);
@@ -2460,9 +2460,10 @@
       const dayLabel = `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
 
       try {
-        const res = await sbFetch('/reservas', {
+        // 1. Insertar reserva con estado pendiente_pago y obtener su ID
+        const res = await sbFetch('/reservas?select=id', {
           method: 'POST',
-          headers: { 'Prefer': 'return=minimal' },
+          headers: { 'Prefer': 'return=representation' },
           body: JSON.stringify({
             servicio_id:      svc.id,
             servicio_nombre:  svc.titulo,
@@ -2473,22 +2474,42 @@
             nombre_cliente:   nombre,
             email_cliente:    email,
             telefono_cliente: telefono,
-            estado:           'confirmada',
+            estado:           'pendiente_pago',
           }),
         });
         if (!res.ok && res.status !== 201) throw new Error('Error al guardar');
+        const [reserva] = await res.json();
 
-        // Mostrar éxito
-        document.getElementById('stepSummary').style.display = 'none';
-        document.getElementById('bkSuccess').style.display = 'block';
-        document.getElementById('bkSuccessDetails').innerHTML =
-          `<strong>${svc.emoji} ${svc.titulo}</strong><br>` +
-          `${modLabel} · ${dayLabel}<br>` +
-          `Hora: ${state.time} hrs<br><br>` +
-          `Te esperamos, ${nombre} 🌸`;
-        scrollToStep('bkSuccess');
+        // 2. Guardar contexto para mostrar al volver de MP
+        sessionStorage.setItem('bk_return', JSON.stringify({
+          nombre,
+          svc_emoji:  svc.emoji || '✨',
+          svc_titulo: svc.titulo,
+          modLabel,
+          dayLabel,
+          hora: state.time,
+        }));
+
+        // 3. Crear preferencia de pago en Mercado Pago vía Apps Script
+        const precio = Number(svc.precio) || 0;
+        const base   = window.location.href.split('?')[0];
+        const mpRes  = await fetch(
+          `${APPS_URL}?action=crearPago` +
+          `&tipo=reserva&id=${encodeURIComponent(reserva.id)}` +
+          `&titulo=${encodeURIComponent(svc.titulo)}` +
+          `&precio=${precio}` +
+          `&email=${encodeURIComponent(email)}` +
+          `&retorno_ok=${encodeURIComponent(base + '?pago=ok')}` +
+          `&retorno_error=${encodeURIComponent(base + '?pago=error')}`
+        );
+        const mpData = await mpRes.json();
+        if (!mpData.ok) throw new Error(mpData.error || 'Error al crear preferencia de pago');
+
+        // 4. Redirigir a Mercado Pago Checkout
+        window.location.href = mpData.checkout_url;
+
       } catch(e) {
-        msgEl.textContent = 'Hubo un error al confirmar. Intenta de nuevo.';
+        msgEl.textContent = 'Hubo un error al procesar el pago. Intenta de nuevo.';
         msgEl.className = 'bk-form-msg err';
         msgEl.style.display = 'block';
         btn.disabled = false;
@@ -3160,12 +3181,51 @@
       }))).then(r => r.filter(Boolean));
     }
 
+    // ── RETORNO DESDE MP CHECKOUT ────────────────────────────────────────
+    function checkPagoReturn() {
+      const params = new URLSearchParams(window.location.search);
+      const pago = params.get('pago');
+      if (!pago) return;
+      // Limpiar parámetro de la URL sin recargar
+      history.replaceState({}, '', window.location.pathname + window.location.hash);
+
+      if (pago === 'ok') {
+        const ctx = JSON.parse(sessionStorage.getItem('bk_return') || '{}');
+        sessionStorage.removeItem('bk_return');
+        const detailsEl = document.getElementById('bkSuccessDetails');
+        const successEl = document.getElementById('bkSuccess');
+        if (detailsEl) {
+          detailsEl.innerHTML = ctx.nombre
+            ? `<strong>${ctx.svc_emoji} ${ctx.svc_titulo}</strong><br>
+               ${ctx.modLabel} · ${ctx.dayLabel}<br>
+               Hora: ${ctx.hora} hrs<br><br>
+               ¡Tu pago fue confirmado, ${ctx.nombre}! 🌸`
+            : `¡Tu pago fue confirmado! Pronto recibirás confirmación. 🌸`;
+        }
+        if (successEl) {
+          document.getElementById('stepSummary').style.display = 'none';
+          successEl.style.display = 'block';
+        }
+        setTimeout(() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' }), 300);
+
+      } else if (pago === 'error') {
+        const msgEl = document.getElementById('bkFormMsg');
+        if (msgEl) {
+          msgEl.textContent = 'El pago no pudo procesarse. Puedes intentarlo de nuevo.';
+          msgEl.className = 'bk-form-msg err';
+          msgEl.style.display = 'block';
+        }
+        setTimeout(() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' }), 300);
+      }
+    }
+
     // Inicializar todo: servicios + agenda en paralelo
     Promise.all([loadBanner(), loadServicios(), loadAgenda()]).then(() => {
       buildServiceCards();
       buildBookingServices();
       buildCalendar();
       renderTimes();
+      checkPagoReturn();
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>

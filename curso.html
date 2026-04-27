@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co https://script.google.com https://script.googleusercontent.com; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Curso — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Josefin+Sans:wght@100;200;300&family=Nunito:wght@200;300;400;600&display=swap" rel="stylesheet"/>
@@ -276,14 +276,27 @@
       if (!user) { renderPaywall(c, 'noAuth'); return; }
 
       const token = await getAuthToken();
-      const r = await fetch(`${SB_URL}/rest/v1/accesos?user_id=eq.${user.id}&curso_id=eq.${id}&select=id`, {
+      const r = await fetch(`${SB_URL}/rest/v1/accesos?user_id=eq.${user.id}&curso_id=eq.${id}&or=(estado.eq.activo,estado.is.null)&select=id`, {
         headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token }
       });
       const rows2 = await r.json();
       if (Array.isArray(rows2) && rows2.length > 0) {
         renderCurso(c);
       } else {
-        renderPaywall(c, 'noAcceso');
+        // Verificar retorno de MP antes de mostrar el paywall
+        const _pp = new URLSearchParams(window.location.search);
+        if (_pp.get('pago') === 'ok') {
+          history.replaceState({}, '', '?id=' + id);
+          // El webhook podría estar en tránsito; reintentar en 3 s
+          document.getElementById('main').innerHTML =
+            `<div style="text-align:center;padding:120px 24px;color:var(--muted);font-family:Nunito,sans-serif">
+               <div style="font-size:2.5rem;margin-bottom:16px">🌸</div>
+               <p style="font-size:1rem">¡Pago confirmado! Activando tu acceso…</p>
+             </div>`;
+          setTimeout(() => load(user), 3000);
+        } else {
+          renderPaywall(c, 'noAcceso');
+        }
       }
     } catch(e) { render404(); }
   }
@@ -294,6 +307,55 @@
     bar.innerHTML = '👁 MODO VISTA PREVIA — Este curso puede no estar publicado &nbsp;·&nbsp; <a href="javascript:window.close()" style="color:#dba8ac;text-decoration:none;">Cerrar</a>';
     document.body.appendChild(bar);
   }
+
+  // ── COMPRAR CURSO VÍA MERCADO PAGO ───────────────────────────────────
+  window.comprarCurso = async function(cursoId, precio, titulo, tema) {
+    const btn = document.querySelector('.paywall-buy');
+    if (btn) { btn.disabled = true; btn.textContent = 'Procesando pago…'; }
+
+    try {
+      // Obtener usuario del contexto de sesión (guardado al inicializar auth)
+      const user = window._curUser;
+      if (!user) { openLogin('Inicia sesión para comprar este curso'); return; }
+      const token = await getAuthToken();
+
+      // 1. Insertar acceso con estado pendiente
+      const res = await fetch(`${SB_URL}/rest/v1/accesos?select=id`, {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY, 'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json', 'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ curso_id: cursoId, user_id: user.id, estado: 'pendiente' })
+      });
+      if (!res.ok) throw new Error('Error al crear acceso');
+      const [acceso] = await res.json();
+
+      // 2. Guardar contexto para mostrar al volver
+      sessionStorage.setItem('cur_return', JSON.stringify({ titulo, cursoId }));
+
+      // 3. Crear preferencia MP vía Apps Script
+      const base  = window.location.href.split('?')[0];
+      const mpRes = await fetch(
+        `${APPS_URL}?action=crearPago` +
+        `&tipo=acceso&id=${encodeURIComponent(acceso.id)}` +
+        `&titulo=${encodeURIComponent(titulo)}` +
+        `&precio=${precio}` +
+        `&email=${encodeURIComponent(user.email)}` +
+        `&retorno_ok=${encodeURIComponent(base + '?id=' + encodeURIComponent(cursoId) + '&pago=ok')}` +
+        `&retorno_error=${encodeURIComponent(base + '?id=' + encodeURIComponent(cursoId) + '&pago=error')}`
+      );
+      const mpData = await mpRes.json();
+      if (!mpData.ok) throw new Error(mpData.error || 'Error al crear preferencia de pago');
+
+      // 4. Redirigir a Mercado Pago Checkout
+      window.location.href = mpData.checkout_url;
+
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = `Comprar acceso — $${Number(precio).toLocaleString('es-CL')} →`; }
+      alert('Hubo un error al iniciar el pago. Intenta de nuevo.');
+    }
+  };
 
   function renderPaywall(c, reason) {
     const tema = c.color_tema || '#c9858a';
@@ -309,12 +371,10 @@
 
     const subMsg = reason === 'noAuth'
       ? 'Inicia sesión para ver si tienes acceso a este curso.'
-      : 'Tu cuenta no tiene acceso a este curso aún. Si ya lo compraste, escríbele a Majo.';
+      : 'Tu cuenta no tiene acceso a este curso aún.';
     const btnHTML = reason === 'noAuth'
       ? `<button class="paywall-buy" onclick="openLogin('Inicia sesión para acceder al curso')">Iniciar sesión →</button>`
-      : c.link_pago
-        ? `<a href="${c.link_pago}" target="_blank" class="paywall-buy" style="background:${tema}">Comprar acceso →</a>`
-        : '';
+      : `<button class="paywall-buy" style="background:${tema}" onclick="comprarCurso('${c.id}',${Number(c.precio)},'${c.titulo.replace(/'/g,"\\'")}','${tema}')">Comprar acceso — $${Number(c.precio).toLocaleString('es-CL')} →</button>`;
 
     document.getElementById('main').innerHTML = `
       <section class="hero" style="background:radial-gradient(ellipse at 50% 60%, ${hex2rgba(tema,0.15)} 0%, transparent 70%), linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%)">
@@ -323,7 +383,6 @@
           <div class="hero-badge" style="background:var(--blush);color:var(--rose)">$${Number(c.precio).toLocaleString('es-CL')}</div>
           <h1>${c.titulo.replace(/(\S+)\s*$/, '<em>$1</em>')}</h1>
           ${c.descripcion ? `<p class="hero-desc">${c.descripcion}</p>` : ''}
-          ${c.link_pago ? `<a href="${c.link_pago}" target="_blank" class="hero-cta">Comprar acceso →</a>` : ''}
         </div>
       </section>
       ${introHTML}
@@ -531,6 +590,7 @@
 <script>
   // Cuando auth esté lista, re-verificar acceso con el usuario real
   initAuth(async (user, perfil) => {
+    window._curUser = user;
     updateNavAuth(user, perfil);
     if (user) {
       _cursoCache = null; // forzar re-check de acceso
