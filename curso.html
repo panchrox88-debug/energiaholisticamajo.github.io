@@ -354,7 +354,7 @@
       if (!mpData.ok) throw new Error(mpData.error || 'Error al crear preferencia de pago');
 
       // 4. Redirigir a Mercado Pago Checkout
-      window.location.href = mpData.checkout_url;
+      window.location.href = mpData.url;
 
     } catch(e) {
       if (btn) { btn.disabled = false; btn.textContent = `Comprar acceso — $${Number(precio).toLocaleString('es-CL')} →`; }
