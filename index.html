@@ -2524,7 +2524,7 @@
           `&titulo=${encodeURIComponent(svc.titulo)}` +
           `&precio=${precio}` +
           `&email=${encodeURIComponent(email)}` +
-          `&retorno_ok=${encodeURIComponent(base + '?pago=ok')}` +
+          `&retorno_ok=${encodeURIComponent(base.replace('index.html','mis-sesiones.html') + '?pago=ok')}` +
           `&retorno_error=${encodeURIComponent(base + '?pago=error')}`
         );
         const mpData = await mpRes.json();

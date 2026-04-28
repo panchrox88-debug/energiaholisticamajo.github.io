@@ -255,6 +255,18 @@
 </footer>
 
 <script>
+  // Banner de éxito al volver de MP
+  (function() {
+    const p = new URLSearchParams(window.location.search).get('pago');
+    if (p === 'ok') {
+      history.replaceState({}, '', window.location.pathname);
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:#d4edda;color:#155724;border:1px solid #c3e6cb;border-radius:10px;padding:16px 20px;margin:24px auto 0;max-width:780px;text-align:center;font-size:1rem;';
+      banner.innerHTML = '✅ <strong>¡Reserva confirmada!</strong> Tu pago fue procesado exitosamente. Pronto recibirás un email de confirmación. 🌸';
+      document.getElementById('mainWrap')?.before(banner);
+    }
+  })();
+
   const DIAS   = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const MESES  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
