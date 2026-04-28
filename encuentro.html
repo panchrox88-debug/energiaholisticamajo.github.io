@@ -376,8 +376,8 @@
           `&titulo=${encodeURIComponent(_encuentro.titulo)}` +
           `&precio=${_encuentro.precio}` +
           `&email=${encodeURIComponent(email)}` +
-          `&retorno_ok=${encodeURIComponent(base + '?id=' + encodeURIComponent(_encuentro.id) + '&pago=ok')}` +
-          `&retorno_error=${encodeURIComponent(base + '?id=' + encodeURIComponent(_encuentro.id) + '&pago=error')}`
+          `&retorno_ok=${encodeURIComponent(new URL('mis-encuentros.html?pago=ok', window.location.href).href)}` +
+          `&retorno_error=${encodeURIComponent(new URL('encuentro.html?id=' + encodeURIComponent(_encuentro.id) + '&pago=error', window.location.href).href)}`
         );
         const mpData = await mpRes.json();
         if (!mpData.ok) throw new Error(mpData.error || 'Error al crear preferencia de pago');

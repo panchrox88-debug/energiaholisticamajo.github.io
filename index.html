@@ -1885,6 +1885,7 @@
             <input type="tel" id="bkTelefono" placeholder="+56 9 1234 5678" autocomplete="tel"/>
           </div>
           <div id="bkFormMsg" class="bk-form-msg" style="display:none"></div>
+          <div id="bkContactInfo" style="margin:16px 0 4px;padding:12px 14px;background:var(--cream);border-radius:10px;font-size:0.78rem;color:var(--muted);line-height:1.8;display:none"></div>
           <button type="button" class="bk-confirm" id="bkConfirmBtn">Confirmar reserva ✨</button>
         </form>
       </div>
@@ -2462,6 +2463,19 @@
         eEl.value = _bkUser.email || '';
         eEl.readOnly = true;
         if (!tEl.value) tEl.value = _bkPerfil?.telefono || '';
+        // Info de contacto / dirección
+        const infoEl = document.getElementById('bkContactInfo');
+        if (infoEl && !infoEl.dataset.loaded) {
+          infoEl.dataset.loaded = '1';
+          sbFetch('/contacto?select=*&order=orden.asc').then(r => r.json()).then(canales => {
+            const items = (canales || []).filter(c => ['ubicacion','whatsapp','email'].includes(c.tipo));
+            if (items.length) {
+              const icons = { ubicacion:'📍', whatsapp:'📱', email:'📧' };
+              infoEl.innerHTML = items.map(c => `<div>${icons[c.tipo]||'·'} <strong>${c.etiqueta}:</strong> ${c.valor}</div>`).join('');
+              infoEl.style.display = 'block';
+            }
+          }).catch(() => {});
+        }
       }
       setTimeout(() => scrollToStep('stepSummary'), 200);
     }
@@ -2537,8 +2551,8 @@
           `&titulo=${encodeURIComponent(svc.titulo)}` +
           `&precio=${precio}` +
           `&email=${encodeURIComponent(email)}` +
-          `&retorno_ok=${encodeURIComponent(base.replace('index.html','mis-sesiones.html') + '?pago=ok')}` +
-          `&retorno_error=${encodeURIComponent(base + '?pago=error')}`
+          `&retorno_ok=${encodeURIComponent(new URL('mis-sesiones.html?pago=ok', window.location.href).href)}` +
+          `&retorno_error=${encodeURIComponent(new URL('index.html?pago=error', window.location.href).href)}`
         );
         const mpData = await mpRes.json();
         if (!mpData.ok) throw new Error(mpData.error || 'Error al crear preferencia de pago');

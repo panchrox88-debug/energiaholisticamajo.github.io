@@ -189,6 +189,17 @@
 </script>
 <script src="js/auth.js"></script>
 <script>
+  // Banner éxito tras pago
+  (function() {
+    if (new URLSearchParams(window.location.search).get('pago') === 'ok') {
+      history.replaceState({}, '', window.location.pathname);
+      const b = document.createElement('div');
+      b.style.cssText = 'background:#d4edda;color:#155724;border:1px solid #c3e6cb;border-radius:10px;padding:16px 20px;margin:24px auto 0;max-width:860px;text-align:center;font-size:1rem;';
+      b.innerHTML = '✅ <strong>¡Acceso activado!</strong> Tu pago fue procesado. El curso ya está disponible abajo. 🌸';
+      document.querySelector('main')?.before(b);
+    }
+  })();
+
   initAuth(async (user, perfil) => {
     updateNavAuth(user, perfil);
     await loadMisCursos(user, perfil);

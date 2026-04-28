@@ -87,6 +87,17 @@
 <footer><strong>Energía Holística Majo</strong> · Psicóloga &amp; Terapeuta Holística</footer>
 
 <script>
+  // Banner éxito tras pago
+  (function() {
+    if (new URLSearchParams(window.location.search).get('pago') === 'ok') {
+      history.replaceState({}, '', window.location.pathname);
+      const b = document.createElement('div');
+      b.style.cssText = 'background:#d4edda;color:#155724;border:1px solid #c3e6cb;border-radius:10px;padding:16px 20px;margin:24px auto 0;max-width:860px;text-align:center;font-size:1rem;';
+      b.innerHTML = '✅ <strong>¡Inscripción confirmada!</strong> Tu pago fue procesado exitosamente. ¡Te esperamos! 🌸';
+      document.querySelector('main')?.before(b);
+    }
+  })();
+
   const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const DIAS  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
