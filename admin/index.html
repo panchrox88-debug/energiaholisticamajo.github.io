@@ -908,6 +908,17 @@
       <input type="number" id="svc-precio" placeholder="30000" min="0"/>
     </div>
     <div class="field">
+      <label>Foto de fondo de tarjeta <span style="font-size:.75rem;color:var(--muted)">(opcional — aparece opaca detrás del contenido)</span></label>
+      <div id="svcFondoPreview" style="display:none;margin-bottom:8px;position:relative">
+        <img id="svcFondoImg" src="" style="width:100%;height:110px;object-fit:cover;border-radius:8px;opacity:.7"/>
+        <button type="button" onclick="window._removeSvcFondo()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:13px;line-height:1">✕</button>
+      </div>
+      <label class="upload-zone">
+        <input type="file" id="svcFondoInput" accept="image/*"/>
+        📁 Subir foto de fondo
+      </label>
+    </div>
+    <div class="field">
       <label>Imágenes del carrusel</label>
       <div id="svcSlides" class="img-grid"></div>
       <label class="upload-zone" style="margin-top:10px">
@@ -1624,12 +1635,16 @@
     try {
       const rows = await sbGet('/servicios?select=*&order=orden.asc');
       const el = document.getElementById('serviciosList');
-      el.innerHTML = rows.map(s => `
+      el.innerHTML = rows.map((s, i) => `
         <div class="card" id="svc-card-${s.id}">
           <div class="card-row">
+            <div style="display:flex;flex-direction:column;gap:4px;margin-right:10px">
+              <button class="btn btn-ghost" style="padding:2px 8px;font-size:1rem" ${i===0?'disabled':''} onclick="window._moveSvc('${s.id}',-1)">↑</button>
+              <button class="btn btn-ghost" style="padding:2px 8px;font-size:1rem" ${i===rows.length-1?'disabled':''} onclick="window._moveSvc('${s.id}',1)">↓</button>
+            </div>
             <div class="card-body">
-              <div class="card-name">${s.emoji} ${s.titulo}</div>
-              <div class="card-sub">${s.modo} · ${(s.slides||[]).length} imágenes${s.precio ? ' · $' + s.precio.toLocaleString('es-CL') : ''}</div>
+              <div class="card-name">${s.emoji || ''} ${s.titulo}</div>
+              <div class="card-sub">${s.modo} · ${(s.slides||[]).length} imágenes${s.foto_fondo?' · 🖼️ fondo':''}${s.precio ? ' · $' + s.precio.toLocaleString('es-CL') : ''}</div>
               <div class="card-text">${s.descripcion || ''}</div>
             </div>
             <div class="card-actions">
@@ -1648,22 +1663,42 @@
   const servicioModal    = document.getElementById('servicioModal');
   const servicioModalTitle = document.getElementById('servicioModalTitle');
   let svcCurrentSlides   = [];
+  let svcFondoUrl        = '';
 
   function openSvcModal(svc = null) {
     svcCurrentSlides = svc ? [...(svc.slides || [])] : [];
+    svcFondoUrl      = svc?.foto_fondo || '';
     document.getElementById('svc-id-original').value = svc?.id || '';
     document.getElementById('svc-id').value          = svc?.id || '';
-    document.getElementById('svc-emoji').value       = svc?.emoji || '✨';
+    document.getElementById('svc-emoji').value       = svc?.emoji || '';
     document.getElementById('svc-titulo').value      = svc?.titulo || '';
     document.getElementById('svc-desc').value        = svc?.descripcion || '';
     document.getElementById('svc-modo').value        = svc?.modo || 'Presencial';
     document.getElementById('svc-precio').value      = svc?.precio || '';
     servicioModalTitle.textContent = svc ? 'Editar servicio' : 'Nuevo servicio';
-    document.getElementById('svc-id').disabled = !!svc; // no editar ID si existe
+    document.getElementById('svc-id').disabled = !!svc;
+    _renderSvcFondo();
     renderSvcSlides();
     document.getElementById('servicioModalMsg').className = 'msg-banner';
     servicioModal.classList.add('open');
   }
+
+  function _renderSvcFondo() {
+    const prev = document.getElementById('svcFondoPreview');
+    const img  = document.getElementById('svcFondoImg');
+    if (svcFondoUrl) {
+      img.src = svcFondoUrl;
+      prev.style.display = 'block';
+    } else {
+      prev.style.display = 'none';
+    }
+  }
+
+  window._removeSvcFondo = () => {
+    svcFondoUrl = '';
+    document.getElementById('svcFondoInput').value = '';
+    _renderSvcFondo();
+  };
 
   function renderSvcSlides() {
     const el = document.getElementById('svcSlides');
@@ -1686,6 +1721,21 @@
 
   document.getElementById('addServicioBtn').addEventListener('click', () => openSvcModal());
   document.getElementById('cancelServicioBtn').addEventListener('click', () => servicioModal.classList.remove('open'));
+
+  // Upload foto de fondo
+  document.getElementById('svcFondoInput').addEventListener('change', async function() {
+    const msgEl = document.getElementById('servicioModalMsg');
+    if (!this.files[0]) return;
+    msgEl.textContent = 'Subiendo foto de fondo…';
+    msgEl.className = 'msg-banner ok';
+    try {
+      svcFondoUrl = await uploadFile(this.files[0], 'servicios');
+      _renderSvcFondo();
+      msgEl.textContent = 'Foto subida ✓';
+      setTimeout(() => msgEl.className = 'msg-banner', 3000);
+    } catch(e) { msgEl.textContent = 'Error: ' + e.message; msgEl.className = 'msg-banner err'; }
+    this.value = '';
+  });
 
   // Upload slides
   document.getElementById('svcSlideInput').addEventListener('change', async function() {
@@ -1717,7 +1767,7 @@
 
     if (!id || !titulo) { msgEl.textContent = 'ID y título son obligatorios'; msgEl.className = 'msg-banner err'; return; }
 
-    const body = { id, emoji, titulo, descripcion, modo, slides: svcCurrentSlides, precio };
+    const body = { id, emoji, titulo, descripcion, modo, slides: svcCurrentSlides, precio, foto_fondo: svcFondoUrl || null };
     try {
       if (idOriginal) {
         await sbPatch(`/servicios?id=eq.${idOriginal}`, body);
@@ -1739,6 +1789,19 @@
       await sbDelete(`/servicios?id=eq.${id}`);
       document.getElementById('svc-card-' + id)?.remove();
       showMsg('serviciosMsg', 'Servicio eliminado');
+    } catch(e) { showMsg('serviciosMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  window._moveSvc = async (id, dir) => {
+    try {
+      const rows = await sbGet('/servicios?select=id,orden&order=orden.asc');
+      const idx  = rows.findIndex(r => r.id === id);
+      const swapIdx = idx + dir;
+      if (swapIdx < 0 || swapIdx >= rows.length) return;
+      const a = rows[idx], b = rows[swapIdx];
+      await sbPatch(`/servicios?id=eq.${a.id}`, { orden: b.orden });
+      await sbPatch(`/servicios?id=eq.${b.id}`, { orden: a.orden });
+      loadServicios();
     } catch(e) { showMsg('serviciosMsg', 'Error: ' + e.message, 'err'); }
   };
 

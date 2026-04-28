@@ -523,6 +523,19 @@
     }
     .service-card:hover { box-shadow: 2px 6px 8px 1px rgba(201,133,138,0.26); }
     .service-card:hover::before { opacity: 0; }
+    /* Tarjeta con foto de fondo */
+    .service-card.has-bg {
+      background-size: cover;
+      background-position: center;
+    }
+    .service-card.has-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.72);
+      border-radius: 24px;
+      z-index: 0;
+    }
+    .service-card.has-bg > * { position: relative; z-index: 1; }
 
     .service-icon { font-size: 2.8rem; margin-bottom: 20px; }
     .service-card h3 {
@@ -3021,10 +3034,11 @@
       grid.innerHTML = '';
       SERVICIOS_DATA.forEach(s => {
         const card = document.createElement('div');
-        card.className = 'service-card reveal';
+        card.className = 'service-card reveal' + (s.foto_fondo ? ' has-bg' : '');
         card.dataset.serviceId = s.id;
+        if (s.foto_fondo) card.style.backgroundImage = `url('${s.foto_fondo}')`;
         card.innerHTML = `
-          <div class="service-icon">${s.emoji}</div>
+          ${s.emoji ? `<div class="service-icon">${s.emoji}</div>` : ''}
           <h3>${s.titulo}</h3>
           <p>${s.descripcion}</p>
           <span class="service-mode">${s.modo}</span>
