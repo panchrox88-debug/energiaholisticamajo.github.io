@@ -396,6 +396,7 @@
       <div class="sidebar-link" data-tab="promociones">🎁 Promociones</div>
       <div class="sidebar-link" data-tab="usuarias">👤 Usuarias</div>
       <div class="sidebar-link" data-tab="blog">✍️ Blog</div>
+      <div class="sidebar-link" data-tab="clientes">🗂️ Fichas</div>
     </nav>
     <main class="content">
 
@@ -828,6 +829,16 @@
         <div id="blogList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
       </div>
 
+      <!-- FICHAS DE CLIENTES -->
+      <div id="tab-clientes" class="section">
+        <h2 class="section-title">Fichas de clientes</h2>
+        <div id="clientesMsg" class="msg-banner"></div>
+        <input type="text" id="clientesBuscar" placeholder="Buscar por nombre o email…"
+          style="width:100%;max-width:400px;padding:9px 14px;border:1.5px solid var(--beige);border-radius:10px;font-family:'Nunito',sans-serif;font-size:0.88rem;background:var(--cream);color:var(--dark);outline:none;margin-bottom:18px"
+          oninput="filtrarClientes(this.value)"/>
+        <div id="clientesList"><p style="color:var(--muted);font-size:.85rem">Cargando…</p></div>
+      </div>
+
       <!-- PORTADA -->
       <div id="tab-portada" class="section">
         <h2 class="section-title">Fotos de portada</h2>
@@ -931,6 +942,27 @@
       <button class="btn btn-ghost" id="cancelServicioBtn">Cancelar</button>
       <button class="btn btn-primary" id="saveServicioBtn">Guardar</button>
     </div>
+  </div>
+</div>
+
+<!-- ── MODAL FICHA CLIENTE ── -->
+<div class="modal-overlay" id="fichaModal">
+  <div class="modal-box" style="max-width:660px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <div>
+        <div class="modal-title" id="fichaModalNombre" style="margin-bottom:2px"></div>
+        <div id="fichaModalSub" style="font-size:.8rem;color:var(--muted);margin-bottom:18px"></div>
+      </div>
+      <button id="fichaModalCerrar" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:0 4px">✕</button>
+    </div>
+    <input type="hidden" id="fichaEmail"/>
+    <div class="field">
+      <label>Notas generales del cliente</label>
+      <textarea id="fichaNotasGenerales" style="min-height:90px" placeholder="Observaciones generales, antecedentes, objetivos del proceso…"></textarea>
+    </div>
+    <button id="fichaGuardarGeneralBtn" class="btn btn-primary" style="margin-bottom:24px">Guardar notas generales</button>
+    <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px">Historial de sesiones</div>
+    <div id="fichaSesiones"></div>
   </div>
 </div>
 
@@ -1365,6 +1397,7 @@
       if (link.dataset.tab === 'usuarias')     loadUsuarias();
       if (link.dataset.tab === 'promociones') loadPromocionesAdmin();
       if (link.dataset.tab === 'blog')        loadBlogAdmin();
+      if (link.dataset.tab === 'clientes')   loadClientes();
     });
   });
 
@@ -1399,6 +1432,7 @@
     adminScreen.style.display = 'block';
     userEmailEl.textContent = email || '';
     loadReservas();
+    loadFichas();
   }
 
   // Restaurar sesión al cargar la página (F5)
@@ -1508,6 +1542,16 @@
              </div>`
           : '';
 
+      const tieneFicha = !!_fichasMap[r.email_cliente];
+      const fichaBtn = `<button
+        data-ficha-email="${r.email_cliente}"
+        onclick="${tieneFicha
+          ? `abrirFicha('${r.email_cliente}')`
+          : `crearFichaDesdeReserva('${r.email_cliente}','${(r.nombre_cliente||'').replace(/'/g,"\\'")}','${(r.telefono_cliente||'').replace(/'/g,"\\'")}')`}"
+        style="font-size:.68rem;padding:4px 11px;border-radius:20px;border:1.5px solid ${tieneFicha ? 'var(--gold)' : 'var(--beige)'};background:none;color:${tieneFicha ? 'var(--gold)' : 'var(--muted)'};cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif;margin-top:8px">
+        ${tieneFicha ? '🗂️ Ver ficha' : '+ Crear ficha'}
+      </button>`;
+
       return `
       <div class="card" id="res-${r.id}" style="${borderStyle}">
         <div class="card-row">
@@ -1519,6 +1563,7 @@
               📧 ${r.email_cliente}${r.telefono_cliente ? '<br>📱 ' + r.telefono_cliente : ''}
             </div>
             ${notaReagendar}
+            ${fichaBtn}
           </div>
           ${acciones}
         </div>
@@ -3853,6 +3898,148 @@
       showMsg('bannerMsg', 'Banner guardado ✓');
     } catch(e) { showMsg('bannerMsg', 'Error: ' + e.message, 'err'); }
   });
+  // ── FICHAS DE CLIENTES ───────────────────────────────────────
+  let _fichasMap = {};   // email → ficha object
+  let _clientesAll = []; // array completo para filtrado
+
+  async function loadFichas() {
+    try {
+      const rows = await sbGet('/fichas_clientes?select=*&order=nombre.asc');
+      _fichasMap = {};
+      rows.forEach(f => { _fichasMap[f.email_cliente] = f; });
+    } catch(e) { /* silencioso — tabla puede estar vacía */ }
+  }
+
+  async function loadClientes() {
+    const el = document.getElementById('clientesList');
+    el.innerHTML = '<p style="color:var(--muted);font-size:.85rem">Cargando…</p>';
+    await loadFichas();
+    _clientesAll = Object.values(_fichasMap);
+    renderClientesList(_clientesAll);
+  }
+
+  function renderClientesList(lista) {
+    const el = document.getElementById('clientesList');
+    if (!lista.length) {
+      el.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No hay fichas creadas aún. Créalas desde las tarjetas de reserva.</p>';
+      return;
+    }
+    el.innerHTML = lista.map(f => `
+      <div class="card" style="cursor:pointer" onclick="abrirFicha('${f.email_cliente}')">
+        <div class="card-row">
+          <div class="card-body">
+            <div class="card-name">${f.nombre}</div>
+            <div class="card-sub">📧 ${f.email_cliente}${f.telefono ? ' · 📱 ' + f.telefono : ''}</div>
+            ${f.notas_generales ? `<div class="card-text" style="margin-top:6px;color:var(--muted);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.notas_generales.substring(0,80)}${f.notas_generales.length > 80 ? '…' : ''}</div>` : ''}
+          </div>
+          <button class="btn" style="font-size:.72rem;padding:6px 14px;white-space:nowrap">Ver ficha →</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function filtrarClientes(q) {
+    const txt = q.toLowerCase();
+    renderClientesList(_clientesAll.filter(f =>
+      f.nombre.toLowerCase().includes(txt) || f.email_cliente.toLowerCase().includes(txt)
+    ));
+  }
+
+  async function crearFichaDesdeReserva(email, nombre, telefono) {
+    if (_fichasMap[email]) { abrirFicha(email); return; }
+    try {
+      const rows = await sbPost('/fichas_clientes',
+        { email_cliente: email, nombre, telefono: telefono || null },
+        { 'Prefer': 'return=representation' }
+      );
+      const f = Array.isArray(rows) ? rows[0] : rows;
+      _fichasMap[email] = f;
+      abrirFicha(email);
+      // Refrescar botones en reservas
+      document.querySelectorAll(`[data-ficha-email="${CSS.escape(email)}"]`).forEach(btn => {
+        btn.textContent = 'Ver ficha →';
+        btn.style.background = 'var(--gold)';
+      });
+    } catch(e) { alert('Error al crear ficha: ' + e.message); }
+  }
+
+  async function abrirFicha(email) {
+    const ficha = _fichasMap[email];
+    if (!ficha) return;
+
+    // Cargar sesiones de este cliente
+    let sesiones = [];
+    try {
+      sesiones = await sbGet(`/reservas?email_cliente=eq.${encodeURIComponent(email)}&select=*&order=fecha.desc,hora_inicio.desc`);
+    } catch(e) {}
+
+    const modal = document.getElementById('fichaModal');
+    document.getElementById('fichaModalNombre').textContent = ficha.nombre;
+    document.getElementById('fichaModalSub').textContent = `${ficha.email_cliente}${ficha.telefono ? ' · ' + ficha.telefono : ''}`;
+    document.getElementById('fichaNotasGenerales').value = ficha.notas_generales || '';
+    document.getElementById('fichaEmail').value = ficha.email_cliente;
+
+    const sesEl = document.getElementById('fichaSesiones');
+    if (!sesiones.length) {
+      sesEl.innerHTML = '<p style="color:var(--muted);font-size:.82rem">Sin sesiones registradas.</p>';
+    } else {
+      sesEl.innerHTML = sesiones.map(r => {
+        const fecha = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+        const estadoBadge = r.estado === 'cancelada'
+          ? '<span class="badge" style="background:#fde8e8;color:var(--red)">Cancelada</span>'
+          : '<span class="badge green">Confirmada</span>';
+        return `
+          <div style="border:1.5px solid var(--beige);border-radius:12px;padding:14px 16px;margin-bottom:10px">
+            <div style="font-size:.88rem;font-weight:600;color:var(--dark);margin-bottom:2px">${r.servicio_nombre} ${estadoBadge}</div>
+            <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">${r.modalidad} · ${fecha} · ${r.hora_inicio}–${r.hora_fin} hrs</div>
+            <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px">Notas de la sesión</label>
+            <textarea data-reserva-id="${r.id}"
+              style="width:100%;padding:8px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.83rem;color:var(--dark);background:var(--cream);resize:vertical;min-height:64px;outline:none"
+              onfocus="this.style.borderColor='var(--rose)'" onblur="this.style.borderColor='var(--beige)'"
+              placeholder="Escribe aquí lo observado en esta sesión…">${r.notas_sesion || ''}</textarea>
+            <button onclick="guardarNotaSesion('${r.id}', this)"
+              style="margin-top:6px;padding:5px 14px;font-size:.72rem;background:var(--rose);color:white;border:none;border-radius:20px;cursor:pointer;font-family:'Nunito',sans-serif">
+              Guardar nota
+            </button>
+          </div>`;
+      }).join('');
+    }
+
+    modal.classList.add('open');
+  }
+
+  async function guardarFichaGeneral() {
+    const email = document.getElementById('fichaEmail').value;
+    const notas = document.getElementById('fichaNotasGenerales').value;
+    const btn   = document.getElementById('fichaGuardarGeneralBtn');
+    btn.textContent = 'Guardando…'; btn.disabled = true;
+    try {
+      const rows = await sbPatch(`/fichas_clientes?email_cliente=eq.${encodeURIComponent(email)}`,
+        { notas_generales: notas, updated_at: new Date().toISOString() });
+      if (_fichasMap[email]) _fichasMap[email].notas_generales = notas;
+      btn.textContent = '✓ Guardado';
+      setTimeout(() => { btn.textContent = 'Guardar notas generales'; btn.disabled = false; }, 1800);
+    } catch(e) { btn.textContent = 'Error'; btn.disabled = false; }
+  }
+
+  async function guardarNotaSesion(reservaId, btnEl) {
+    const textarea = btnEl.previousElementSibling;
+    const notas = textarea.value;
+    btnEl.textContent = 'Guardando…'; btnEl.disabled = true;
+    try {
+      await sbPatch(`/reservas?id=eq.${reservaId}`, { notas_sesion: notas });
+      btnEl.textContent = '✓ Guardado';
+      setTimeout(() => { btnEl.textContent = 'Guardar nota'; btnEl.disabled = false; }, 1800);
+    } catch(e) { btnEl.textContent = 'Error'; btnEl.disabled = false; }
+  }
+
+  document.getElementById('fichaModal')?.addEventListener('click', e => {
+    if (e.target.id === 'fichaModal') e.target.classList.remove('open');
+  });
+  document.getElementById('fichaModalCerrar')?.addEventListener('click', () => {
+    document.getElementById('fichaModal').classList.remove('open');
+  });
+  document.getElementById('fichaGuardarGeneralBtn')?.addEventListener('click', guardarFichaGeneral);
+
 </script>
 </body>
 </html>
