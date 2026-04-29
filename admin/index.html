@@ -960,7 +960,10 @@
       <label>Notas generales del cliente</label>
       <textarea id="fichaNotasGenerales" style="min-height:90px" placeholder="Observaciones generales, antecedentes, objetivos del proceso…"></textarea>
     </div>
-    <button id="fichaGuardarGeneralBtn" class="btn btn-primary" style="margin-bottom:24px">Guardar notas generales</button>
+    <div style="display:flex;gap:8px;margin-bottom:24px">
+      <button id="fichaGuardarGeneralBtn" class="btn btn-primary">Guardar notas generales</button>
+      <button id="fichaExportarBtn" class="btn btn-ghost" title="Copia todo el contenido de la ficha al portapapeles">📋 Exportar</button>
+    </div>
     <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px">Historial de sesiones</div>
     <div id="fichaSesiones"></div>
   </div>
@@ -3899,8 +3902,9 @@
     } catch(e) { showMsg('bannerMsg', 'Error: ' + e.message, 'err'); }
   });
   // ── FICHAS DE CLIENTES ───────────────────────────────────────
-  let _fichasMap = {};   // email → ficha object
-  let _clientesAll = []; // array completo para filtrado
+  let _fichasMap = {};          // email → ficha object
+  let _clientesAll = [];        // array completo para filtrado
+  let _fichaCurrentSesiones = []; // sesiones de la ficha abierta
 
   async function loadFichas() {
     try {
@@ -3971,6 +3975,7 @@
     try {
       sesiones = await sbGet(`/reservas?email_cliente=eq.${encodeURIComponent(email)}&select=*&order=fecha.desc,hora_inicio.desc`);
     } catch(e) {}
+    _fichaCurrentSesiones = sesiones;
 
     const modal = document.getElementById('fichaModal');
     document.getElementById('fichaModalNombre').textContent = ficha.nombre;
@@ -4032,6 +4037,65 @@
     } catch(e) { btnEl.textContent = 'Error'; btnEl.disabled = false; }
   }
 
+  function exportarFicha() {
+    const ficha   = _fichasMap[document.getElementById('fichaEmail').value];
+    const notas   = document.getElementById('fichaNotasGenerales').value.trim();
+    const btn     = document.getElementById('fichaExportarBtn');
+
+    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const fmtFecha = f => {
+      if (!f) return '';
+      const [y,m,d] = f.split('-');
+      return `${parseInt(d)} de ${meses[parseInt(m)-1]} de ${y}`;
+    };
+
+    let texto = `FICHA CLÍNICA\n`;
+    texto += `${'='.repeat(50)}\n`;
+    texto += `Cliente:   ${ficha.nombre}\n`;
+    texto += `Email:     ${ficha.email_cliente}\n`;
+    if (ficha.telefono) texto += `Teléfono:  ${ficha.telefono}\n`;
+    texto += `\n`;
+
+    texto += `NOTAS GENERALES\n`;
+    texto += `${'-'.repeat(40)}\n`;
+    texto += notas ? notas + '\n' : '(sin notas)\n';
+    texto += `\n`;
+
+    texto += `HISTORIAL DE SESIONES (${_fichaCurrentSesiones.length})\n`;
+    texto += `${'-'.repeat(40)}\n`;
+
+    if (!_fichaCurrentSesiones.length) {
+      texto += '(sin sesiones registradas)\n';
+    } else {
+      // Leer notas actualizadas desde los textareas del DOM
+      const notasDOM = {};
+      document.querySelectorAll('#fichaSesiones textarea[data-reserva-id]').forEach(ta => {
+        notasDOM[ta.dataset.reservaId] = ta.value.trim();
+      });
+
+      _fichaCurrentSesiones.forEach((r, i) => {
+        texto += `\nSesión ${_fichaCurrentSesiones.length - i} — ${fmtFecha(r.fecha)}\n`;
+        texto += `Servicio:  ${r.servicio_nombre}\n`;
+        texto += `Modalidad: ${r.modalidad} · ${r.hora_inicio}–${r.hora_fin} hrs\n`;
+        texto += `Estado:    ${r.estado}\n`;
+        const nota = notasDOM[r.id] ?? (r.notas_sesion || '');
+        texto += `Notas:     ${nota || '(sin notas)'}\n`;
+      });
+    }
+
+    navigator.clipboard.writeText(texto).then(() => {
+      btn.textContent = '✓ Copiado';
+      setTimeout(() => { btn.textContent = '📋 Exportar'; }, 2000);
+    }).catch(() => {
+      // Fallback: descargar como .txt
+      const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `ficha-${ficha.nombre.replace(/\s+/g,'-').toLowerCase()}.txt`;
+      a.click();
+    });
+  }
+
   // Exponer al scope global para onclicks inline
   window.crearFichaDesdeReserva = crearFichaDesdeReserva;
   window.abrirFicha             = abrirFicha;
@@ -4045,6 +4109,7 @@
     document.getElementById('fichaModal').classList.remove('open');
   });
   document.getElementById('fichaGuardarGeneralBtn')?.addEventListener('click', guardarFichaGeneral);
+  document.getElementById('fichaExportarBtn')?.addEventListener('click', exportarFicha);
 
 </script>
 </body>
