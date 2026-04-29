@@ -104,7 +104,9 @@
       document.querySelector('main')?.before(b);
 
       if (paymentId && typeof APPS_URL !== 'undefined') {
-        fetch(APPS_URL + '?action=confirmarPago&payment_id=' + encodeURIComponent(paymentId))
+        const appsUrl = APPS_URL + '?action=confirmarPago&payment_id=' + encodeURIComponent(paymentId)
+          + (extRef ? '&external_reference=' + encodeURIComponent(extRef) : '');
+        fetch(appsUrl)
           .then(r => r.json())
           .then(data => { if (data.ok) b.innerHTML = '✅ <strong>¡Inscripción confirmada!</strong> ¡Te esperamos! 🌸'; })
           .catch(() => {});

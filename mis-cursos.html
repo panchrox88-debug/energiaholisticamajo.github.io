@@ -206,8 +206,9 @@
       document.querySelector('main')?.before(b);
 
       if (paymentId && typeof APPS_URL !== 'undefined') {
-        fetch(APPS_URL + '?action=confirmarPago&payment_id=' + encodeURIComponent(paymentId))
-          .catch(() => {});
+        const appsUrl = APPS_URL + '?action=confirmarPago&payment_id=' + encodeURIComponent(paymentId)
+          + (extRef ? '&external_reference=' + encodeURIComponent(extRef) : '');
+        fetch(appsUrl).catch(() => {});
       }
 
     } else if (pago === 'error') {

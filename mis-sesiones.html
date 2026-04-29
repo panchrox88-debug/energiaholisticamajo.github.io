@@ -273,7 +273,9 @@
 
       // Llamar al Apps Script para confirmar el pago y enviar correos
       if (paymentId && typeof APPS_URL !== 'undefined') {
-        fetch(APPS_URL + '?action=confirmarPago&payment_id=' + encodeURIComponent(paymentId))
+        const appsUrl = APPS_URL + '?action=confirmarPago&payment_id=' + encodeURIComponent(paymentId)
+          + (extRef ? '&external_reference=' + encodeURIComponent(extRef) : '');
+        fetch(appsUrl)
           .then(r => r.json())
           .then(data => {
             if (data.ok) banner.innerHTML = '✅ <strong>¡Reserva confirmada!</strong> Te enviamos un correo de confirmación. 🌸';
