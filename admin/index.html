@@ -4032,6 +4032,12 @@
     } catch(e) { btnEl.textContent = 'Error'; btnEl.disabled = false; }
   }
 
+  // Exponer al scope global para onclicks inline
+  window.crearFichaDesdeReserva = crearFichaDesdeReserva;
+  window.abrirFicha             = abrirFicha;
+  window.guardarNotaSesion      = guardarNotaSesion;
+  window.filtrarClientes        = filtrarClientes;
+
   document.getElementById('fichaModal')?.addEventListener('click', e => {
     if (e.target.id === 'fichaModal') e.target.classList.remove('open');
   });
