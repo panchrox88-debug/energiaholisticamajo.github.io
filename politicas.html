@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Políticas de servicio — Energía Holística Majo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --rose:    #c9858a;
+      --rose-lt: #dba8ac;
+      --blush:   #f0dada;
+      --cream:   #faf5f0;
+      --beige:   #ede0d4;
+      --gold:    #c9a96e;
+      --dark:    #3d2b2b;
+      --muted:   #7a5c5c;
+    }
+    body { background: var(--cream); color: var(--dark); font-family: 'Nunito', sans-serif; font-weight: 300; }
+
+    /* NAV */
+    nav { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 22px 64px; background: rgba(250,245,240,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(201,133,138,0.12); z-index: 100; }
+    .nav-logo { display: flex; flex-direction: column; line-height: 1.1; text-decoration: none; }
+    .nav-logo-main { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.12em; color: var(--rose); }
+    .nav-logo-sub  { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); }
+    .nav-back { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+    .nav-back:hover { color: var(--rose); }
+    @media (max-width: 900px) { nav { padding: 18px 24px; } .nav-back { display: none; } }
+
+    /* HEADER */
+    .page-header { padding: 160px 64px 60px; background: linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%); }
+    .page-header .eyebrow { font-size: 0.65rem; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 300; color: var(--dark); margin-bottom: 10px; }
+    .page-header h1 em { font-style: italic; color: var(--rose); }
+    .page-header p { font-size: 0.88rem; color: var(--muted); line-height: 1.8; max-width: 520px; }
+    @media (max-width: 900px) { .page-header { padding: 120px 24px 48px; } }
+
+    /* CONTENT */
+    .content { max-width: 740px; margin: 0 auto; padding: 60px 64px 100px; }
+    @media (max-width: 900px) { .content { padding: 40px 24px 80px; } }
+
+    /* SECCIONES */
+    .politica { margin-bottom: 56px; }
+    .politica-icon { font-size: 1.6rem; margin-bottom: 10px; }
+    .politica h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.7rem; font-weight: 300;
+      color: var(--dark); margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--beige);
+    }
+    .politica h2 em { font-style: italic; color: var(--rose); }
+
+    .politica p { font-size: 0.9rem; color: var(--dark); line-height: 1.9; margin-bottom: 12px; }
+    .politica p:last-child { margin-bottom: 0; }
+
+    .politica ul { margin: 8px 0 12px 0; padding-left: 0; list-style: none; }
+    .politica ul li {
+      font-size: 0.88rem; color: var(--dark);
+      line-height: 1.8; padding: 6px 0 6px 20px;
+      position: relative; border-bottom: 1px solid var(--beige);
+    }
+    .politica ul li:last-child { border-bottom: none; }
+    .politica ul li::before { content: '—'; position: absolute; left: 0; color: var(--rose-lt); }
+
+    .highlight-box {
+      background: var(--blush);
+      border-left: 3px solid var(--rose);
+      border-radius: 0 10px 10px 0;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 0.87rem;
+      color: var(--dark);
+      line-height: 1.8;
+    }
+    .highlight-box strong { color: var(--rose); }
+
+    .aviso-box {
+      background: #fef9f0;
+      border: 1.5px solid var(--gold);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 0.87rem;
+      color: var(--dark);
+      line-height: 1.8;
+    }
+
+    .contact-link { color: var(--rose); text-decoration: none; font-weight: 400; }
+    .contact-link:hover { text-decoration: underline; }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 32px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--beige); }
+    footer a { color: var(--rose); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="nav-logo-main">Energía Holística Majo</span>
+    <span class="nav-logo-sub">Psicóloga & Terapeuta</span>
+  </a>
+  <a href="index.html" class="nav-back">← Inicio</a>
+</nav>
+
+<header class="page-header">
+  <p class="eyebrow">Legal</p>
+  <h1>Políticas de <em>servicio</em></h1>
+  <p>Aquí encontrarás toda la información sobre cómo funcionan las reservas, el manejo de tus datos y los pagos. Última actualización: mayo de 2025.</p>
+</header>
+
+<main class="content">
+
+  <!-- 1. Cancelación y reagendamiento -->
+  <section class="politica" id="cancelacion">
+    <div class="politica-icon">🗓️</div>
+    <h2>Cancelación y <em>reagendamiento</em></h2>
+
+    <p>Para garantizar la disponibilidad y el respeto del tiempo de todos, se establecen las siguientes condiciones:</p>
+
+    <ul>
+      <li>Las sesiones pueden cancelarse o reagendarse con un mínimo de <strong>24 horas de anticipación</strong> a la hora de inicio.</li>
+      <li>Pasado ese plazo, no se aceptan cancelaciones ni reagendamientos.</li>
+      <li>En caso de no presentarse a la sesión o de cancelar fuera del plazo establecido, <strong>no se realizan reembolsos</strong>.</li>
+      <li>Para reagendar, puedes hacerlo directamente desde <a href="mis-sesiones.html" class="contact-link">Mis Sesiones</a> en tu cuenta.</li>
+    </ul>
+
+    <div class="highlight-box">
+      <strong>Importante:</strong> Si tienes una situación de fuerza mayor, comunícate directamente con Majo a través de los canales de contacto disponibles en el sitio.
+    </div>
+  </section>
+
+  <!-- 2. Privacidad de datos -->
+  <section class="politica" id="privacidad">
+    <div class="politica-icon">🔒</div>
+    <h2>Privacidad de <em>datos</em></h2>
+
+    <p>El manejo de tu información personal se rige por la Ley 19.628 sobre Protección de la Vida Privada de Chile. A continuación, el detalle de cómo se tratan tus datos:</p>
+
+    <ul>
+      <li><strong>Datos recopilados:</strong> nombre completo, correo electrónico, teléfono de contacto y notas de seguimiento de sesiones.</li>
+      <li><strong>Finalidad:</strong> gestión administrativa de reservas y seguimiento del proceso de acompañamiento terapéutico.</li>
+      <li><strong>Acceso:</strong> únicamente Majo tiene acceso a esta información. No se comparte con terceros.</li>
+      <li><strong>Tiempo de retención:</strong> los datos se conservan por el mayor tiempo posible como respaldo del historial de cada persona.</li>
+    </ul>
+
+    <p>Si deseas solicitar la eliminación o corrección de tus datos personales, puedes hacerlo enviando un correo a <a href="mailto:energiaholisticamajo@gmail.com" class="contact-link">energiaholisticamajo@gmail.com</a>.</p>
+  </section>
+
+  <!-- 3. Pagos y reembolsos -->
+  <section class="politica" id="pagos">
+    <div class="politica-icon">💳</div>
+    <h2>Pagos y <em>reembolsos</em></h2>
+
+    <ul>
+      <li>Los pagos se procesan a través de <strong>Mercado Pago</strong>, plataforma segura de pago en línea.</li>
+      <li>Si deseas solicitar un reembolso, debes elevar la solicitud por correo a <a href="mailto:energiaholisticamajo@gmail.com" class="contact-link">energiaholisticamajo@gmail.com</a>, indicando los datos de tu reserva.</li>
+      <li>No se realizan reembolsos por cancelaciones fuera del plazo establecido de 24 horas.</li>
+      <li>Si el pago presentó un problema técnico, debes gestionarlo directamente con <strong>Mercado Pago</strong> a través de sus canales de soporte.</li>
+    </ul>
+
+    <div class="highlight-box">
+      <strong>Nota:</strong> Toda solicitud de reembolso es evaluada caso a caso. El tiempo de respuesta puede variar.
+    </div>
+  </section>
+
+  <!-- 4. Aviso de salud -->
+  <section class="politica" id="salud">
+    <div class="politica-icon">🌿</div>
+    <h2>Aviso de <em>salud</em></h2>
+
+    <div class="aviso-box">
+      Los servicios ofrecidos en este sitio son de carácter <strong>complementario y de bienestar</strong>. No reemplazan, sustituyen ni equivalen a tratamientos médicos, psiquiátricos ni psicológicos convencionales.
+    </div>
+
+    <ul>
+      <li>Se recomienda mantener la atención con profesionales de salud acreditados cuando la situación lo requiera.</li>
+      <li>Majo se desempeña como psicóloga y terapeuta holística, y su acompañamiento integra herramientas energéticas y de bienestar.</li>
+      <li>En caso de crisis de salud mental o situación de urgencia, contacta a los servicios de salud correspondientes.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <strong>Energía Holística Majo</strong> · Psicóloga &amp; Terapeuta Holística<br>
+  <span style="margin-top:6px;display:inline-block">© 2025 · Todos los derechos reservados · <a href="index.html">Inicio</a></span>
+</footer>
+
+</body>
+</html>

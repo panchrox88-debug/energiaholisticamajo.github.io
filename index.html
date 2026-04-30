@@ -1886,7 +1886,11 @@
           </div>
           <div id="bkFormMsg" class="bk-form-msg" style="display:none"></div>
           <div id="bkContactInfo" style="margin:16px 0 4px;padding:12px 14px;background:var(--cream);border-radius:10px;font-size:0.78rem;color:var(--muted);line-height:1.8;display:none"></div>
-          <button type="button" class="bk-confirm" id="bkConfirmBtn">Confirmar reserva ✨</button>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;cursor:pointer;font-size:0.8rem;color:var(--muted);line-height:1.6">
+            <input type="checkbox" id="bkPoliticas" style="margin-top:3px;accent-color:var(--rose);flex-shrink:0"/>
+            He leído y acepto las <a href="politicas.html" target="_blank" style="color:var(--rose);margin-left:4px">políticas de servicio</a>
+          </label>
+          <button type="button" class="bk-confirm" id="bkConfirmBtn" disabled style="opacity:0.5;cursor:not-allowed">Confirmar reserva ✨</button>
         </form>
       </div>
 
@@ -1947,6 +1951,7 @@
           <li><a href="#">Agenda</a></li>
           <li><a href="#">Testimonios</a></li>
           <li><a href="#">Contacto</a></li>
+          <li><a href="politicas.html">Políticas de servicio</a></li>
         </ul>
       </div>
     </div>
@@ -2482,6 +2487,14 @@
       setTimeout(() => scrollToStep('stepSummary'), 200);
     }
 
+    // ── CHECKBOX POLÍTICAS ────────────────────────────────────
+    document.getElementById('bkPoliticas').addEventListener('change', function() {
+      const btn = document.getElementById('bkConfirmBtn');
+      btn.disabled = !this.checked;
+      btn.style.opacity = this.checked ? '1' : '0.5';
+      btn.style.cursor  = this.checked ? 'pointer' : 'not-allowed';
+    });
+
     // ── CONFIRMACIÓN RESERVA ──────────────────────────────────
     function calcHoraFin(inicio) {
       const [h, m] = inicio.split(':').map(Number);
@@ -2585,7 +2598,10 @@
       document.getElementById('bkEmail').readOnly = false;
       document.getElementById('bkTelefono').value = '';
       document.getElementById('bkFormMsg').style.display = 'none';
-      document.getElementById('bkConfirmBtn').disabled = false;
+      document.getElementById('bkPoliticas').checked = false;
+      document.getElementById('bkConfirmBtn').disabled = true;
+      document.getElementById('bkConfirmBtn').style.opacity = '0.5';
+      document.getElementById('bkConfirmBtn').style.cursor = 'not-allowed';
       document.getElementById('bkConfirmBtn').textContent = 'Confirmar reserva ✨';
       elSummary.innerHTML = '<span class="bk-summary-empty">Completa los pasos para agendar tu sesión ✨</span>';
       [...elServices.children].forEach(c => c.classList.remove('selected'));
