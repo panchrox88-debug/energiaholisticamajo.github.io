@@ -2382,7 +2382,7 @@
       await Promise.all([
         (async () => {
           try {
-            const res = await sbFetch(`/reservas?fecha=eq.${fecha}&estado=in.(confirmada,reagendar_solicitado)&select=hora_inicio`);
+            const res = await sbFetch(`/reservas?fecha=eq.${fecha}&estado=eq.confirmada&select=hora_inicio`);
             const rows = await res.json();
             SLOTS_OCUPADOS = (rows || []).map(r => r.hora_inicio);
           } catch(e) { SLOTS_OCUPADOS = []; }
