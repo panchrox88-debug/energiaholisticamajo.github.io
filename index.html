@@ -2062,8 +2062,8 @@
       const ov    = AGENDA_DIA_OVERRIDE || {};
       const inicio    = toMin(ov.hora_inicio || AGENDA.hora_inicio);
       const fin       = toMin(ov.hora_fin    || AGENDA.hora_fin);
-      const dur       = AGENDA.duracion_sesion || 60;
-      const pausa     = AGENDA.pausa_minutos   || 0;
+      const dur       = (AGENDA.duracion_sesion ?? 60) || 60;
+      const pausa     = AGENDA.pausa_minutos   ?? 0;
       const breakFrom = AGENDA.descanso_desde  ? toMin(AGENDA.descanso_desde) : null;
       const breakTo   = AGENDA.descanso_hasta  ? toMin(AGENDA.descanso_hasta) : null;
       const slots = [];
