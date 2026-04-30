@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://yvuzccxqkkytuisgzpqx.supabase.co https://script.google.com https://script.googleusercontent.com; frame-src www.youtube.com player.vimeo.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel Admin — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap" rel="stylesheet"/>
@@ -1394,6 +1394,12 @@
     return `${SB_URL}/storage/v1/object/public/documentos/${name}`;
   }
 
+  // ── SEGURIDAD: escape HTML para prevenir XSS ──────────────
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  }
+
   // ── AUTH ──────────────────────────────────────────────────
   const SESSION_KEY = 'ehm_admin_session';
 
@@ -1404,7 +1410,20 @@
       body: JSON.stringify({ email, password }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error_description || data.msg || 'Error al iniciar sesión');
+    if (!r.ok) throw new Error(data.error_description || data.msg || 'Credenciales incorrectas');
+    // Verificar que el usuario tiene rol 'admin'
+    const rolRes = await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${data.user.id}&select=rol`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + data.access_token },
+    });
+    const rolData = await rolRes.json();
+    if (!rolData?.[0] || rolData[0].rol !== 'admin') {
+      // Hacer logout inmediato para invalidar el token
+      await fetch(`${SB_URL}/auth/v1/logout`, {
+        method: 'POST',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + data.access_token },
+      }).catch(() => {});
+      throw new Error('Acceso no autorizado');
+    }
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
     return data;
   }
@@ -1430,10 +1449,20 @@
       // Verificar si el token expiró
       const expiresAt = saved.expires_at || 0;
       const expired = expiresAt && (expiresAt * 1000) < Date.now();
-      if (expired && saved.refresh_token) {
-        return await refreshSession(saved.refresh_token);
+      let session = expired
+        ? (saved.refresh_token ? await refreshSession(saved.refresh_token) : null)
+        : saved;
+      if (!session) return null;
+      // Re-verificar rol al restaurar sesión
+      const rolRes = await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${session.user.id}&select=rol`, {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + session.access_token },
+      });
+      const rolData = await rolRes.json();
+      if (!rolData?.[0] || rolData[0].rol !== 'admin') {
+        localStorage.removeItem(SESSION_KEY);
+        return null;
       }
-      return expired ? null : saved;
+      return session;
     } catch { return null; }
   }
 
@@ -1585,8 +1614,8 @@
 
       const notaReagendar = r.estado === 'reagendar_solicitado'
         ? `<div style="margin-top:8px;padding:10px 14px;background:#fff8e1;border-radius:8px;font-size:0.8rem;color:#7a6000;line-height:1.6">
-             ${r.nueva_fecha_propuesta ? `📅 <strong>Nueva fecha propuesta:</strong> ${r.nueva_fecha_propuesta}${nHoraLabel}<br>` : ''}
-             ${r.notas_reagendar ? `💬 <em>"${r.notas_reagendar}"</em>` : ''}
+             ${r.nueva_fecha_propuesta ? `📅 <strong>Nueva fecha propuesta:</strong> ${esc(r.nueva_fecha_propuesta)}${esc(nHoraLabel)}<br>` : ''}
+             ${r.notas_reagendar ? `💬 <em>"${esc(r.notas_reagendar)}"</em>` : ''}
            </div>`
         : '';
 
@@ -1650,11 +1679,11 @@
       <div class="card" id="res-${r.id}" style="${borderStyle}">
         <div class="card-row">
           <div class="card-body">
-            <div class="card-name">${r.servicio_nombre} ${badge}</div>
-            <div class="card-sub">${r.modalidad} · ${fecha} · ${r.hora_inicio}–${r.hora_fin} hrs</div>
+            <div class="card-name">${esc(r.servicio_nombre)} ${badge}</div>
+            <div class="card-sub">${esc(r.modalidad)} · ${esc(fecha)} · ${esc(r.hora_inicio)}–${esc(r.hora_fin)} hrs</div>
             <div class="card-text">
-              👤 ${r.nombre_cliente}<br>
-              📧 ${r.email_cliente}${r.telefono_cliente ? '<br>📱 ' + r.telefono_cliente : ''}
+              👤 ${esc(r.nombre_cliente)}<br>
+              📧 ${esc(r.email_cliente)}${r.telefono_cliente ? '<br>📱 ' + esc(r.telefono_cliente) : ''}
             </div>
             ${notaReagendar}
             ${fichaBtn}
@@ -3459,19 +3488,19 @@
         <div id="com-admin-${c.id}" style="padding:12px 0;border-bottom:1px solid var(--beige)">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <div style="flex:1">
-              <div style="font-size:.78rem;font-weight:400;color:var(--dark)">${c.nombre} <span style="color:var(--muted);font-weight:300;font-size:.7rem;margin-left:6px">${new Date(c.created_at).toLocaleDateString('es-CL')}</span></div>
-              <div style="font-size:.82rem;color:var(--muted);margin-top:3px">${c.mensaje}</div>
+              <div style="font-size:.78rem;font-weight:400;color:var(--dark)">${esc(c.nombre)} <span style="color:var(--muted);font-weight:300;font-size:.7rem;margin-left:6px">${new Date(c.created_at).toLocaleDateString('es-CL')}</span></div>
+              <div style="font-size:.82rem;color:var(--muted);margin-top:3px">${esc(c.mensaje)}</div>
             </div>
             <button class="btn btn-danger" style="flex-shrink:0;padding:4px 10px;font-size:.7rem" onclick="window._deleteCom('${c.id}')">×</button>
           </div>
           ${c.respuesta ? `
             <div style="margin-top:8px;margin-left:16px;padding:8px 12px;background:var(--blush);border-radius:8px;border-left:3px solid var(--rose)">
               <div style="font-size:.68rem;color:var(--rose);letter-spacing:.1em;margin-bottom:4px">TU RESPUESTA</div>
-              <div style="font-size:.82rem;color:var(--dark)">${c.respuesta}</div>
+              <div style="font-size:.82rem;color:var(--dark)">${esc(c.respuesta)}</div>
               <button onclick="window._editRespuesta('${c.id}', this)" style="font-size:.68rem;color:var(--muted);background:none;border:none;cursor:pointer;margin-top:4px;letter-spacing:.05em">Editar respuesta</button>
             </div>` : ''}
           <div id="reply-form-${c.id}" style="margin-top:8px;margin-left:16px;display:${c.respuesta ? 'none' : 'flex'};flex-direction:column;gap:6px">
-            <textarea id="reply-text-${c.id}" placeholder="Escribe tu respuesta…" style="width:100%;padding:8px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:300;resize:none;min-height:60px;outline:none" onfocus="this.style.borderColor='var(--rose)'" onblur="this.style.borderColor='var(--beige)'">${c.respuesta || ''}</textarea>
+            <textarea id="reply-text-${c.id}" placeholder="Escribe tu respuesta…" style="width:100%;padding:8px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:300;resize:none;min-height:60px;outline:none" onfocus="this.style.borderColor='var(--rose)'" onblur="this.style.borderColor='var(--beige)'">${esc(c.respuesta || '')}</textarea>
             <button class="btn btn-primary" style="align-self:flex-end;padding:5px 16px;font-size:.72rem" onclick="window._saveRespuesta('${c.id}')">Responder →</button>
           </div>
         </div>`).join('');
