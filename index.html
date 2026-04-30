@@ -502,62 +502,71 @@
     }
 
     .services-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 24px; max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 20px; max-width: 1100px; margin: 0 auto;
     }
 
     .service-card {
       background: white;
-      border-radius: 24px;
-      padding: 44px 32px;
-      text-align: center;
+      border-radius: 20px;
       border: 1px solid rgba(201,133,138,0.12);
-      transition: transform 0.4s, box-shadow 0.4s;
+      transition: box-shadow 0.4s;
       position: relative; overflow: hidden;
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      text-align: left;
+      cursor: pointer;
+      min-height: 180px;
     }
-    .service-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--rose), var(--gold));
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .service-card:hover { box-shadow: 2px 6px 8px 1px rgba(201,133,138,0.26); }
-    .service-card:hover::before { opacity: 0; }
-    /* Tarjeta con foto de fondo */
-    .service-card.has-bg {
+    .service-card:hover { box-shadow: 0 8px 28px rgba(201,133,138,0.2); }
+
+    /* Panel imagen izquierda */
+    .service-card-img {
+      background: linear-gradient(135deg, var(--blush) 0%, var(--rose-lt) 100%);
       background-size: cover;
       background-position: center;
+      position: relative;
+      border-radius: 20px 0 0 20px;
+      overflow: hidden;
+      min-height: 180px;
     }
-    .service-card.has-bg::after {
+    .service-card-img::after {
       content: '';
       position: absolute; inset: 0;
-      background: rgba(255,255,255,0.72);
-      border-radius: 24px;
-      z-index: 0;
+      background: rgba(255,255,255,0.55);
+      transition: background 0.3s;
     }
-    .service-card.has-bg > * { position: relative; z-index: 1; }
+    .service-card:hover .service-card-img::after {
+      background: rgba(255,255,255,0.38);
+    }
 
-    .service-icon { font-size: 2.8rem; margin-bottom: 20px; }
+    /* Panel texto derecha */
+    .service-card-body {
+      padding: 28px 26px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .service-icon { font-size: 1.4rem; margin-bottom: 8px; }
     .service-card h3 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.4rem; font-weight: 400; color: var(--dark);
-      margin-bottom: 12px;
+      font-size: 1.25rem; font-weight: 400; color: var(--dark);
+      margin-bottom: 8px; line-height: 1.3;
     }
-    .service-card p { font-size: 0.82rem; line-height: 1.9; color: var(--muted); }
+    .service-card p { font-size: 0.8rem; line-height: 1.8; color: var(--muted); }
     .service-mode {
       display: inline-block;
-      margin-top: 20px;
-      padding: 5px 16px;
+      margin-top: 14px;
+      padding: 4px 13px;
       border-radius: 20px;
       background: var(--blush);
-      font-size: 0.65rem; letter-spacing: 0.2em;
+      font-size: 0.62rem; letter-spacing: 0.2em;
       text-transform: uppercase; color: var(--rose);
+      align-self: flex-start;
     }
     .service-card-cta {
       display: inline-flex; align-items: center; gap: 6px;
-      margin-top: 20px;
+      margin-top: 10px;
       font-family: 'Cormorant Garamond', serif;
-      font-style: italic; font-size: 0.95rem;
+      font-style: italic; font-size: 0.88rem;
       color: var(--rose);
       opacity: 0.7;
       transition: opacity 0.3s, gap 0.3s;
@@ -1367,7 +1376,8 @@
       .nav-links { gap: 24px; }
       .about, .contact { padding: 100px 32px; gap: 56px; }
       .services, .testimonials, .booking { padding: 100px 32px; }
-      .services-grid { grid-template-columns: repeat(2, 1fr); }
+      .services-grid { grid-template-columns: 1fr; }
+      .service-card { grid-template-columns: 140px 1fr; }
       .testimonial-card { flex: 0 0 calc(50% - 12px); }
       .booking-wrap { padding: 48px 40px; }
       .bk-services { grid-template-columns: repeat(2, 1fr); }
@@ -1413,10 +1423,12 @@
       .badge-text { font-size: 0.66rem; }
 
       .services { padding: 80px 24px; }
-      .services-grid { grid-template-columns: 1fr; gap: 16px; }
+      .services-grid { grid-template-columns: 1fr; gap: 14px; }
+      .service-card { grid-template-columns: 110px 1fr; min-height: 150px; }
+      .service-card-img { min-height: 150px; }
+      .service-card-body { padding: 20px 18px; }
       .testimonial-card { flex: 0 0 100%; }
       .tc-arrow { display: none; }
-      .service-card { padding: 36px 24px; }
       .services .section-sub { margin-bottom: 48px; }
 
       .testimonials { padding: 80px 24px; }
@@ -3066,15 +3078,18 @@
       grid.innerHTML = '';
       SERVICIOS_DATA.forEach(s => {
         const card = document.createElement('div');
-        card.className = 'service-card reveal' + (s.foto_fondo ? ' has-bg' : '');
+        card.className = 'service-card reveal';
         card.dataset.serviceId = s.id;
-        if (s.foto_fondo) card.style.backgroundImage = `url('${s.foto_fondo}')`;
+        const imgStyle = s.foto_fondo ? `background-image:url('${s.foto_fondo}')` : '';
         card.innerHTML = `
-          ${s.emoji ? `<div class="service-icon">${s.emoji}</div>` : ''}
-          <h3>${s.titulo}</h3>
-          <p>${s.descripcion}</p>
-          <span class="service-mode">${s.modo}</span>
-          <div class="service-card-cta">Ver más →</div>`;
+          <div class="service-card-img" style="${imgStyle}"></div>
+          <div class="service-card-body">
+            ${s.emoji ? `<div class="service-icon">${s.emoji}</div>` : ''}
+            <h3>${s.titulo}</h3>
+            <p>${s.descripcion}</p>
+            <span class="service-mode">${s.modo}</span>
+            <div class="service-card-cta">Ver más →</div>
+          </div>`;
         preloadSlides(s.slides).then(valid => {
           s.slides = valid;
           card.addEventListener('click', () => openService(s.id));
