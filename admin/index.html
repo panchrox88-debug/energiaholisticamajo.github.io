@@ -2028,13 +2028,13 @@
       DIAS_HABILES = a.dias_habiles || [1,2,3,4,5,6];
       FECHAS_BLOQUEADAS = a.fechas_bloqueadas || [];
 
-      document.getElementById('ag-inicio').value      = a.hora_inicio || '9:00';
-      document.getElementById('ag-fin').value         = a.hora_fin || '19:00';
-      document.getElementById('ag-dur').value         = a.duracion_sesion || 60;
-      document.getElementById('ag-pausa').value       = a.pausa_minutos || 15;
+      document.getElementById('ag-inicio').value      = a.hora_inicio ?? '9:00';
+      document.getElementById('ag-fin').value         = a.hora_fin ?? '19:00';
+      document.getElementById('ag-dur').value         = a.duracion_sesion ?? 60;
+      document.getElementById('ag-pausa').value       = a.pausa_minutos ?? 15;
       document.getElementById('ag-break-desde').value = a.descanso_desde || '';
       document.getElementById('ag-break-hasta').value = a.descanso_hasta || '';
-      document.getElementById('ag-adelante').value    = a.dias_adelante  || 30;
+      document.getElementById('ag-adelante').value    = a.dias_adelante  ?? 30;
       document.getElementById('ag-anticip').value     = a.horas_anticipacion_reagendar ?? 24;
 
       // Días
@@ -2277,12 +2277,12 @@
     const body = {
       hora_inicio:          document.getElementById('ag-inicio').value.trim(),
       hora_fin:             document.getElementById('ag-fin').value.trim(),
-      duracion_sesion:      parseInt(document.getElementById('ag-dur').value) || 60,
-      pausa_minutos:        parseInt(document.getElementById('ag-pausa').value) || 15,
+      duracion_sesion:      (v => isNaN(v) ? 60 : v)(parseInt(document.getElementById('ag-dur').value)),
+      pausa_minutos:        (v => isNaN(v) ? 15 : v)(parseInt(document.getElementById('ag-pausa').value)),
       descanso_desde:       document.getElementById('ag-break-desde').value.trim() || null,
       descanso_hasta:       document.getElementById('ag-break-hasta').value.trim() || null,
-      dias_adelante:        parseInt(document.getElementById('ag-adelante').value) || 30,
-      horas_anticipacion_reagendar: parseInt(document.getElementById('ag-anticip').value) ?? 24,
+      dias_adelante:        (v => isNaN(v) ? 30 : v)(parseInt(document.getElementById('ag-adelante').value)),
+      horas_anticipacion_reagendar: (v => isNaN(v) ? 24 : v)(parseInt(document.getElementById('ag-anticip').value)),
       dias_habiles:          DIAS_HABILES,
       fechas_bloqueadas:     FECHAS_BLOQUEADAS,
       horarios_por_dia:      HORARIOS_POR_DIA,
@@ -2344,11 +2344,11 @@
     const body = {
       hora_inicio:      document.getElementById('ag-inicio').value.trim(),
       hora_fin:         document.getElementById('ag-fin').value.trim(),
-      duracion_sesion:  parseInt(document.getElementById('ag-dur').value) || 60,
-      pausa_minutos:    parseInt(document.getElementById('ag-pausa').value) || 15,
+      duracion_sesion:  (v => isNaN(v) ? 60 : v)(parseInt(document.getElementById('ag-dur').value)),
+      pausa_minutos:    (v => isNaN(v) ? 15 : v)(parseInt(document.getElementById('ag-pausa').value)),
       descanso_desde:   document.getElementById('ag-break-desde').value.trim() || null,
       descanso_hasta:   document.getElementById('ag-break-hasta').value.trim() || null,
-      dias_adelante:    parseInt(document.getElementById('ag-adelante').value) || 30,
+      dias_adelante:    (v => isNaN(v) ? 30 : v)(parseInt(document.getElementById('ag-adelante').value)),
       dias_habiles:          DIAS_HABILES,
       fechas_bloqueadas:     FECHAS_BLOQUEADAS,
       horarios_por_dia:      HORARIOS_POR_DIA,
