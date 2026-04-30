@@ -374,11 +374,10 @@
       cerrarModal();
       const card = document.getElementById(`sesion-${_modalId}`);
       if (card) {
-        card.classList.add('cancelada');
-        card.querySelectorAll('.badge').forEach(b => {
-          if (b.classList.contains('badge-confirmada')) { b.textContent = 'Cancelada'; b.className = 'badge badge-cancelada'; }
-        });
-        card.querySelector('.acciones-sesion')?.remove();
+        card.style.transition = 'opacity 0.4s, transform 0.4s';
+        card.style.opacity    = '0';
+        card.style.transform  = 'translateY(-8px)';
+        setTimeout(() => card.remove(), 420);
       }
     } catch(e) { cerrarModal(); alert('Error al cancelar. Intenta de nuevo.'); }
     btn.textContent = 'Sí, cancelar'; btn.disabled = false;
