@@ -967,7 +967,32 @@
       <button id="fichaGuardarGeneralBtn" class="btn btn-primary">Guardar notas generales</button>
       <button id="fichaExportarBtn" class="btn btn-ghost" title="Copia todo el contenido de la ficha al portapapeles">📋 Exportar</button>
     </div>
-    <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px">Historial de sesiones</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Historial de sesiones</div>
+      <button onclick="mostrarFormSesionManual()" style="font-size:.7rem;padding:5px 14px;border-radius:20px;border:1.5px solid var(--gold);background:none;color:var(--gold);cursor:pointer;font-family:'Nunito',sans-serif">+ Agregar sesión</button>
+    </div>
+    <!-- Formulario inline nueva sesión manual -->
+    <div id="formNuevaSesion" style="display:none;background:var(--cream);border:1.5px dashed var(--gold);border-radius:12px;padding:16px;margin-bottom:14px">
+      <div style="font-size:.82rem;font-weight:600;color:var(--dark);margin-bottom:12px">Nueva sesión manual</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div>
+          <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px">Fecha</label>
+          <input type="date" id="nsDate" style="padding:7px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;background:white;color:var(--dark)"/>
+        </div>
+        <div style="flex:1;min-width:180px">
+          <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px">Descripción / servicio</label>
+          <input type="text" id="nsDesc" placeholder="Terapia floral, sesión de reiki…" style="width:100%;padding:7px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;background:white;color:var(--dark);outline:none"/>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px">Notas</label>
+        <textarea id="nsNotas" style="width:100%;padding:8px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.83rem;color:var(--dark);background:white;resize:vertical;min-height:64px;outline:none" placeholder="Observaciones de la sesión…"></textarea>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="nsGuardarBtn" onclick="guardarNuevaSesionManual()" class="btn btn-primary" style="font-size:.78rem;padding:7px 16px">Guardar sesión</button>
+        <button onclick="document.getElementById('formNuevaSesion').style.display='none'" class="btn btn-ghost" style="font-size:.78rem;padding:7px 16px">Cancelar</button>
+      </div>
+    </div>
     <div id="fichaSesiones"></div>
   </div>
 </div>
@@ -3968,9 +3993,10 @@
     } catch(e) { showMsg('bannerMsg', 'Error: ' + e.message, 'err'); }
   });
   // ── FICHAS DE CLIENTES ───────────────────────────────────────
-  let _fichasMap = {};          // email → ficha object
-  let _clientesAll = [];        // array completo para filtrado
-  let _fichaCurrentSesiones = []; // sesiones de la ficha abierta
+  let _fichasMap = {};                 // email → ficha object
+  let _clientesAll = [];               // array completo para filtrado
+  let _fichaCurrentSesiones = [];      // reservas reales de la ficha abierta
+  let _fichaCurrentSesionesManual = []; // sesiones manuales de la ficha abierta
 
   async function loadFichas() {
     try {
@@ -4040,24 +4066,45 @@
     const ficha = _fichasMap[email];
     if (!ficha) return;
 
-    // Cargar sesiones de este cliente
-    let sesiones = [];
+    // Cargar reservas reales y sesiones manuales en paralelo
+    let sesiones = [], sesionesManual = [];
     try {
       sesiones = await sbGet(`/reservas?email_cliente=eq.${encodeURIComponent(email)}&select=*&order=fecha.desc,hora_inicio.desc`);
     } catch(e) {}
-    _fichaCurrentSesiones = sesiones;
+    try {
+      sesionesManual = await sbGet(`/sesiones_fichas?email_cliente=eq.${encodeURIComponent(email)}&select=*&order=fecha.desc,created_at.desc`);
+    } catch(e) {}
 
-    const modal = document.getElementById('fichaModal');
+    _fichaCurrentSesiones       = sesiones;
+    _fichaCurrentSesionesManual = sesionesManual;
+
     document.getElementById('fichaModalNombre').textContent = ficha.nombre;
     document.getElementById('fichaModalSub').textContent = `${ficha.email_cliente}${ficha.telefono ? ' · ' + ficha.telefono : ''}`;
     document.getElementById('fichaNotasGenerales').value = ficha.notas_generales || '';
     document.getElementById('fichaEmail').value = ficha.email_cliente;
+    document.getElementById('formNuevaSesion').style.display = 'none';
 
+    renderFichaSesiones(sesiones, sesionesManual);
+    document.getElementById('fichaModal').classList.add('open');
+  }
+
+  function renderFichaSesiones(reservas, manuales) {
     const sesEl = document.getElementById('fichaSesiones');
-    if (!sesiones.length) {
-      sesEl.innerHTML = '<p style="color:var(--muted);font-size:.82rem">Sin sesiones registradas.</p>';
-    } else {
-      sesEl.innerHTML = sesiones.map(r => {
+
+    if (!reservas.length && !manuales.length) {
+      sesEl.innerHTML = '<p style="color:var(--muted);font-size:.82rem">Sin sesiones registradas. Usa "+ Agregar sesión" para añadir una.</p>';
+      return;
+    }
+
+    // Unificar y ordenar por fecha descendente
+    const all = [
+      ...reservas.map(r => ({ tipo: 'reserva', fecha: r.fecha + (r.hora_inicio || ''), data: r })),
+      ...manuales.map(s => ({ tipo: 'manual',  fecha: s.fecha, data: s }))
+    ].sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+    sesEl.innerHTML = all.map(item => {
+      if (item.tipo === 'reserva') {
+        const r = item.data;
         const fecha = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
         const estadoBadge = r.estado === 'cancelada'
           ? '<span class="badge" style="background:#fde8e8;color:var(--red)">Cancelada</span>'
@@ -4076,10 +4123,35 @@
               Guardar nota
             </button>
           </div>`;
-      }).join('');
-    }
-
-    modal.classList.add('open');
+      } else {
+        const s = item.data;
+        return `
+          <div id="sesmanual-${s.id}" style="border:1.5px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+              <span style="background:#fef3e0;color:var(--gold);font-size:.65rem;padding:2px 9px;border-radius:20px;font-family:'Nunito';white-space:nowrap">Sesión manual</span>
+              <input type="date" value="${s.fecha}"
+                style="font-size:.82rem;padding:5px 8px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;background:white;color:var(--dark)"/>
+              <input type="text" value="${s.descripcion || ''}" placeholder="Descripción / servicio…"
+                style="flex:1;min-width:140px;font-size:.82rem;padding:5px 8px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;background:white;color:var(--dark);outline:none"/>
+            </div>
+            <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px">Notas de la sesión</label>
+            <textarea data-sesion-manual-id="${s.id}"
+              style="width:100%;padding:8px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.83rem;color:var(--dark);background:var(--cream);resize:vertical;min-height:64px;outline:none"
+              onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--beige)'"
+              placeholder="Escribe aquí lo observado en esta sesión…">${s.notas || ''}</textarea>
+            <div style="display:flex;gap:6px;margin-top:6px">
+              <button onclick="guardarSesionManual('${s.id}', this)"
+                style="padding:5px 14px;font-size:.72rem;background:var(--gold);color:white;border:none;border-radius:20px;cursor:pointer;font-family:'Nunito',sans-serif">
+                Guardar
+              </button>
+              <button onclick="eliminarSesionManual('${s.id}')"
+                style="padding:5px 14px;font-size:.72rem;background:none;border:1.5px solid var(--beige);color:var(--muted);border-radius:20px;cursor:pointer;font-family:'Nunito',sans-serif">
+                Eliminar
+              </button>
+            </div>
+          </div>`;
+      }
+    }).join('');
   }
 
   async function guardarFichaGeneral() {
@@ -4131,25 +4203,45 @@
     texto += notas ? notas + '\n' : '(sin notas)\n';
     texto += `\n`;
 
-    texto += `HISTORIAL DE SESIONES (${_fichaCurrentSesiones.length})\n`;
+    // Leer notas actualizadas desde los textareas del DOM
+    const notasReservaDOM = {};
+    document.querySelectorAll('#fichaSesiones textarea[data-reserva-id]').forEach(ta => {
+      notasReservaDOM[ta.dataset.reservaId] = ta.value.trim();
+    });
+    const notasManualDOM = {};
+    document.querySelectorAll('#fichaSesiones textarea[data-sesion-manual-id]').forEach(ta => {
+      notasManualDOM[ta.dataset.sesionManualId] = ta.value.trim();
+    });
+
+    // Unificar y ordenar
+    const todasSesiones = [
+      ..._fichaCurrentSesiones.map(r  => ({ tipo: 'reserva', fecha: r.fecha, data: r })),
+      ..._fichaCurrentSesionesManual.map(s => ({ tipo: 'manual',  fecha: s.fecha, data: s }))
+    ].sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+    texto += `HISTORIAL DE SESIONES (${todasSesiones.length})\n`;
     texto += `${'-'.repeat(40)}\n`;
 
-    if (!_fichaCurrentSesiones.length) {
+    if (!todasSesiones.length) {
       texto += '(sin sesiones registradas)\n';
     } else {
-      // Leer notas actualizadas desde los textareas del DOM
-      const notasDOM = {};
-      document.querySelectorAll('#fichaSesiones textarea[data-reserva-id]').forEach(ta => {
-        notasDOM[ta.dataset.reservaId] = ta.value.trim();
-      });
-
-      _fichaCurrentSesiones.forEach((r, i) => {
-        texto += `\nSesión ${_fichaCurrentSesiones.length - i} — ${fmtFecha(r.fecha)}\n`;
-        texto += `Servicio:  ${r.servicio_nombre}\n`;
-        texto += `Modalidad: ${r.modalidad} · ${r.hora_inicio}–${r.hora_fin} hrs\n`;
-        texto += `Estado:    ${r.estado}\n`;
-        const nota = notasDOM[r.id] ?? (r.notas_sesion || '');
-        texto += `Notas:     ${nota || '(sin notas)'}\n`;
+      todasSesiones.forEach((item, i) => {
+        const num = todasSesiones.length - i;
+        if (item.tipo === 'reserva') {
+          const r = item.data;
+          const nota = notasReservaDOM[r.id] ?? (r.notas_sesion || '');
+          texto += `\nSesión ${num} — ${fmtFecha(r.fecha)}\n`;
+          texto += `Servicio:  ${r.servicio_nombre}\n`;
+          texto += `Modalidad: ${r.modalidad} · ${r.hora_inicio}–${r.hora_fin} hrs\n`;
+          texto += `Estado:    ${r.estado}\n`;
+          texto += `Notas:     ${nota || '(sin notas)'}\n`;
+        } else {
+          const s = item.data;
+          const nota = notasManualDOM[s.id] ?? (s.notas || '');
+          texto += `\nSesión ${num} — ${fmtFecha(s.fecha)} [manual]\n`;
+          if (s.descripcion) texto += `Descripción: ${s.descripcion}\n`;
+          texto += `Notas:     ${nota || '(sin notas)'}\n`;
+        }
       });
     }
 
@@ -4160,6 +4252,69 @@
     a.click();
     btn.textContent = '✓ Descargado';
     setTimeout(() => { btn.textContent = '📋 Exportar'; }, 2000);
+  }
+
+  // ── SESIONES MANUALES ────────────────────────────────────────
+  function mostrarFormSesionManual() {
+    document.getElementById('nsDate').value  = new Date().toISOString().slice(0, 10);
+    document.getElementById('nsDesc').value  = '';
+    document.getElementById('nsNotas').value = '';
+    document.getElementById('formNuevaSesion').style.display = 'block';
+    setTimeout(() => document.getElementById('nsDesc').focus(), 80);
+  }
+
+  async function guardarNuevaSesionManual() {
+    const email       = document.getElementById('fichaEmail').value;
+    const fecha       = document.getElementById('nsDate').value;
+    const descripcion = document.getElementById('nsDesc').value.trim();
+    const notas       = document.getElementById('nsNotas').value.trim();
+    const btn         = document.getElementById('nsGuardarBtn');
+
+    if (!fecha) { alert('La fecha es requerida.'); return; }
+
+    btn.textContent = 'Guardando…'; btn.disabled = true;
+    try {
+      const rows = await sbPost('/sesiones_fichas',
+        { email_cliente: email, fecha, descripcion: descripcion || null, notas: notas || null },
+        { 'Prefer': 'return=representation' }
+      );
+      const s = Array.isArray(rows) ? rows[0] : rows;
+      _fichaCurrentSesionesManual = [s, ..._fichaCurrentSesionesManual];
+      document.getElementById('formNuevaSesion').style.display = 'none';
+      renderFichaSesiones(_fichaCurrentSesiones, _fichaCurrentSesionesManual);
+    } catch(e) {
+      alert('Error al guardar sesión: ' + e.message);
+    }
+    btn.textContent = 'Guardar sesión'; btn.disabled = false;
+  }
+
+  async function guardarSesionManual(id, btn) {
+    const card        = document.getElementById(`sesmanual-${id}`);
+    const fecha       = card.querySelector('input[type="date"]').value;
+    const descripcion = card.querySelector('input[type="text"]').value.trim();
+    const notas       = card.querySelector('textarea').value.trim();
+
+    btn.textContent = 'Guardando…'; btn.disabled = true;
+    try {
+      await sbPatch(`/sesiones_fichas?id=eq.${id}`, { fecha, descripcion: descripcion || null, notas: notas || null });
+      const idx = _fichaCurrentSesionesManual.findIndex(s => s.id === id);
+      if (idx !== -1) _fichaCurrentSesionesManual[idx] = { ..._fichaCurrentSesionesManual[idx], fecha, descripcion, notas };
+      btn.textContent = '✓ Guardado';
+      setTimeout(() => { btn.textContent = 'Guardar'; btn.disabled = false; }, 1800);
+    } catch(e) {
+      btn.textContent = 'Error'; btn.disabled = false;
+    }
+  }
+
+  async function eliminarSesionManual(id) {
+    if (!confirm('¿Eliminar esta sesión? Esta acción no se puede deshacer.')) return;
+    try {
+      await sbDelete(`/sesiones_fichas?id=eq.${id}`);
+      _fichaCurrentSesionesManual = _fichaCurrentSesionesManual.filter(s => s.id !== id);
+      renderFichaSesiones(_fichaCurrentSesiones, _fichaCurrentSesionesManual);
+    } catch(e) {
+      alert('Error al eliminar: ' + e.message);
+    }
   }
 
   // ── CREAR FICHA MANUAL ──────────────────────────────────────
@@ -4299,6 +4454,10 @@
   window.abrirAsociarFicha      = abrirAsociarFicha;
   window.filtrarAsociar         = filtrarAsociar;
   window.confirmarAsociarFicha  = confirmarAsociarFicha;
+  window.mostrarFormSesionManual   = mostrarFormSesionManual;
+  window.guardarNuevaSesionManual  = guardarNuevaSesionManual;
+  window.guardarSesionManual       = guardarSesionManual;
+  window.eliminarSesionManual      = eliminarSesionManual;
 
   document.getElementById('fichaModal')?.addEventListener('click', e => {
     if (e.target.id === 'fichaModal') e.target.classList.remove('open');
