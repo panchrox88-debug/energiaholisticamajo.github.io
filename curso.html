@@ -188,7 +188,7 @@
       .indice { padding: 48px 24px; }
       .seccion { padding: 60px 24px; }
       .seccion-inner { grid-template-columns: 1fr; gap: 32px; }
-      .seccion-visual { position: static; flex-direction: row; justify-content: flex-start; }
+      .seccion-visual { position: relative; top: auto; flex-direction: row; justify-content: flex-start; align-items: center; }
       .seccion-circle { width: 100px; height: 100px; }
       .seccion-icono { font-size: 2.5rem; }
       .cierre { padding: 60px 24px; }
@@ -200,6 +200,12 @@
       .paywall-form { flex-direction: column; }
       .paywall-form input { font-size: 16px; } /* iOS: evitar zoom */
       .paywall-form button { width: 100%; }
+      /* Cuerpo +2px mobile */
+      .hero-desc    { font-size: 1.075rem; }
+      .intro p      { font-size: 1.075rem; }
+      .seccion-desc { font-size: 1.045rem; }
+      .paywall-sub  { font-size: 1.005rem; }
+      .cierre p     { font-size: 1.025rem; }
     }
   </style>
 </head>

@@ -855,7 +855,7 @@
       margin-bottom: 20px;
     }
     .step-label .step-num {
-      color: var(--rose); font-weight: 400; margin-right: 6px;
+      color: var(--gold); font-weight: 400; margin-right: 6px;
     }
 
     /* Service grid */
@@ -1539,6 +1539,56 @@
 
       .mobile-menu a { font-size: 1.6rem; }
     }
+
+    /* ── Cuerpo +2px solo mobile ── */
+    @media (max-width: 900px) {
+      .hero-desc        { font-size: 1.075rem; }
+      .section-sub      { font-size: 1.025rem; }
+      .service-card p   { font-size: 0.925rem; }
+      .contact-left p   { font-size: 1.025rem; }
+      .testimonial-text { font-size: 1.125rem; }
+      .bk-time          { font-size: 0.945rem; }
+      .bk-mod           { font-size: 1.025rem; }
+    }
+    @media (max-width: 480px) {
+      .hero-desc        { font-size: 1.045rem; }
+      .about-content p  { font-size: 1.025rem; }
+      .cta-banner p     { font-size: 0.975rem; }
+      .section-sub      { font-size: 1.025rem; }
+      .service-card p   { font-size: 0.925rem; }
+      .contact-left p   { font-size: 1.025rem; }
+    }
+
+    /* ── Contraste eyebrows/labels (dorado → tono más oscuro) ── */
+    .section-eyebrow,
+    .hero-eyebrow,
+    .step-label,
+    .step-label .step-num,
+    .detail-eyebrow,
+    .bk-client-title .step-num {
+      color: #8b6d35;
+    }
+    /* Hero tags: borde y color más visibles */
+    .hero-tag {
+      border-color: rgba(201,133,138,0.65);
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* ── Texto justificado en mobile ── */
+    @media (max-width: 900px) {
+      .hero-desc,
+      .section-sub,
+      .about-content p,
+      .service-card p,
+      .contact-left p,
+      .cta-banner p,
+      .testimonial-text,
+      .sesion-meta,
+      .bk-mod,
+      p {
+        text-align: justify;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2176,6 +2226,10 @@
       }
 
       // ── Día mixto: mañana distinta a tarde ──────────────────
+      // Si ambos tramos tienen la misma modalidad, tratar como día fijo
+      if (conf.modalidad === 'mixta' && conf.manana && conf.tarde && conf.manana === conf.tarde) {
+        conf = { ...conf, modalidad: conf.manana };
+      }
       if (conf.modalidad === 'mixta') {
         const manIcon = conf.manana === 'presencial' ? '🌸' : '💻';
         const tarIcon = conf.tarde  === 'presencial' ? '🌸' : '💻';
