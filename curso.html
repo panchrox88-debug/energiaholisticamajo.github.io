@@ -187,9 +187,9 @@
       .intro { padding: 60px 24px; }
       .indice { padding: 48px 24px; }
       .seccion { padding: 60px 24px; }
-      .seccion-inner { grid-template-columns: 1fr; gap: 32px; }
-      .seccion-visual { position: relative; top: auto; flex-direction: row; justify-content: flex-start; align-items: center; }
-      .seccion-circle { width: 100px; height: 100px; }
+      .seccion-inner { display: flex !important; flex-direction: column; gap: 24px; }
+      .seccion-visual { position: static !important; top: auto; flex-direction: row; justify-content: flex-start; align-items: center; z-index: auto; }
+      .seccion-circle { width: 88px; height: 88px; }
       .seccion-icono { font-size: 2.5rem; }
       .cierre { padding: 60px 24px; }
       .pdf-card { margin: 0 16px; flex-wrap: wrap; gap: 12px; padding: 16px 20px; align-items: flex-start; }
