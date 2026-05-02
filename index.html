@@ -84,18 +84,20 @@
     .agendar-float {
       display: none;
       position: fixed; bottom: 100px; right: 20px; z-index: 998;
-      background: var(--rose); color: white;
-      border: none; border-radius: 28px;
-      padding: 10px 18px;
-      font-family: 'Nunito', sans-serif;
-      font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase;
+      width: 52px; height: 52px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--rose) 0%, #c4606b 100%);
+      flex-direction: column; align-items: center; justify-content: center; gap: 2px;
       cursor: pointer; text-decoration: none;
-      box-shadow: 0 4px 18px rgba(201,133,138,0.5);
-      white-space: nowrap;
-      align-items: center; gap: 5px;
+      box-shadow: 0 4px 16px rgba(201,133,138,0.55);
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    .agendar-float:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(201,133,138,0.65); }
+    .agendar-float-emoji { font-size: 1.25rem; line-height: 1; }
+    .agendar-float-text {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.42rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(255,255,255,0.92); white-space: nowrap;
+    }
+    .agendar-float:hover { transform: scale(1.07); box-shadow: 0 6px 22px rgba(201,133,138,0.7); }
     @media (max-width: 900px) { .agendar-float { display: flex; } }
     body.menu-open .agendar-float { display: none; }
 
@@ -3413,7 +3415,10 @@
     });
   </script>
   <!-- Botón flotante Agendar — solo mobile -->
-  <a class="agendar-float" href="#booking" aria-label="Agendar sesión">✨ Agendar sesión</a>
+  <a class="agendar-float" href="#booking" aria-label="Agendar sesión">
+    <span class="agendar-float-emoji">✨</span>
+    <span class="agendar-float-text">Agendar</span>
+  </a>
 
   <!-- WhatsApp flotante -->
   <a id="waBtn" class="wa-float" href="#" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
