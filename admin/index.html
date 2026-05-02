@@ -577,7 +577,8 @@
 
         <div class="section-subtitle">Fotos del carrusel</div>
         <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">
-          Las fotos reemplazan el emoji 🌸 de la tarjeta izquierda y rotan cada 6 segundos.
+          Las fotos reemplazan el emoji 🌸 de la tarjeta izquierda y rotan cada 6 segundos.<br>
+          📐 <strong>Tamaño recomendado: 600 × 800 px</strong> · formato vertical (portrait) · JPG · máx 300 KB
         </p>
         <div id="sobremifotos" style="margin-bottom:12px"></div>
         <label class="upload-zone">
@@ -742,7 +743,7 @@
 
             <!-- Imagen -->
             <div class="field" style="grid-column:1/-1">
-              <label>Imagen de portada</label>
+              <label>Imagen de portada<br><small style="font-weight:300;color:var(--muted)">📐 800 × 450 px · horizontal · JPG · máx 300 KB</small></label>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
                 <div>
                   <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Desde tu equipo</div>
@@ -765,7 +766,7 @@
 
             <!-- Fotos galería -->
             <div class="field" style="grid-column:1/-1">
-              <label>Fotos de galería <span style="text-transform:none;letter-spacing:0;font-weight:300">(aparecen como carrusel en la página del encuentro)</span></label>
+              <label>Fotos de galería <span style="text-transform:none;letter-spacing:0;font-weight:300">(aparecen como carrusel en la página del encuentro)</span><br><small style="font-weight:300;color:var(--muted)">📐 800 × 800 px · cuadradas · JPG · máx 300 KB por foto</small></label>
               <div id="encFotosList" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px"></div>
               <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                 <label style="display:inline-flex;align-items:center;gap:8px;background:var(--beige);color:var(--dark);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:0.82rem;border:1.5px solid var(--beige);transition:border-color 0.2s" onmouseenter="this.style.borderColor='var(--rose)'" onmouseleave="this.style.borderColor='var(--beige)'">
@@ -922,7 +923,7 @@
       <input type="number" id="svc-precio" placeholder="30000" min="0"/>
     </div>
     <div class="field">
-      <label>Foto de fondo de tarjeta <span style="font-size:.75rem;color:var(--muted)">(opcional — aparece opaca detrás del contenido)</span></label>
+      <label>Foto de fondo de tarjeta <span style="font-size:.75rem;color:var(--muted)">(opcional — aparece opaca detrás del contenido)</span><br><small style="font-weight:300;color:var(--muted)">📐 800 × 500 px · horizontal · JPG · máx 300 KB</small></label>
       <div id="svcFondoPreview" style="display:none;margin-bottom:8px;position:relative">
         <img id="svcFondoImg" src="" style="width:100%;height:110px;object-fit:cover;border-radius:8px;opacity:.7"/>
         <button type="button" onclick="window._removeSvcFondo()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:13px;line-height:1">✕</button>
@@ -933,7 +934,7 @@
       </label>
     </div>
     <div class="field">
-      <label>Imágenes del carrusel</label>
+      <label>Imágenes del carrusel<br><small style="font-weight:300;color:var(--muted)">📐 800 × 600 px · horizontal · JPG · máx 300 KB por foto</small></label>
       <div id="svcSlides" class="img-grid"></div>
       <label class="upload-zone" style="margin-top:10px">
         <input type="file" id="svcSlideInput" accept="image/*" multiple/>
@@ -1094,7 +1095,7 @@
           <label class="upload-zone" id="cursoPdfZone"><input type="file" id="cursoPdfInput" accept="application/pdf" multiple/>📁 Añadir PDF</label>
         </div>
         <div class="field">
-          <label>Imagen de portada</label>
+          <label>Imagen de portada<br><small style="font-weight:300;color:var(--muted)">📐 1200 × 630 px · proporción 16:9 · JPG · máx 400 KB</small></label>
           <div id="cursoImgPositioner" style="display:none;margin-bottom:8px">
             <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">↔ Arrastra para reposicionar</div>
             <div id="cursoPosDrag" style="width:100%;height:160px;overflow:hidden;position:relative;cursor:grab;user-select:none;border-radius:10px;border:1.5px solid var(--beige)">
@@ -1165,7 +1166,7 @@
       <textarea id="promo-desc" style="min-height:80px" placeholder="Describe los beneficios del combo…"></textarea>
     </div>
     <div class="field">
-      <label>Imagen de portada</label>
+      <label>Imagen de portada<br><small style="font-weight:300;color:var(--muted)">📐 900 × 600 px · JPG · máx 400 KB</small></label>
       <div id="promoImgPositioner" style="display:none;margin-bottom:8px">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">↔ Arrastra para reposicionar</div>
         <div id="promoPosDrag" style="width:100%;height:160px;overflow:hidden;position:relative;cursor:grab;user-select:none;border-radius:10px;border:1.5px solid var(--beige)">
@@ -1231,7 +1232,7 @@
     <div class="field"><label>Resumen (se muestra en la lista, opcional)</label><textarea id="blog-resumen" style="min-height:60px"></textarea></div>
     <div class="field"><label>Contenido (usa doble salto de línea para separar párrafos)</label><textarea id="blog-contenido" style="min-height:200px"></textarea></div>
     <div class="field">
-      <label>Imagen destacada</label>
+      <label>Imagen destacada<br><small style="font-weight:300;color:var(--muted)">📐 1200 × 630 px · proporción 2:1 · JPG · máx 500 KB</small></label>
       <div id="blogImgPositioner" style="display:none;margin-bottom:8px">
         <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">↔ Arrastra para reposicionar</div>
         <div id="blogPosDrag" style="width:100%;height:160px;overflow:hidden;position:relative;cursor:grab;user-select:none;border-radius:10px;border:1.5px solid var(--beige)">
