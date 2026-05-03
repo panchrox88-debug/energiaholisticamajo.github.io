@@ -4177,7 +4177,7 @@
     const svcKeys = Object.keys(todosServicios).sort();
     const chipActivo  = 'padding:4px 13px;border-radius:20px;border:none;background:var(--rose);color:white;font-size:.72rem;cursor:pointer;font-family:\'Nunito\',sans-serif;white-space:nowrap';
     const chipInactivo = 'padding:4px 13px;border-radius:20px;border:1.5px solid var(--beige);background:white;color:var(--muted);font-size:.72rem;cursor:pointer;font-family:\'Nunito\',sans-serif;white-space:nowrap';
-    const filtrosHtml = svcKeys.length > 1 ? `
+    const filtrosHtml = svcKeys.length >= 1 ? `
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;align-items:center">
         <span style="font-size:.68rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-right:2px">Servicio:</span>
         <button style="${!_fichaFiltroServicio ? chipActivo : chipInactivo}" onclick="filtrarClientesPorServicio(null)">
