@@ -4208,6 +4208,8 @@
     document.getElementById('fichaNotasGenerales').value = ficha.notas_generales || '';
     document.getElementById('fichaEmail').value = ficha.email_cliente;
     document.getElementById('formNuevaSesion').style.display = 'none';
+    // Resetear panel de edición para que no muestre datos de ficha anterior
+    document.getElementById('fichaEditarDatos').style.display = 'none';
 
     renderFichaSesiones(sesiones, sesionesManual);
     document.getElementById('fichaModal').classList.add('open');
@@ -4610,17 +4612,15 @@
   // ── EDITAR DATOS DE FICHA ────────────────────────────────────
   function toggleEditarDatosFicha() {
     const panel = document.getElementById('fichaEditarDatos');
-    if (panel.style.display === 'none') {
-      const email = document.getElementById('fichaEmail').value;
-      const ficha = _fichasMap[email];
-      if (!ficha) return;
-      document.getElementById('fichaEditNombre').value   = ficha.nombre || '';
-      document.getElementById('fichaEditTelefono').value = ficha.telefono || '';
-      document.getElementById('fichaEditEmail').value    = ficha.email_cliente || '';
-      panel.style.display = 'block';
-    } else {
-      panel.style.display = 'none';
-    }
+    if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+    // Siempre repopular desde la ficha actual
+    const email = document.getElementById('fichaEmail').value;
+    const ficha = _fichasMap[email];
+    if (!ficha) return;
+    document.getElementById('fichaEditNombre').value   = ficha.nombre || '';
+    document.getElementById('fichaEditTelefono').value = ficha.telefono || '';
+    document.getElementById('fichaEditEmail').value    = ficha.email_cliente || '';
+    panel.style.display = 'block';
   }
 
   async function guardarDatosFicha() {
