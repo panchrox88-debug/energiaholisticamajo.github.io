@@ -4122,6 +4122,7 @@
   let _clientesAll = [];               // array completo para filtrado
   let _fichaCurrentSesiones = [];      // reservas reales de la ficha abierta
   let _fichaCurrentSesionesManual = []; // sesiones manuales de la ficha abierta
+  let _fichaActual = null;             // objeto ficha actualmente abierta
 
   async function loadFichas() {
     try {
@@ -4202,6 +4203,7 @@
 
     _fichaCurrentSesiones       = sesiones;
     _fichaCurrentSesionesManual = sesionesManual;
+    _fichaActual                = ficha;
 
     document.getElementById('fichaModalNombre').textContent = ficha.nombre;
     document.getElementById('fichaModalSub').textContent = `${ficha.email_cliente}${ficha.telefono ? ' · ' + ficha.telefono : ''}`;
@@ -4613,51 +4615,52 @@
   function toggleEditarDatosFicha() {
     const panel = document.getElementById('fichaEditarDatos');
     if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
-    // Siempre repopular desde la ficha actual
-    const email = document.getElementById('fichaEmail').value;
-    const ficha = _fichasMap[email];
-    if (!ficha) return;
-    document.getElementById('fichaEditNombre').value   = ficha.nombre || '';
-    document.getElementById('fichaEditTelefono').value = ficha.telefono || '';
-    document.getElementById('fichaEditEmail').value    = ficha.email_cliente || '';
+    if (!_fichaActual) return;
+    document.getElementById('fichaEditNombre').value   = _fichaActual.nombre || '';
+    document.getElementById('fichaEditTelefono').value = _fichaActual.telefono || '';
+    document.getElementById('fichaEditEmail').value    = _fichaActual.email_cliente || '';
     panel.style.display = 'block';
   }
 
   async function guardarDatosFicha() {
-    const emailOrig = document.getElementById('fichaEmail').value;
+    if (!_fichaActual) return;
+    const emailOrig = _fichaActual.email_cliente;
     const nombre    = document.getElementById('fichaEditNombre').value.trim();
     const telefono  = document.getElementById('fichaEditTelefono').value.trim();
     const emailNew  = document.getElementById('fichaEditEmail').value.trim().toLowerCase();
-    if (!nombre || !emailNew) { alert('Nombre y email son obligatorios.'); return; }
+    if (!nombre) { alert('El nombre es obligatorio.'); return; }
     try {
       await sbPatch(`/fichas_clientes?email_cliente=eq.${encodeURIComponent(emailOrig)}`,
-        { nombre, telefono: telefono || null, email_cliente: emailNew }
+        { nombre, telefono: telefono || null, email_cliente: emailNew || emailOrig }
       );
-      // Actualizar mapa local
-      const ficha = _fichasMap[emailOrig];
-      ficha.nombre = nombre; ficha.telefono = telefono; ficha.email_cliente = emailNew;
-      if (emailOrig !== emailNew) {
+      // Actualizar mapa local y _fichaActual
+      _fichaActual.nombre = nombre;
+      _fichaActual.telefono = telefono;
+      if (emailNew && emailNew !== emailOrig) {
         delete _fichasMap[emailOrig];
-        _fichasMap[emailNew] = ficha;
+        _fichaActual.email_cliente = emailNew;
+        _fichasMap[emailNew] = _fichaActual;
         document.getElementById('fichaEmail').value = emailNew;
       }
       _clientesAll = Object.values(_fichasMap);
       // Actualizar header del modal
+      const emailFinal = _fichaActual.email_cliente;
       document.getElementById('fichaModalNombre').textContent = nombre;
-      document.getElementById('fichaModalSub').textContent = `${emailNew}${telefono ? ' · ' + telefono : ''}`;
+      document.getElementById('fichaModalSub').textContent = `${emailFinal}${telefono ? ' · ' + telefono : ''}`;
       document.getElementById('fichaEditarDatos').style.display = 'none';
       showMsg('clientesMsg', 'Datos actualizados correctamente');
     } catch(e) { alert('Error al guardar: ' + e.message); }
   }
 
   async function eliminarFicha() {
-    const email = document.getElementById('fichaEmail').value;
-    const ficha = _fichasMap[email];
-    if (!ficha) return;
+    if (!_fichaActual) return;
+    const ficha = _fichaActual;
     if (!confirm(`¿Eliminar la ficha de "${ficha.nombre}"?\n\nEsto eliminará la ficha y sus sesiones manuales.\nLas reservas del sistema NO se eliminan.`)) return;
+    const emailElim = ficha.email_cliente;
     try {
-      await sbDelete(`/fichas_clientes?email_cliente=eq.${encodeURIComponent(email)}`);
-      delete _fichasMap[email];
+      await sbDelete(`/fichas_clientes?email_cliente=eq.${encodeURIComponent(emailElim)}`);
+      delete _fichasMap[emailElim];
+      _fichaActual = null;
       _clientesAll = Object.values(_fichasMap);
       document.getElementById('fichaModal').classList.remove('open');
       renderClientesList(_clientesAll);
