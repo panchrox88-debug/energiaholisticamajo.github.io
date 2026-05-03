@@ -2027,7 +2027,7 @@
         <p class="footer-brand-desc">Acompaño procesos de sanación integrando psicología, energía y conciencia. Un espacio seguro para tu transformación.</p>
         <div class="footer-socials">
           <a id="footerInsta" class="social-btn" href="https://www.instagram.com/energiaholisticamajo/" target="_blank" rel="noopener" aria-label="Instagram">📸</a>
-          <a id="footerEmail" class="social-btn" href="#" aria-label="Enviar correo">✉️</a>
+          <button id="footerEmail" class="social-btn" aria-label="Enviar correo" style="cursor:pointer;background:transparent;border:1px solid rgba(201,133,138,0.3);">✉️</button>
           <button id="footerShare" class="social-btn" aria-label="Compartir sitio" style="cursor:pointer;background:transparent;border:1px solid rgba(201,133,138,0.3);">🔗</button>
         </div>
       </div>
@@ -2741,9 +2741,10 @@
         }
         // Footer: email desde Supabase
         const em = (canales || []).find(c => c.tipo === 'email');
-        if (em) {
-          const emailBtn = document.getElementById('footerEmail');
-          if (emailBtn) emailBtn.href = `mailto:${em.valor.trim()}`;
+        const emailBtn = document.getElementById('footerEmail');
+        if (em && emailBtn) {
+          emailBtn.dataset.email = em.valor.trim();
+          emailBtn.onclick = () => { window.location.href = `mailto:${em.valor.trim()}`; };
         }
         // Footer: Instagram desde Supabase (si está configurado, sobreescribe el hardcoded)
         const ig = (canales || []).find(c => c.tipo === 'instagram');
