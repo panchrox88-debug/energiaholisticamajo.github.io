@@ -4120,16 +4120,34 @@
   // ── FICHAS DE CLIENTES ───────────────────────────────────────
   let _fichasMap = {};                 // email → ficha object
   let _clientesAll = [];               // array completo para filtrado
+  let _serviciosMap = {};              // email → Set de servicios consumidos
+  let _fichaFiltroServicio = null;     // servicio activo en el filtro de lista
   let _fichaCurrentSesiones = [];      // reservas reales de la ficha abierta
   let _fichaCurrentSesionesManual = []; // sesiones manuales de la ficha abierta
   let _fichaActual = null;             // objeto ficha actualmente abierta
 
   async function loadFichas() {
     try {
-      const rows = await sbGet('/fichas_clientes?select=*&order=nombre.asc');
+      const [fichas, reservas, manuales] = await Promise.all([
+        sbGet('/fichas_clientes?select=*&order=nombre.asc'),
+        sbGet('/reservas?select=email_cliente,servicio_nombre&estado=neq.cancelada').catch(() => []),
+        sbGet('/sesiones_fichas?select=email_cliente,descripcion').catch(() => []),
+      ]);
       _fichasMap = {};
-      rows.forEach(f => { _fichasMap[f.email_cliente] = f; });
-    } catch(e) { /* silencioso — tabla puede estar vacía */ }
+      fichas.forEach(f => { _fichasMap[f.email_cliente] = f; });
+      // Construir mapa de servicios por cliente
+      _serviciosMap = {};
+      reservas.forEach(r => {
+        if (!r.email_cliente || !r.servicio_nombre) return;
+        if (!_serviciosMap[r.email_cliente]) _serviciosMap[r.email_cliente] = new Set();
+        _serviciosMap[r.email_cliente].add(r.servicio_nombre);
+      });
+      manuales.forEach(s => {
+        if (!s.email_cliente || !s.descripcion) return;
+        if (!_serviciosMap[s.email_cliente]) _serviciosMap[s.email_cliente] = new Set();
+        _serviciosMap[s.email_cliente].add(s.descripcion);
+      });
+    } catch(e) { /* silencioso */ }
   }
 
   async function loadClientes() {
@@ -4137,37 +4155,82 @@
     el.innerHTML = '<p style="color:var(--muted);font-size:.85rem">Cargando…</p>';
     await loadFichas();
     _clientesAll = Object.values(_fichasMap);
+    _fichaFiltroServicio = null;
     renderClientesList(_clientesAll);
   }
 
   function renderClientesList(lista) {
     const el = document.getElementById('clientesList');
+
+    // ── Chips de filtro por servicio ──────────────────────────
+    const todosServicios = {};
+    _clientesAll.forEach(f => {
+      (_serviciosMap[f.email_cliente] || new Set()).forEach(svc => {
+        todosServicios[svc] = (todosServicios[svc] || 0) + 1;
+      });
+    });
+    const svcKeys = Object.keys(todosServicios).sort();
+    const chipActivo  = 'padding:4px 13px;border-radius:20px;border:none;background:var(--rose);color:white;font-size:.72rem;cursor:pointer;font-family:\'Nunito\',sans-serif;white-space:nowrap';
+    const chipInactivo = 'padding:4px 13px;border-radius:20px;border:1.5px solid var(--beige);background:white;color:var(--muted);font-size:.72rem;cursor:pointer;font-family:\'Nunito\',sans-serif;white-space:nowrap';
+    const filtrosHtml = svcKeys.length > 1 ? `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;align-items:center">
+        <span style="font-size:.68rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-right:2px">Servicio:</span>
+        <button style="${!_fichaFiltroServicio ? chipActivo : chipInactivo}" onclick="filtrarClientesPorServicio(null)">
+          Todas (${_clientesAll.length})
+        </button>
+        ${svcKeys.map(svc => `
+          <button style="${_fichaFiltroServicio === svc ? chipActivo : chipInactivo}" onclick="filtrarClientesPorServicio('${svc.replace(/'/g,"\\'")}')">
+            ${svc} (${todosServicios[svc]})
+          </button>`).join('')}
+      </div>` : '';
+
     if (!lista.length) {
-      el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted)">
+      el.innerHTML = filtrosHtml + `<div style="text-align:center;padding:40px 20px;color:var(--muted)">
         <div style="font-size:2.5rem;margin-bottom:12px">🗂️</div>
         <p style="font-size:.88rem;line-height:1.7;margin-bottom:16px">No hay fichas creadas aún.<br>Puedes crearlas manualmente aquí o desde las tarjetas de reserva.</p>
         <button class="btn btn-primary" onclick="crearFichaManual()">+ Nueva ficha</button>
       </div>`;
       return;
     }
-    el.innerHTML = lista.map(f => `
-      <div class="card" style="cursor:pointer" onclick="abrirFicha('${f.email_cliente}')">
+
+    el.innerHTML = filtrosHtml + lista.map(f => {
+      const svcs = [...(_serviciosMap[f.email_cliente] || new Set())];
+      const tagsHtml = svcs.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px">${
+        svcs.map(s => `<span style="font-size:.62rem;padding:2px 9px;border-radius:20px;background:var(--blush);color:var(--rose);white-space:nowrap">${s}</span>`).join('')
+      }</div>` : '';
+      const emailSafe = (f.email_cliente || '').replace(/'/g, "\\'");
+      return `
+      <div class="card" style="cursor:pointer" onclick="abrirFicha('${emailSafe}')">
         <div class="card-row">
           <div class="card-body">
             <div class="card-name">${f.nombre}</div>
-            <div class="card-sub">📧 ${f.email_cliente}${f.telefono ? ' · 📱 ' + f.telefono : ''}</div>
+            <div class="card-sub">${f.email_cliente ? '📧 ' + f.email_cliente : ''}${f.telefono ? (f.email_cliente ? ' · ' : '') + '📱 ' + f.telefono : ''}</div>
+            ${tagsHtml}
             ${f.notas_generales ? `<div class="card-text" style="margin-top:6px;color:var(--muted);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.notas_generales.substring(0,80)}${f.notas_generales.length > 80 ? '…' : ''}</div>` : ''}
           </div>
-          <button class="btn" style="font-size:.72rem;padding:6px 14px;white-space:nowrap">Ver ficha →</button>
+          <button class="btn" style="font-size:.72rem;padding:6px 14px;white-space:nowrap;flex-shrink:0">Ver ficha →</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
+
+  function filtrarClientesPorServicio(svc) {
+    _fichaFiltroServicio = svc;
+    const txt = (document.getElementById('clientesBuscar')?.value || '').toLowerCase();
+    let lista = _clientesAll;
+    if (txt) lista = lista.filter(f => f.nombre.toLowerCase().includes(txt) || (f.email_cliente||'').toLowerCase().includes(txt));
+    if (svc) lista = lista.filter(f => (_serviciosMap[f.email_cliente] || new Set()).has(svc));
+    renderClientesList(lista);
+  }
+  window.filtrarClientesPorServicio = filtrarClientesPorServicio;
 
   function filtrarClientes(q) {
     const txt = q.toLowerCase();
-    renderClientesList(_clientesAll.filter(f =>
-      f.nombre.toLowerCase().includes(txt) || f.email_cliente.toLowerCase().includes(txt)
-    ));
+    let lista = _clientesAll.filter(f =>
+      f.nombre.toLowerCase().includes(txt) || (f.email_cliente||'').toLowerCase().includes(txt)
+    );
+    if (_fichaFiltroServicio) lista = lista.filter(f => (_serviciosMap[f.email_cliente] || new Set()).has(_fichaFiltroServicio));
+    renderClientesList(lista);
   }
 
   async function crearFichaDesdeReserva(email, nombre, telefono) {
