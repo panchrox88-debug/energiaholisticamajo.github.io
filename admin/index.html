@@ -4213,7 +4213,9 @@
     document.getElementById('fichaModal').classList.add('open');
   }
 
-  function renderFichaSesiones(reservas, manuales) {
+  let _fichaFiltroActivo = null; // null = todas
+
+  function renderFichaSesiones(reservas, manuales, filtro) {
     const sesEl = document.getElementById('fichaSesiones');
 
     if (!reservas.length && !manuales.length) {
@@ -4222,12 +4224,43 @@
     }
 
     // Unificar y ordenar por fecha descendente
-    const all = [
-      ...reservas.map(r => ({ tipo: 'reserva', fecha: r.fecha + (r.hora_inicio || ''), data: r })),
-      ...manuales.map(s => ({ tipo: 'manual',  fecha: s.fecha, data: s }))
+    const allItems = [
+      ...reservas.map(r => ({ tipo: 'reserva', fecha: r.fecha + (r.hora_inicio || ''), servicio: r.servicio_nombre || '—', data: r })),
+      ...manuales.map(s => ({ tipo: 'manual',  fecha: s.fecha, servicio: s.descripcion || 'Sesión manual', data: s }))
     ].sort((a, b) => b.fecha.localeCompare(a.fecha));
 
-    sesEl.innerHTML = all.map(item => {
+    // ── Conteo por servicio ──────────────────────────────────
+    const conteo = {};
+    allItems.forEach(item => {
+      const svc = item.servicio;
+      conteo[svc] = (conteo[svc] || 0) + 1;
+    });
+    const servicios = Object.keys(conteo).sort();
+
+    // ── Chips de filtro ──────────────────────────────────────
+    _fichaFiltroActivo = filtro || null;
+    const chipStyle = (activo) => activo
+      ? 'padding:4px 13px;border-radius:20px;border:none;background:var(--rose);color:white;font-size:.72rem;cursor:pointer;font-family:\'Nunito\',sans-serif;white-space:nowrap'
+      : 'padding:4px 13px;border-radius:20px;border:1.5px solid var(--beige);background:white;color:var(--muted);font-size:.72rem;cursor:pointer;font-family:\'Nunito\',sans-serif;white-space:nowrap';
+
+    const chipsHtml = `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center">
+        <span style="font-size:.68rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-right:2px">Filtrar:</span>
+        <button style="${chipStyle(!_fichaFiltroActivo)}" onclick="filtrarFichaSesiones(null)">
+          Todas (${allItems.length})
+        </button>
+        ${servicios.map(svc => `
+          <button style="${chipStyle(_fichaFiltroActivo === svc)}" onclick="filtrarFichaSesiones('${svc.replace(/'/g,"\\'")}')">
+            ${svc} (${conteo[svc]})
+          </button>`).join('')}
+      </div>`;
+
+    // ── Filtrar items ────────────────────────────────────────
+    const filtered = _fichaFiltroActivo
+      ? allItems.filter(item => item.servicio === _fichaFiltroActivo)
+      : allItems;
+
+    sesEl.innerHTML = chipsHtml + filtered.map(item => {
       if (item.tipo === 'reserva') {
         const r = item.data;
         const fecha = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
@@ -4278,6 +4311,11 @@
       }
     }).join('');
   }
+
+  function filtrarFichaSesiones(servicio) {
+    renderFichaSesiones(_fichaCurrentSesiones, _fichaCurrentSesionesManual, servicio);
+  }
+  window.filtrarFichaSesiones = filtrarFichaSesiones;
 
   async function guardarFichaGeneral() {
     const email = document.getElementById('fichaEmail').value;
