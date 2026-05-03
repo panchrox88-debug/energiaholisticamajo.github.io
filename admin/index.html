@@ -4212,7 +4212,6 @@
             <div class="card-name">${f.nombre}</div>
             <div class="card-sub">${f.email_cliente ? '📧 ' + f.email_cliente : ''}${f.telefono ? (f.email_cliente ? ' · ' : '') + '📱 ' + f.telefono : ''}</div>
             ${tagsHtml}
-            ${f.notas_generales ? `<div class="card-text" style="margin-top:6px;color:var(--muted);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.notas_generales.substring(0,80)}${f.notas_generales.length > 80 ? '…' : ''}</div>` : ''}
           </div>
           <button class="btn" style="font-size:.72rem;padding:6px 14px;white-space:nowrap;flex-shrink:0">Ver ficha →</button>
         </div>
