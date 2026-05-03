@@ -235,7 +235,7 @@
     }
     .mobile-cta {
       display: block; text-align: center;
-      background: var(--rose);
+      background: linear-gradient(135deg, #c9a96e 0%, #a8803c 100%);
       color: var(--white);
       padding: 10px 16px; border-radius: 30px;
       font-family: 'Cormorant Garamond', serif;
@@ -244,7 +244,16 @@
       text-decoration: none;
       transition: background 0.25s;
     }
-    .mobile-cta:hover { background: var(--rose-lt); }
+    .mobile-cta:hover { background: linear-gradient(135deg, #d4b47a 0%, #b88a47 100%); }
+    .menu-maps-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      text-decoration: none; padding: 10px 12px; border-radius: 12px;
+      background: white; border: 1px solid var(--beige); margin-bottom: 12px;
+    }
+    .menu-maps-left { display: flex; flex-direction: column; }
+    .menu-maps-addr { font-size: 0.74rem; color: var(--muted); line-height: 1.45; }
+    .menu-maps-hint { font-size: 0.53rem; color: var(--rose); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+    .menu-maps-arrow { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; background: var(--blush); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: var(--rose); }
     body.menu-open { overflow: hidden; }
     /* Ocultar WhatsApp cuando el menú está abierto */
     body.menu-open .wa-float { display: none; }
@@ -1764,11 +1773,7 @@
     </div>
 
     <div class="mobile-menu-footer">
-      <div id="menuUbicacion" style="display:none;margin-bottom:14px;font-size:0.78rem;color:var(--muted);line-height:1.5;">
-        <div style="font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Ubicación</div>
-        <div id="menuUbicacionVal"></div>
-        <a id="menuMapsBtn" class="maps-btn" href="#" target="_blank" rel="noopener" style="margin-top:6px;">📍 Cómo llegar</a>
-      </div>
+      <div id="menuUbicacion" style="display:none;"></div>
       <a href="#booking" class="mobile-cta">Agendar sesión ✨</a>
     </div>
   </div>
@@ -2754,15 +2759,20 @@
           const btn = document.getElementById('waBtn');
           if (btn) btn.href = `https://wa.me/${num}`;
         }
-        // Menú mobile: ubicación + botón Maps
+        // Menú mobile: tarjeta P5 de ubicación
         const ub = (canales || []).find(c => c.tipo === 'ubicacion');
         if (ub) {
           const menuUb = document.getElementById('menuUbicacion');
-          const menuVal = document.getElementById('menuUbicacionVal');
-          const menuMaps = document.getElementById('menuMapsBtn');
-          if (menuUb && menuVal && menuMaps) {
-            menuVal.textContent = ub.valor;
-            menuMaps.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ub.valor)}`;
+          if (menuUb) {
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ub.valor)}`;
+            menuUb.innerHTML = `
+              <a class="menu-maps-card" href="${mapsUrl}" target="_blank" rel="noopener">
+                <span class="menu-maps-left">
+                  <span class="menu-maps-addr">${ub.valor}</span>
+                  <span class="menu-maps-hint">↗ Cómo llegar</span>
+                </span>
+                <span class="menu-maps-arrow">↗</span>
+              </a>`;
             menuUb.style.display = 'block';
           }
         }
