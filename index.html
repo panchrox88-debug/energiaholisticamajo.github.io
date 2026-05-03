@@ -1764,6 +1764,11 @@
     </div>
 
     <div class="mobile-menu-footer">
+      <div id="menuUbicacion" style="display:none;margin-bottom:14px;font-size:0.78rem;color:var(--muted);line-height:1.5;">
+        <div style="font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Ubicación</div>
+        <div id="menuUbicacionVal"></div>
+        <a id="menuMapsBtn" class="maps-btn" href="#" target="_blank" rel="noopener" style="margin-top:6px;">📍 Cómo llegar</a>
+      </div>
       <a href="#booking" class="mobile-cta">Agendar sesión ✨</a>
     </div>
   </div>
@@ -2748,6 +2753,18 @@
           const num = wa.valor.replace(/\D/g, '');
           const btn = document.getElementById('waBtn');
           if (btn) btn.href = `https://wa.me/${num}`;
+        }
+        // Menú mobile: ubicación + botón Maps
+        const ub = (canales || []).find(c => c.tipo === 'ubicacion');
+        if (ub) {
+          const menuUb = document.getElementById('menuUbicacion');
+          const menuVal = document.getElementById('menuUbicacionVal');
+          const menuMaps = document.getElementById('menuMapsBtn');
+          if (menuUb && menuVal && menuMaps) {
+            menuVal.textContent = ub.valor;
+            menuMaps.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ub.valor)}`;
+            menuUb.style.display = 'block';
+          }
         }
         // Footer: email desde Supabase
         const em = (canales || []).find(c => c.tipo === 'email');
