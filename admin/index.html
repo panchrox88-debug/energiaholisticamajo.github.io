@@ -2626,17 +2626,76 @@
     } catch(e) { /* ignore */ }
   }
 
+  // Convierte "50% 30%" o "center top" → {x:50, y:0}
+  function _smParsePosicion(pos) {
+    const kw = { left:0, center:50, right:100, top:0, bottom:100 };
+    const parts = (pos || 'center center').split(' ');
+    const parse = (v, isY) => {
+      if (kw[v] !== undefined) return kw[v];
+      return parseInt(v) || 50;
+    };
+    return { x: parse(parts[0]), y: parse(parts[1] || 'center', true) };
+  }
+
   function renderSobreMiniFotos(rows) {
     const el = document.getElementById('sobremifotos');
     if (!rows.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.82rem">Aún no hay fotos.</p>'; return; }
-    el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:12px">${rows.map(r => `
-      <div class="card" style="width:160px;padding:10px">
-        <div style="width:100%;height:100px;border-radius:8px;margin-bottom:8px;
-          background-image:url('${r.src}');background-size:cover;background-position:center;"></div>
+    el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:16px">${rows.map(r => {
+      const {x, y} = _smParsePosicion(r.posicion);
+      return `
+      <div class="card" style="width:200px;padding:10px">
+        <div style="font-size:.7rem;color:var(--muted);margin-bottom:5px;text-align:center">Arrastra para ajustar posición</div>
+        <div id="smDrag-${r.id}" style="position:relative;width:100%;height:140px;border-radius:8px;
+          overflow:hidden;cursor:crosshair;background:var(--blush);margin-bottom:8px;user-select:none"
+          onmousedown="window._smDragStart(event,'${r.id}')">
+          <div id="smPrev-${r.id}" style="position:absolute;inset:0;
+            background-image:url('${r.src}');
+            background-size:contain;background-repeat:no-repeat;
+            background-origin:content-box;padding:8px;
+            background-position:${r.posicion||'center center'};"></div>
+          <div id="smDot-${r.id}" style="position:absolute;pointer-events:none;
+            width:18px;height:18px;border-radius:50%;
+            border:2px solid white;box-shadow:0 0 6px rgba(0,0,0,0.4);
+            background:rgba(201,133,138,0.85);transform:translate(-50%,-50%);
+            left:${x}%;top:${y}%;"></div>
+        </div>
         <button class="btn btn-danger" style="width:100%;font-size:.75rem;padding:6px"
           onclick="window._delSobreFoto('${r.id}')">Eliminar</button>
-      </div>`).join('')}</div>`;
+      </div>`;
+    }).join('')}</div>`;
   }
+
+  window._smDragStart = (e, id) => {
+    e.preventDefault();
+    const wrap = document.getElementById('smDrag-' + id);
+    const prev = document.getElementById('smPrev-' + id);
+    const dot  = document.getElementById('smDot-' + id);
+
+    const move = (evt) => {
+      const rect = wrap.getBoundingClientRect();
+      const x = Math.round(Math.max(0, Math.min(100, (evt.clientX - rect.left)  / rect.width  * 100)));
+      const y = Math.round(Math.max(0, Math.min(100, (evt.clientY - rect.top)   / rect.height * 100)));
+      const pos = `${x}% ${y}%`;
+      prev.style.backgroundPosition = pos;
+      dot.style.left = x + '%';
+      dot.style.top  = y + '%';
+      return pos;
+    };
+
+    let lastPos = move(e);
+
+    const onMove = evt => { lastPos = move(evt); };
+    const onUp   = async () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+      try {
+        await sbPatch(`/sobre_mi_fotos?id=eq.${id}`, { posicion: lastPos });
+        showMsg('sobremiMsg', 'Posición guardada ✓');
+      } catch(err) { showMsg('sobremiMsg', 'Error: ' + err.message, 'err'); }
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  };
 
   document.getElementById('saveSobreMiBtn').addEventListener('click', async () => {
     const body = {
