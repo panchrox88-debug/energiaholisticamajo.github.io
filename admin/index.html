@@ -411,7 +411,16 @@
           <div class="section-subtitle" style="color:#e67e22">🔄 Solicitudes de reagendamiento</div>
           <div id="reservasSolicitudes"></div>
         </div>
-        <div class="section-subtitle">Próximas</div>
+        <!-- Barra de selección masiva -->
+        <div id="reservasBulkBar" style="display:none;align-items:center;gap:10px;background:#fff3e0;border:1.5px solid #f0a500;border-radius:10px;padding:10px 16px;margin-bottom:14px;flex-wrap:wrap">
+          <span id="reservasBulkCount" style="font-size:.83rem;color:#7a4f00;flex:1">0 seleccionadas</span>
+          <button onclick="seleccionarTodasReservas(true)" style="font-size:.75rem;padding:5px 12px;border-radius:20px;border:1px solid #f0a500;background:none;color:#7a4f00;cursor:pointer;font-family:'Nunito',sans-serif">Seleccionar todas</button>
+          <button onclick="seleccionarTodasReservas(false)" style="font-size:.75rem;padding:5px 12px;border-radius:20px;border:1px solid #f0a500;background:none;color:#7a4f00;cursor:pointer;font-family:'Nunito',sans-serif">Deseleccionar</button>
+          <button onclick="eliminarReservasSeleccionadas()" style="font-size:.75rem;padding:5px 14px;border-radius:20px;background:#e74c3c;color:white;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:600">🗑️ Eliminar seleccionadas</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div class="section-subtitle" style="margin:0">Próximas</div>
+        </div>
         <div id="reservasProximas"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
         <div class="section-subtitle">Historial</div>
         <div id="reservasHistorial"></div>
@@ -968,18 +977,44 @@
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
       <div>
         <div class="modal-title" id="fichaModalNombre" style="margin-bottom:2px"></div>
-        <div id="fichaModalSub" style="font-size:.8rem;color:var(--muted);margin-bottom:18px"></div>
+        <div id="fichaModalSub" style="font-size:.8rem;color:var(--muted);margin-bottom:8px"></div>
       </div>
       <button id="fichaModalCerrar" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:0 4px">✕</button>
     </div>
     <input type="hidden" id="fichaEmail"/>
+
+    <!-- Datos editables -->
+    <div id="fichaEditarDatos" style="display:none;background:var(--cream);border:1.5px dashed var(--beige);border-radius:12px;padding:16px;margin-bottom:14px">
+      <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px">Editar datos de la ficha</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="flex:1;min-width:160px">
+          <label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:4px">Nombre</label>
+          <input type="text" id="fichaEditNombre" style="width:100%;padding:8px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;background:white;color:var(--dark);outline:none"/>
+        </div>
+        <div style="flex:1;min-width:140px">
+          <label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:4px">Teléfono</label>
+          <input type="text" id="fichaEditTelefono" style="width:100%;padding:8px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;background:white;color:var(--dark);outline:none"/>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:4px">Email</label>
+          <input type="text" id="fichaEditEmail" style="width:100%;padding:8px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;background:white;color:var(--dark);outline:none"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="guardarDatosFicha()" class="btn btn-primary" style="font-size:.78rem;padding:7px 16px">Guardar datos</button>
+        <button onclick="document.getElementById('fichaEditarDatos').style.display='none'" class="btn btn-ghost" style="font-size:.78rem;padding:7px 16px">Cancelar</button>
+      </div>
+    </div>
+
     <div class="field">
       <label>Notas generales del cliente</label>
       <textarea id="fichaNotasGenerales" style="min-height:90px" placeholder="Observaciones generales, antecedentes, objetivos del proceso…"></textarea>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:24px">
+    <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
       <button id="fichaGuardarGeneralBtn" class="btn btn-primary">Guardar notas generales</button>
       <button id="fichaExportarBtn" class="btn btn-ghost" title="Copia todo el contenido de la ficha al portapapeles">📋 Exportar</button>
+      <button onclick="toggleEditarDatosFicha()" class="btn btn-ghost" style="border-color:var(--gold);color:var(--gold)">✏️ Editar datos</button>
+      <button onclick="eliminarFicha()" class="btn btn-danger" style="margin-left:auto">🗑️ Eliminar ficha</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Historial de sesiones</div>
@@ -1692,7 +1727,10 @@
 
       return `
       <div class="card" id="res-${r.id}" style="${borderStyle}">
-        <div class="card-row">
+        <div class="card-row" style="align-items:flex-start">
+          <input type="checkbox" class="res-check" data-id="${r.id}"
+            style="margin-top:4px;flex-shrink:0;width:16px;height:16px;cursor:pointer;accent-color:var(--rose)"
+            onchange="actualizarBulkBar()"/>
           <div class="card-body">
             <div class="card-name">${esc(r.servicio_nombre)} ${badge}</div>
             <div class="card-sub">${esc(r.modalidad)} · ${esc(fecha)} · ${esc(r.hora_inicio)}–${esc(r.hora_fin)} hrs</div>
@@ -1703,7 +1741,11 @@
             ${notaReagendar}
             ${fichaBtn}
           </div>
-          ${acciones}
+          <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+            ${acciones ? acciones.replace('<div class="card-actions"','<div').replace('</div>','') : ''}
+            <button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
+              onclick="window._eliminarReserva('${r.id}')">🗑️ Eliminar</button>
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -1717,6 +1759,45 @@
       loadReservas();
     } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
   };
+
+  window._eliminarReserva = async id => {
+    if (!confirm('¿Eliminar esta reserva permanentemente? Esta acción no se puede deshacer.')) return;
+    try {
+      await sbDelete(`/reservas?id=eq.${id}`);
+      document.getElementById(`res-${id}`)?.remove();
+      showMsg('reservasMsg', 'Reserva eliminada');
+      actualizarBulkBar();
+    } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  function actualizarBulkBar() {
+    const checks = document.querySelectorAll('.res-check:checked');
+    const bar    = document.getElementById('reservasBulkBar');
+    const count  = document.getElementById('reservasBulkCount');
+    bar.style.display = checks.length > 0 ? 'flex' : 'none';
+    if (count) count.textContent = `${checks.length} seleccionada${checks.length !== 1 ? 's' : ''}`;
+  }
+
+  function seleccionarTodasReservas(sel) {
+    document.querySelectorAll('.res-check').forEach(c => c.checked = sel);
+    actualizarBulkBar();
+  }
+
+  async function eliminarReservasSeleccionadas() {
+    const ids = [...document.querySelectorAll('.res-check:checked')].map(c => c.dataset.id);
+    if (!ids.length) return;
+    if (!confirm(`¿Eliminar permanentemente ${ids.length} reserva${ids.length !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await sbDelete(`/reservas?id=in.(${ids.join(',')})`);
+      ids.forEach(id => document.getElementById(`res-${id}`)?.remove());
+      showMsg('reservasMsg', `${ids.length} reserva${ids.length !== 1 ? 's' : ''} eliminada${ids.length !== 1 ? 's' : ''}`);
+      actualizarBulkBar();
+    } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
+  }
+
+  window.actualizarBulkBar             = actualizarBulkBar;
+  window.seleccionarTodasReservas      = seleccionarTodasReservas;
+  window.eliminarReservasSeleccionadas = eliminarReservasSeleccionadas;
 
   window._confirmarReserva = async (id) => {
     const card = document.getElementById(`res-${id}`);
@@ -4488,6 +4569,64 @@
     }
   }
 
+  // ── EDITAR DATOS DE FICHA ────────────────────────────────────
+  function toggleEditarDatosFicha() {
+    const panel = document.getElementById('fichaEditarDatos');
+    if (panel.style.display === 'none') {
+      const email = document.getElementById('fichaEmail').value;
+      const ficha = _fichasMap[email];
+      if (!ficha) return;
+      document.getElementById('fichaEditNombre').value   = ficha.nombre || '';
+      document.getElementById('fichaEditTelefono').value = ficha.telefono || '';
+      document.getElementById('fichaEditEmail').value    = ficha.email_cliente || '';
+      panel.style.display = 'block';
+    } else {
+      panel.style.display = 'none';
+    }
+  }
+
+  async function guardarDatosFicha() {
+    const emailOrig = document.getElementById('fichaEmail').value;
+    const nombre    = document.getElementById('fichaEditNombre').value.trim();
+    const telefono  = document.getElementById('fichaEditTelefono').value.trim();
+    const emailNew  = document.getElementById('fichaEditEmail').value.trim().toLowerCase();
+    if (!nombre || !emailNew) { alert('Nombre y email son obligatorios.'); return; }
+    try {
+      await sbPatch(`/fichas_clientes?email_cliente=eq.${encodeURIComponent(emailOrig)}`,
+        { nombre, telefono: telefono || null, email_cliente: emailNew }
+      );
+      // Actualizar mapa local
+      const ficha = _fichasMap[emailOrig];
+      ficha.nombre = nombre; ficha.telefono = telefono; ficha.email_cliente = emailNew;
+      if (emailOrig !== emailNew) {
+        delete _fichasMap[emailOrig];
+        _fichasMap[emailNew] = ficha;
+        document.getElementById('fichaEmail').value = emailNew;
+      }
+      _clientesAll = Object.values(_fichasMap);
+      // Actualizar header del modal
+      document.getElementById('fichaModalNombre').textContent = nombre;
+      document.getElementById('fichaModalSub').textContent = `${emailNew}${telefono ? ' · ' + telefono : ''}`;
+      document.getElementById('fichaEditarDatos').style.display = 'none';
+      showMsg('clientesMsg', 'Datos actualizados correctamente');
+    } catch(e) { alert('Error al guardar: ' + e.message); }
+  }
+
+  async function eliminarFicha() {
+    const email = document.getElementById('fichaEmail').value;
+    const ficha = _fichasMap[email];
+    if (!ficha) return;
+    if (!confirm(`¿Eliminar la ficha de "${ficha.nombre}"?\n\nEsto eliminará la ficha y sus sesiones manuales.\nLas reservas del sistema NO se eliminan.`)) return;
+    try {
+      await sbDelete(`/fichas_clientes?email_cliente=eq.${encodeURIComponent(email)}`);
+      delete _fichasMap[email];
+      _clientesAll = Object.values(_fichasMap);
+      document.getElementById('fichaModal').classList.remove('open');
+      renderClientesList(_clientesAll);
+      showMsg('clientesMsg', 'Ficha eliminada');
+    } catch(e) { alert('Error al eliminar: ' + e.message); }
+  }
+
   // Exponer al scope global para onclicks inline
   window.crearFichaDesdeReserva = crearFichaDesdeReserva;
   window.abrirFicha             = abrirFicha;
@@ -4502,6 +4641,9 @@
   window.guardarNuevaSesionManual  = guardarNuevaSesionManual;
   window.guardarSesionManual       = guardarSesionManual;
   window.eliminarSesionManual      = eliminarSesionManual;
+  window.toggleEditarDatosFicha    = toggleEditarDatosFicha;
+  window.guardarDatosFicha         = guardarDatosFicha;
+  window.eliminarFicha             = eliminarFicha;
 
   document.getElementById('fichaModal')?.addEventListener('click', e => {
     if (e.target.id === 'fichaModal') e.target.classList.remove('open');

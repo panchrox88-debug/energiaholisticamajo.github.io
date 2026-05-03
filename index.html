@@ -2282,10 +2282,12 @@
         conf = { ...conf, modalidad: conf.manana };
       }
       if (conf.modalidad === 'mixta') {
-        const manIcon = conf.manana === 'presencial' ? '🌸' : '💻';
-        const tarIcon = conf.tarde  === 'presencial' ? '🌸' : '💻';
-        const manTxt  = conf.manana === 'presencial' ? 'Presencial' : 'Online';
-        const tarTxt  = conf.tarde  === 'presencial' ? 'Presencial' : 'Online';
+        const actualManana = conf.manana || 'presencial';
+        const actualTarde  = conf.tarde  || 'online';
+        const manIcon = actualManana === 'presencial' ? '🌸' : '💻';
+        const tarIcon = actualTarde  === 'presencial' ? '🌸' : '💻';
+        const manTxt  = actualManana === 'presencial' ? 'Presencial' : 'Online';
+        const tarTxt  = actualTarde  === 'presencial' ? 'Presencial' : 'Online';
         const corte   = conf.corte  || '13:00';
         // Limpiar modalidad → se asignará automáticamente al elegir horario
         state.modality = null;
