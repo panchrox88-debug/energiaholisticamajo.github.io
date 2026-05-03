@@ -4536,10 +4536,10 @@
       }
       el.innerHTML = rows.map(p => renderPoliticaCard(p)).join('');
     } catch(e) {
-      el.innerHTML = `<div style="background:var(--blush);border-radius:12px;padding:16px 20px;font-size:.85rem;color:var(--dark)">
-        <strong>📋 Tabla no encontrada.</strong><br>
-        Ejecuta este SQL en Supabase para crearla:<br><br>
-        <code style="font-size:.72rem;line-height:1.8;display:block;background:white;padding:10px 12px;border-radius:8px;white-space:pre-wrap">${getSQLScript()}</code>
+      el.innerHTML = `<div style="background:var(--blush);border-radius:12px;padding:20px 24px;font-size:.88rem;color:var(--dark);line-height:1.8">
+        <div style="font-size:1.1rem;margin-bottom:8px">⚙️</div>
+        <strong>Esta sección aún no está activa.</strong><br>
+        Avisa a tu desarrollador para que la configure. Una vez lista, podrás editar las políticas desde aquí.
       </div>`;
     }
   }
