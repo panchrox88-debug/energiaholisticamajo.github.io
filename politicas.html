@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Políticas de servicio — Energía Holística Majo</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@200;300;400&display=swap" rel="stylesheet"/>
+  <script>
+    var SB_URL = 'https://yvuzccxqkkytuisgzpqx.supabase.co';
+    var SB_KEY = 'sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi';
+  </script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -118,8 +122,10 @@
   <p>Aquí encontrarás toda la información sobre cómo funcionan las reservas, el manejo de tus datos y los pagos. Última actualización: mayo de 2025.</p>
 </header>
 
-<main class="content">
+<main class="content" id="politicasMain">
 
+  <!-- contenido cargado dinámicamente desde Supabase -->
+  <!-- fallback estático si falla -->
   <!-- 1. Cancelación y reagendamiento -->
   <section class="politica" id="cancelacion">
     <div class="politica-icon">🗓️</div>
@@ -196,5 +202,25 @@
   <span style="margin-top:6px;display:inline-block">© 2025 · Todos los derechos reservados · <a href="index.html">Inicio</a></span>
 </footer>
 
+<script>
+  // Cargar secciones desde Supabase (si está disponible)
+  (async function() {
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/politicas?select=*&activa=eq.true&order=orden.asc`, {
+        headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+      });
+      if (!r.ok) return; // fallback al contenido estático
+      const rows = await r.json();
+      if (!rows || !rows.length) return;
+      const main = document.getElementById('politicasMain');
+      main.innerHTML = rows.map(p => `
+        <section class="politica">
+          <div class="politica-icon">${p.icono || ''}</div>
+          <h2>${p.titulo}</h2>
+          ${p.contenido || ''}
+        </section>`).join('');
+    } catch(e) { /* mantener contenido estático */ }
+  })();
+</script>
 </body>
 </html>

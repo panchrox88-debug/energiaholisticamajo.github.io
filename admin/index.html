@@ -397,6 +397,7 @@
       <div class="sidebar-link" data-tab="usuarias">👤 Usuarias</div>
       <div class="sidebar-link" data-tab="blog">✍️ Blog</div>
       <div class="sidebar-link" data-tab="clientes">🗂️ Fichas</div>
+      <div class="sidebar-link" data-tab="politicas">📋 Políticas</div>
     </nav>
     <main class="content">
 
@@ -841,6 +842,18 @@
           <button class="btn btn-primary" onclick="crearFichaManual()" style="white-space:nowrap">+ Nueva ficha</button>
         </div>
         <div id="clientesList"><p style="color:var(--muted);font-size:.85rem">Cargando…</p></div>
+      </div>
+
+      <!-- POLÍTICAS -->
+      <div id="tab-politicas" class="section">
+        <h2 class="section-title">Políticas de servicio</h2>
+        <div id="politicasMsg" class="msg-banner"></div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:20px;line-height:1.7">
+          Edita el texto de cada sección. Puedes usar formato básico con la barra de herramientas.<br>
+          Los cambios se reflejan en <strong>politicas.html</strong> del sitio público.
+        </p>
+        <button class="btn btn-primary" onclick="addPoliticaSeccion()" style="margin-bottom:20px">+ Nueva sección</button>
+        <div id="politicasList"><div class="loading"><div class="spinner"></div>Cargando…</div></div>
       </div>
 
       <!-- PORTADA -->
@@ -1506,6 +1519,7 @@
       if (link.dataset.tab === 'promociones') loadPromocionesAdmin();
       if (link.dataset.tab === 'blog')        loadBlogAdmin();
       if (link.dataset.tab === 'clientes')   loadClientes();
+      if (link.dataset.tab === 'politicas')  loadPoliticas();
     });
   });
 
@@ -4503,6 +4517,149 @@
   });
   document.getElementById('asociarFichaModal')?.addEventListener('click', e => {
     if (e.target.id === 'asociarFichaModal') e.target.classList.remove('open');
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // POLÍTICAS DE SERVICIO
+  // ══════════════════════════════════════════════════════════
+  async function loadPoliticas() {
+    const el = document.getElementById('politicasList');
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando…</div>';
+    try {
+      const rows = await sbGet('/politicas?select=*&order=orden.asc&activa=eq.true');
+      if (!rows.length) {
+        el.innerHTML = `<p style="color:var(--muted);font-size:.85rem">No hay secciones aún. Crea la primera con el botón de arriba.</p>
+          <div style="background:var(--blush);border-radius:12px;padding:14px 18px;margin-top:16px;font-size:.8rem;color:var(--dark);line-height:1.7">
+            <strong>💡 Primer uso:</strong> Crea la tabla en Supabase ejecutando el SQL del archivo <code>supabase-politicas.sql</code>.
+          </div>`;
+        return;
+      }
+      el.innerHTML = rows.map(p => renderPoliticaCard(p)).join('');
+    } catch(e) {
+      el.innerHTML = `<div style="background:var(--blush);border-radius:12px;padding:16px 20px;font-size:.85rem;color:var(--dark)">
+        <strong>📋 Tabla no encontrada.</strong><br>
+        Ejecuta este SQL en Supabase para crearla:<br><br>
+        <code style="font-size:.72rem;line-height:1.8;display:block;background:white;padding:10px 12px;border-radius:8px;white-space:pre-wrap">${getSQLScript()}</code>
+      </div>`;
+    }
+  }
+
+  function renderPoliticaCard(p) {
+    const id = esc(p.id);
+    return `
+    <div class="card" id="pol-card-${id}" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <input type="text" value="${esc(p.icono)}" placeholder="🌿" maxlength="4"
+          style="width:52px;font-size:1.4rem;text-align:center;border:1.5px solid var(--beige);border-radius:10px;padding:6px;background:var(--cream)"
+          id="pol-icono-${id}"/>
+        <input type="text" value="${esc(p.titulo)}" placeholder="Título de la sección"
+          style="flex:1;padding:9px 14px;border:1.5px solid var(--beige);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.9rem;background:var(--cream);color:var(--dark)"
+          id="pol-titulo-${id}"/>
+        <button class="btn btn-danger" onclick="deletePolitica(${id})" title="Eliminar">×</button>
+      </div>
+      <div style="font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Contenido</div>
+      <div style="border:1.5px solid var(--beige);border-radius:10px;overflow:hidden">
+        <div style="display:flex;gap:2px;padding:6px 8px;background:var(--beige);flex-wrap:wrap">
+          <button type="button" onclick="polFmt(${id},'bold')" style="padding:3px 9px;border:none;border-radius:6px;background:white;font-size:.78rem;font-weight:700;cursor:pointer" title="Negrita">B</button>
+          <button type="button" onclick="polFmt(${id},'italic')" style="padding:3px 9px;border:none;border-radius:6px;background:white;font-size:.78rem;font-style:italic;cursor:pointer" title="Cursiva">I</button>
+          <button type="button" onclick="polFmt(${id},'insertUnorderedList')" style="padding:3px 9px;border:none;border-radius:6px;background:white;font-size:.78rem;cursor:pointer" title="Lista">≡</button>
+          <button type="button" onclick="polLink(${id})" style="padding:3px 9px;border:none;border-radius:6px;background:white;font-size:.78rem;cursor:pointer" title="Enlace">🔗</button>
+          <button type="button" onclick="polBox(${id},'highlight')" style="padding:3px 9px;border:none;border-radius:6px;background:#f0dada;font-size:.72rem;cursor:pointer" title="Caja rosa">Nota</button>
+          <button type="button" onclick="polBox(${id},'aviso')" style="padding:3px 9px;border:none;border-radius:6px;background:#fef9f0;border:1px solid #c9a96e;font-size:.72rem;cursor:pointer" title="Caja dorada">Aviso</button>
+        </div>
+        <div id="pol-editor-${id}" contenteditable="true"
+          style="min-height:160px;padding:14px 16px;font-family:'Nunito',sans-serif;font-size:.87rem;color:var(--dark);line-height:1.9;outline:none;background:white"
+          onfocus="document.getElementById('pol-active').value='${id}'"
+        >${p.contenido || ''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+        <button class="btn btn-primary" onclick="savePolitica(${id})" style="flex:1">Guardar sección</button>
+        <span id="pol-msg-${id}" style="font-size:.75rem;color:var(--muted)"></span>
+      </div>
+    </div>`;
+  }
+
+  window.polFmt = function(id, cmd) {
+    document.getElementById('pol-editor-' + id).focus();
+    document.execCommand(cmd, false, null);
+  };
+  window.polLink = function(id) {
+    const url = prompt('URL del enlace:');
+    if (url) { document.getElementById('pol-editor-' + id).focus(); document.execCommand('createLink', false, url); }
+  };
+  window.polBox = function(id, tipo) {
+    const cls = tipo === 'highlight' ? 'highlight-box' : 'aviso-box';
+    const txt = prompt('Texto de la caja:');
+    if (!txt) return;
+    const el = document.getElementById('pol-editor-' + id);
+    el.focus();
+    document.execCommand('insertHTML', false, `<div class="${cls}">${txt}</div><p><br></p>`);
+  };
+
+  window.savePolitica = async function(id) {
+    const msg  = document.getElementById('pol-msg-' + id);
+    const icono  = document.getElementById('pol-icono-' + id).value.trim();
+    const titulo = document.getElementById('pol-titulo-' + id).value.trim();
+    const contenido = document.getElementById('pol-editor-' + id).innerHTML;
+    msg.textContent = 'Guardando…'; msg.style.color = 'var(--muted)';
+    try {
+      await sbPatch(`/politicas?id=eq.${id}`, { icono, titulo, contenido, actualizado_en: new Date().toISOString() });
+      msg.textContent = '✓ Guardado'; msg.style.color = 'var(--green,#2d6a4f)';
+      setTimeout(() => { msg.textContent = ''; }, 3000);
+    } catch(e) {
+      msg.textContent = 'Error: ' + e.message; msg.style.color = 'var(--red)';
+    }
+  };
+
+  window.deletePolitica = async function(id) {
+    if (!confirm('¿Eliminar esta sección? Esta acción no se puede deshacer.')) return;
+    try {
+      await sbDelete(`/politicas?id=eq.${id}`);
+      document.getElementById('pol-card-' + id)?.remove();
+      showMsg('politicasMsg', 'Sección eliminada.', 'ok');
+    } catch(e) { showMsg('politicasMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  window.addPoliticaSeccion = async function() {
+    const titulo = prompt('Título de la nueva sección:');
+    if (!titulo) return;
+    const icono = prompt('Ícono (emoji):') || '📄';
+    try {
+      // Obtener el máximo orden actual
+      const rows = await sbGet('/politicas?select=orden&order=orden.desc&limit=1');
+      const orden = (rows[0]?.orden || 0) + 1;
+      const [nuevo] = await sbPost('/politicas', { icono, titulo, contenido: '<p>Escribe el contenido aquí…</p>', orden, activa: true });
+      document.getElementById('politicasList').insertAdjacentHTML('beforeend', renderPoliticaCard(nuevo));
+      showMsg('politicasMsg', 'Sección creada. Edita el contenido y guarda.', 'ok');
+    } catch(e) { showMsg('politicasMsg', 'Error: ' + e.message, 'err'); }
+  };
+
+  function getSQLScript() {
+    return `CREATE TABLE IF NOT EXISTS politicas (
+  id BIGSERIAL PRIMARY KEY,
+  icono TEXT DEFAULT '',
+  titulo TEXT NOT NULL,
+  contenido TEXT DEFAULT '',
+  orden INT DEFAULT 0,
+  activa BOOLEAN DEFAULT TRUE,
+  actualizado_en TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO politicas (icono,titulo,contenido,orden) VALUES
+('🗓️','Cancelación y reagendamiento','<p>Para garantizar la disponibilidad y el respeto del tiempo de todos, se establecen las siguientes condiciones:</p><ul><li>Las sesiones pueden cancelarse o reagendarse con un mínimo de <strong>24 horas de anticipación</strong> a la hora de inicio.</li><li>Pasado ese plazo, no se aceptan cancelaciones ni reagendamientos.</li><li>En caso de no presentarse o cancelar fuera del plazo, <strong>no se realizan reembolsos</strong>.</li></ul><div class="highlight-box"><strong>Importante:</strong> Si tienes una situación de fuerza mayor, comunícate directamente con Majo.</div>',1),
+('🔒','Privacidad de datos','<p>El manejo de tu información personal se rige por la Ley 19.628 sobre Protección de la Vida Privada de Chile.</p><ul><li><strong>Datos recopilados:</strong> nombre, correo, teléfono y notas de sesiones.</li><li><strong>Finalidad:</strong> gestión de reservas y seguimiento terapéutico.</li><li><strong>Acceso:</strong> únicamente Majo. No se comparte con terceros.</li></ul>',2),
+('💳','Pagos y reembolsos','<ul><li>Los pagos se procesan a través de <strong>Mercado Pago</strong>.</li><li>Para reembolsos, escribe a <a href="mailto:energiaholisticamajo@gmail.com" class="contact-link">energiaholisticamajo@gmail.com</a>.</li><li>No se realizan reembolsos por cancelaciones fuera del plazo de 24 horas.</li></ul><div class="highlight-box"><strong>Nota:</strong> Toda solicitud de reembolso es evaluada caso a caso.</div>',3),
+('🌿','Aviso de salud','<div class="aviso-box">Los servicios ofrecidos son de carácter <strong>complementario y de bienestar</strong>. No reemplazan tratamientos médicos, psiquiátricos ni psicológicos convencionales.</div><ul><li>Se recomienda mantener atención con profesionales de salud acreditados cuando la situación lo requiera.</li><li>En caso de crisis de salud mental, contacta los servicios de salud correspondientes.</li></ul>',4)
+ON CONFLICT DO NOTHING;`;
+  }
+
+  // Input oculto para rastrear editor activo
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!document.getElementById('pol-active')) {
+      const inp = document.createElement('input');
+      inp.type = 'hidden'; inp.id = 'pol-active';
+      document.body.appendChild(inp);
+    }
   });
 
 </script>
