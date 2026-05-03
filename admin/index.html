@@ -1029,8 +1029,10 @@
           <input type="date" id="nsDate" style="padding:7px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;background:white;color:var(--dark)"/>
         </div>
         <div style="flex:1;min-width:180px">
-          <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px">Descripción / servicio</label>
-          <input type="text" id="nsDesc" placeholder="Terapia floral, sesión de reiki…" style="width:100%;padding:7px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;background:white;color:var(--dark);outline:none"/>
+          <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px">Servicio</label>
+          <select id="nsDesc" style="width:100%;padding:7px 10px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;background:white;color:var(--dark);outline:none;cursor:pointer">
+            <option value="">— Selecciona un servicio —</option>
+          </select>
         </div>
       </div>
       <div style="margin-bottom:12px">
@@ -4122,17 +4124,20 @@
   let _clientesAll = [];               // array completo para filtrado
   let _serviciosMap = {};              // email → Set de servicios consumidos
   let _fichaFiltroServicio = null;     // servicio activo en el filtro de lista
+  let _serviciosNombres = [];          // lista de nombres de servicios para selects
   let _fichaCurrentSesiones = [];      // reservas reales de la ficha abierta
   let _fichaCurrentSesionesManual = []; // sesiones manuales de la ficha abierta
   let _fichaActual = null;             // objeto ficha actualmente abierta
 
   async function loadFichas() {
     try {
-      const [fichas, reservas, manuales] = await Promise.all([
+      const [fichas, reservas, manuales, svcs] = await Promise.all([
         sbGet('/fichas_clientes?select=*&order=nombre.asc'),
         sbGet('/reservas?select=email_cliente,servicio_nombre&estado=neq.cancelada').catch(() => []),
         sbGet('/sesiones_fichas?select=email_cliente,descripcion').catch(() => []),
+        sbGet('/servicios?select=titulo&order=orden.asc').catch(() => []),
       ]);
+      _serviciosNombres = (svcs || []).map(s => s.titulo).filter(Boolean);
       _fichasMap = {};
       fichas.forEach(f => { _fichasMap[f.email_cliente] = f; });
       // Construir mapa de servicios por cliente
@@ -4356,8 +4361,11 @@
               <span style="background:#fef3e0;color:var(--gold);font-size:.65rem;padding:2px 9px;border-radius:20px;font-family:'Nunito';white-space:nowrap">Sesión manual</span>
               <input type="date" value="${s.fecha}"
                 style="font-size:.82rem;padding:5px 8px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;background:white;color:var(--dark)"/>
-              <input type="text" value="${s.descripcion || ''}" placeholder="Descripción / servicio…"
-                style="flex:1;min-width:140px;font-size:.82rem;padding:5px 8px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;background:white;color:var(--dark);outline:none"/>
+              <select style="flex:1;min-width:140px;font-size:.82rem;padding:5px 8px;border:1.5px solid var(--beige);border-radius:8px;font-family:'Nunito',sans-serif;background:white;color:var(--dark);outline:none;cursor:pointer">
+                <option value="">— Servicio —</option>
+                ${_serviciosNombres.map(sv => `<option value="${sv}" ${sv === (s.descripcion||'') ? 'selected' : ''}>${sv}</option>`).join('')}
+                ${!_serviciosNombres.includes(s.descripcion||'') && s.descripcion ? `<option value="${s.descripcion}" selected>${s.descripcion}</option>` : ''}
+              </select>
             </div>
             <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px">Notas de la sesión</label>
             <textarea data-sesion-manual-id="${s.id}"
@@ -4487,10 +4495,13 @@
   // ── SESIONES MANUALES ────────────────────────────────────────
   function mostrarFormSesionManual() {
     document.getElementById('nsDate').value  = new Date().toISOString().slice(0, 10);
-    document.getElementById('nsDesc').value  = '';
     document.getElementById('nsNotas').value = '';
+    // Poblar select de servicios
+    const sel = document.getElementById('nsDesc');
+    sel.innerHTML = '<option value="">— Selecciona un servicio —</option>' +
+      _serviciosNombres.map(s => `<option value="${s}">${s}</option>`).join('');
+    sel.value = '';
     document.getElementById('formNuevaSesion').style.display = 'block';
-    setTimeout(() => document.getElementById('nsDesc').focus(), 80);
   }
 
   async function guardarNuevaSesionManual() {
@@ -4521,7 +4532,7 @@
   async function guardarSesionManual(id, btn) {
     const card        = document.getElementById(`sesmanual-${id}`);
     const fecha       = card.querySelector('input[type="date"]').value;
-    const descripcion = card.querySelector('input[type="text"]').value.trim();
+    const descripcion = (card.querySelector('select')?.value || card.querySelector('input[type="text"]')?.value || '').trim();
     const notas       = card.querySelector('textarea').value.trim();
 
     btn.textContent = 'Guardando…'; btn.disabled = true;
