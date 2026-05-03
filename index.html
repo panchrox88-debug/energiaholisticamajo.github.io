@@ -498,12 +498,9 @@
     /* About card carousel */
     .about-card-slide {
       position: absolute; inset: 0;
-      background-color: var(--blush);
-      background-size: contain;
+      background-size: cover;
       background-position: center center;
       background-repeat: no-repeat;
-      background-origin: content-box;   /* tamaño relativo al área interior (sin padding) */
-      padding: 28px;                    /* buffer para que la imagen no llegue a las esquinas redondeadas */
       opacity: 0; transition: opacity 1.8s ease-in-out;
       border-radius: inherit;
     }
