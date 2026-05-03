@@ -1,50 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 180" fill="none">
-  <!--
-    Energía Holística Majo — Logo Luna
-    Color principal: #c9858a  (var(--rose))
-    Uso: <img src="logo-luna.svg"> o inline como <svg>
-  -->
-
-  <!-- ── Luna creciente horizontal (apertura hacia arriba) ── -->
   <g stroke="#c9858a" fill="none" stroke-linecap="round" stroke-linejoin="round">
-
-    <!--
-      Arco exterior (más profundo): puntas (20,98) y (180,98), pasa por (100,152)
-      Arco interior (más plano):   vuelve de (180,98) a (20,98) pasando por (100,115)
-      Ambos trazados con bezier cuadrático para control exacto de la curva.
-    -->
-    <path d="M 20,98
-             Q 100,206 180,98
-             Q 100,132 20,98
-             Z"
-          stroke-width="1.7"/>
-
-    <!-- Líneas decorativas dentro del cuerpo de la luna -->
-    <!-- Posicionadas en la zona izquierda-central del cuerpo de la luna -->
+    <path d="M 20,98 Q 100,206 180,98 Q 100,132 20,98 Z" stroke-width="1.7"/>
     <line x1="38" y1="134" x2="60" y2="138" stroke-width="1.2"/>
     <line x1="44" y1="143" x2="68" y2="146" stroke-width="1.2"/>
     <line x1="53" y1="150" x2="77" y2="151" stroke-width="1.2"/>
-
-    <!-- Diamante en la base del hueco interior de la luna -->
     <path d="M 100,110 L 105,117 L 100,124 L 95,117 Z" stroke-width="1.3"/>
   </g>
-
-  <!-- ── Estrella grande (4 puntas) ── -->
-  <!-- Centro (104,76), radio largo=14, radio corto=5 -->
-  <path d="M 104,62
-           L 109,71 L 118,76
-           L 109,81 L 104,90
-           L  99,81 L  90,76
-           L  99,71 Z"
-        fill="#c9858a"/>
-
-  <!-- ── Estrella pequeña (4 puntas) ── -->
-  <!-- Centro (124,63), radio largo=9, radio corto=3 -->
-  <path d="M 124,54
-           L 127,60 L 133,63
-           L 127,66 L 124,72
-           L 121,66 L 115,63
-           L 121,60 Z"
-        fill="#c9858a"/>
-
+  <path d="M 104,62 L 109,71 L 118,76 L 109,81 L 104,90 L 99,81 L 90,76 L 99,71 Z" fill="#c9858a"/>
+  <path d="M 124,54 L 127,60 L 133,63 L 127,66 L 124,72 L 121,66 L 115,63 L 121,60 Z" fill="#c9858a"/>
 </svg>
