@@ -2732,13 +2732,24 @@
     // ── CONTACTO DINÁMICO ──────────────────────────────────────
     const CONTACT_ICONS = {
       whatsapp:  '📱',
-      instagram: '📸',
+      instagram: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" style="color:var(--rose)"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>`,
       tiktok:    '🎵',
-      email:     '📧',
+      email:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" style="color:var(--rose)"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
       ubicacion: '📍',
       modalidad: '🌐',
       otro:      '💬',
     };
+
+    function contactLink(c) {
+      if (c.tipo === 'instagram') {
+        const url = c.valor.startsWith('http') ? c.valor : `https://instagram.com/${c.valor.replace(/^@/,'')}`;
+        return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--rose);text-decoration:none;font-weight:400">${c.valor}</a>`;
+      }
+      if (c.tipo === 'email') {
+        return `<a href="mailto:${c.valor.trim()}" style="color:var(--rose);text-decoration:none;font-weight:400">${c.valor}</a>`;
+      }
+      return c.valor;
+    }
 
     async function loadContacto() {
       try {
@@ -2751,7 +2762,7 @@
             <div class="info-icon">${CONTACT_ICONS[c.tipo] || '💬'}</div>
             <div>
               <div class="info-label">${c.etiqueta}</div>
-              <div class="info-val">${c.valor}</div>
+              <div class="info-val">${contactLink(c)}</div>
               ${c.tipo === 'ubicacion' ? `<a class="maps-btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.valor)}" target="_blank" rel="noopener">📍 Cómo llegar</a>` : ''}
             </div>
           </div>`).join('');
