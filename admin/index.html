@@ -4128,6 +4128,7 @@
   let _fichaCurrentSesiones = [];      // reservas reales de la ficha abierta
   let _fichaCurrentSesionesManual = []; // sesiones manuales de la ficha abierta
   let _fichaActual = null;             // objeto ficha actualmente abierta
+  let _fichaFiltroActivo = null;       // filtro activo dentro de la ficha abierta
 
   async function loadFichas() {
     try {
@@ -4260,6 +4261,10 @@
     const ficha = _fichasMap[email];
     if (!ficha) return;
 
+    // Limpiar sesiones y filtro de la ficha anterior ANTES del fetch
+    _fichaFiltroActivo = null;
+    document.getElementById('fichaSesiones').innerHTML = '<p style="color:var(--muted);font-size:.82rem">Cargando sesiones…</p>';
+
     // Cargar reservas reales y sesiones manuales en paralelo
     let sesiones = [], sesionesManual = [];
     try {
@@ -4284,8 +4289,6 @@
     renderFichaSesiones(sesiones, sesionesManual);
     document.getElementById('fichaModal').classList.add('open');
   }
-
-  let _fichaFiltroActivo = null; // null = todas
 
   function renderFichaSesiones(reservas, manuales, filtro) {
     const sesEl = document.getElementById('fichaSesiones');
