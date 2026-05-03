@@ -2026,9 +2026,9 @@
         <div class="footer-brand-name">Energía Holística Majo 🌙</div>
         <p class="footer-brand-desc">Acompaño procesos de sanación integrando psicología, energía y conciencia. Un espacio seguro para tu transformación.</p>
         <div class="footer-socials">
-          <a class="social-btn" href="#">📸</a>
-          <a class="social-btn" href="#">💬</a>
-          <a class="social-btn" href="#">🔗</a>
+          <a id="footerInsta" class="social-btn" href="https://www.instagram.com/energiaholisticamajo/" target="_blank" rel="noopener" aria-label="Instagram">📸</a>
+          <a id="footerEmail" class="social-btn" href="#" aria-label="Enviar correo">✉️</a>
+          <button id="footerShare" class="social-btn" aria-label="Compartir sitio" style="cursor:pointer;background:transparent;border:1px solid rgba(201,133,138,0.3);">🔗</button>
         </div>
       </div>
       <div>
@@ -2739,10 +2739,40 @@
           const btn = document.getElementById('waBtn');
           if (btn) btn.href = `https://wa.me/${num}`;
         }
+        // Footer: email desde Supabase
+        const em = (canales || []).find(c => c.tipo === 'email');
+        if (em) {
+          const emailBtn = document.getElementById('footerEmail');
+          if (emailBtn) emailBtn.href = `mailto:${em.valor.trim()}`;
+        }
+        // Footer: Instagram desde Supabase (si está configurado, sobreescribe el hardcoded)
+        const ig = (canales || []).find(c => c.tipo === 'instagram');
+        if (ig) {
+          const igBtn = document.getElementById('footerInsta');
+          const url = ig.valor.startsWith('http') ? ig.valor : `https://instagram.com/${ig.valor.replace(/^@/,'')}`;
+          if (igBtn) igBtn.href = url;
+        }
       } catch (e) {
         console.warn('No se pudo cargar contacto', e);
       }
     }
+    // Botón Compartir — Web Share API con fallback a copiar URL
+    document.addEventListener('DOMContentLoaded', () => {
+      const shareBtn = document.getElementById('footerShare');
+      if (!shareBtn) return;
+      shareBtn.addEventListener('click', async () => {
+        const data = { title: 'Energía Holística Majo', url: location.href };
+        if (navigator.share) {
+          try { await navigator.share(data); } catch (_) {}
+        } else {
+          try {
+            await navigator.clipboard.writeText(location.href);
+            shareBtn.textContent = '✅';
+            setTimeout(() => { shareBtn.textContent = '🔗'; }, 2000);
+          } catch (_) {}
+        }
+      });
+    });
 
     // ── HERO TEXTO ────────────────────────────────────────────
     async function loadHeroTexto() {
