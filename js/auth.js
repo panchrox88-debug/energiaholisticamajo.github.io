@@ -98,6 +98,19 @@
       </div>`;
     document.body.appendChild(div);
     div.addEventListener('click', e => { if (e.target === div) closeLogin(); });
+
+    // Enter para enviar en login
+    ['authEmail','authPass'].forEach(id => {
+      div.querySelector('#' + id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
+      });
+    });
+    // Enter para enviar en registro
+    ['regNombre','regEmail','regPass'].forEach(id => {
+      div.querySelector('#' + id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') doRegister();
+      });
+    });
     authSetTab('login');
   }
 
@@ -142,6 +155,8 @@
     m.style.display = 'flex';
     document.getElementById('authMsg').textContent = '';
     authSetTab('login');
+    // Foco automático en el campo email
+    setTimeout(() => document.getElementById('authEmail')?.focus(), 50);
   };
 
   window.closeLogin = function () {
@@ -167,6 +182,7 @@
 
   function _errEs(msg) {
     if (!msg) return 'Error desconocido. Intenta de nuevo.';
+    if (msg.includes('signup_disabled') || msg.includes('Signups not allowed')) return 'El registro está temporalmente desactivado. Contáctanos para crear tu cuenta.';
     if (msg.includes('Invalid') || msg.includes('credentials'))   return 'Correo o contraseña incorrectos.';
     if (msg.includes('confirmed') || msg.includes('verify'))      return 'Confirma tu correo antes de ingresar. Revisa tu bandeja de entrada.';
     if (msg.includes('Too many') || msg.includes('rate'))         return 'Demasiados intentos. Espera unos minutos.';
@@ -265,12 +281,70 @@
     return session?.access_token || SB_KEY;  // sin window.
   };
 
+  // ── Modal cambio de contraseña (PASSWORD_RECOVERY) ──────
+  function _injectResetModal() {
+    if (document.getElementById('resetModal')) return;
+    const div = document.createElement('div');
+    div.id = 'resetModal';
+    div.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(61,43,43,0.5);backdrop-filter:blur(6px);z-index:3100;align-items:center;justify-content:center;padding:16px';
+    div.innerHTML = `
+      <div style="background:#faf5f0;border-radius:22px;max-width:380px;width:100%;padding:40px 36px 32px;position:relative;box-shadow:0 24px 64px rgba(61,43,43,0.22);font-family:'Nunito',sans-serif">
+        <p style="font-size:0.6rem;letter-spacing:0.38em;text-transform:uppercase;color:#c9a96e;margin-bottom:6px">Energía Holística Majo</p>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;color:#3d2b2b;margin-bottom:6px">Nueva contraseña</h2>
+        <p style="font-size:0.84rem;color:#7a5c5c;margin-bottom:28px;line-height:1.75">Elige una contraseña nueva para tu cuenta.</p>
+        <input id="resetPass1" type="password" placeholder="Nueva contraseña (mín. 6 caracteres)"
+          style="width:100%;padding:12px 16px;border:1.5px solid #ede0d4;border-radius:11px;font-family:'Nunito',sans-serif;font-size:0.88rem;background:white;outline:none;margin-bottom:11px;box-sizing:border-box;color:#3d2b2b"/>
+        <input id="resetPass2" type="password" placeholder="Repite la contraseña"
+          style="width:100%;padding:12px 16px;border:1.5px solid #ede0d4;border-radius:11px;font-family:'Nunito',sans-serif;font-size:0.88rem;background:white;outline:none;margin-bottom:18px;box-sizing:border-box;color:#3d2b2b"/>
+        <button id="resetBtn" onclick="doSetNewPassword()"
+          style="width:100%;padding:13px;background:#c9858a;color:white;border:none;border-radius:40px;font-family:'Nunito',sans-serif;font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer">
+          Guardar contraseña →
+        </button>
+        <p id="resetMsg" style="margin-top:14px;font-size:0.82rem;min-height:18px;text-align:center;line-height:1.6;color:#7a5c5c"></p>
+      </div>`;
+    document.body.appendChild(div);
+
+    // Enter en cualquiera de los campos
+    ['resetPass1','resetPass2'].forEach(id => {
+      div.querySelector('#' + id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') doSetNewPassword();
+      });
+    });
+  }
+
+  window.doSetNewPassword = async function () {
+    const p1  = document.getElementById('resetPass1')?.value || '';
+    const p2  = document.getElementById('resetPass2')?.value || '';
+    const btn = document.getElementById('resetBtn');
+    const msg = document.getElementById('resetMsg');
+    if (p1.length < 6) { _setMsg(msg, 'La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
+    if (p1 !== p2)     { _setMsg(msg, 'Las contraseñas no coinciden.', 'err'); return; }
+    btn.textContent = 'Guardando…'; btn.disabled = true;
+    const { error } = await _sb.auth.updateUser({ password: p1 });
+    if (error) {
+      _setMsg(msg, 'No se pudo guardar. Intenta solicitar el enlace de nuevo.', 'err');
+      btn.textContent = 'Guardar contraseña →'; btn.disabled = false;
+    } else {
+      _setMsg(msg, '¡Contraseña actualizada! Ya puedes ingresar.', 'ok');
+      setTimeout(() => {
+        document.getElementById('resetModal').style.display = 'none';
+        // Limpiar el hash/token de la URL sin recargar
+        history.replaceState(null, '', location.pathname);
+      }, 2000);
+    }
+  };
+
   window.initAuth = function (onReady) {
     _injectModal();
-    // onAuthStateChange dispara INITIAL_SESSION de inmediato con la sesión actual,
-    // y luego SIGNED_IN / SIGNED_OUT cuando cambia. Esto cubre tanto la carga
-    // normal como el callback de OAuth (Google), sin necesidad de getSession() extra.
+    _injectResetModal();
     _sb.auth.onAuthStateChange(async (event, session) => {
+      // Recuperación de contraseña: mostrar formulario de nueva contraseña
+      if (event === 'PASSWORD_RECOVERY') {
+        _user = session?.user || null;
+        const m = document.getElementById('resetModal');
+        if (m) m.style.display = 'flex';
+        return; // no llamar onReady todavía
+      }
       _user = session?.user || null;
       if (_user) await _loadPerfil(_user.id, session.access_token);
       else _perfil = null;
