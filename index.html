@@ -2676,7 +2676,11 @@
         }));
 
         // 3. Crear preferencia de pago en Mercado Pago vía Apps Script
-        const precio = Number(svc.precio) || 0;
+        const precioOriginal = Number(svc.precio) || 0;
+        const descuento      = tieneBannerDesc('servicio', svc.id) ? (BANNER_DESCUENTO || 0) : 0;
+        const precio         = descuento > 0
+          ? Math.round(precioOriginal * (1 - descuento / 100) / 1000) * 1000
+          : precioOriginal;
         const base   = window.location.href.split('?')[0];
         const mpRes  = await fetch(
           `${APPS_URL}?action=crearPago` +
