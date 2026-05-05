@@ -13,6 +13,7 @@
 
   let _user   = null;
   let _perfil = null;
+  let _signOutReason = null; // 'manual' | 'blocked' | null → null = sesión expirada
 
   // ── Inyectar modal ───────────────────────────────────────
   function _injectModal() {
@@ -140,6 +141,7 @@
       // Si la cuenta está bloqueada, cerrar sesión
       if (_perfil?.bloqueado) {
         _perfil = null;
+        _signOutReason = 'blocked';
         await _sb.auth.signOut();
         _user = null;
         alert('Tu cuenta ha sido suspendida. Contacta a la administradora.');
@@ -269,6 +271,7 @@
   };
 
   window.doLogout = async function () {
+    _signOutReason = 'manual';
     await _sb.auth.signOut();
     _user = null; _perfil = null;
   };
@@ -345,12 +348,56 @@
         if (m) m.style.display = 'flex';
         return; // no llamar onReady todavía
       }
+
+      const wasLoggedIn = !!_user;
       _user = session?.user || null;
+
+      // Sesión expirada involuntariamente → mostrar toast
+      if (event === 'SIGNED_OUT' && wasLoggedIn && !_signOutReason) {
+        _showSessionExpiredToast();
+      }
+      _signOutReason = null;
+
       if (_user) await _loadPerfil(_user.id, session.access_token);
       else _perfil = null;
       if (onReady) onReady(_user, _perfil);
     });
   };
+
+  function _showSessionExpiredToast() {
+    if (document.getElementById('sessionExpiredToast')) return;
+    const t = document.createElement('div');
+    t.id = 'sessionExpiredToast';
+    t.style.cssText = [
+      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%)',
+      'background:#faf5f0;border:1.5px solid #e8c5c8;border-left:4px solid var(--rose,#c9858a)',
+      'border-radius:14px;padding:15px 20px',
+      'font-family:\'Nunito\',sans-serif;font-size:0.85rem;color:var(--dark,#3d2b2b)',
+      'z-index:4000;box-shadow:0 8px 32px rgba(61,43,43,0.15)',
+      'display:flex;align-items:center;gap:13px',
+      'max-width:400px;width:calc(100% - 48px)',
+      'animation:_fadeUp 0.3s ease',
+    ].join(';');
+    t.innerHTML = `
+      <style>
+        @keyframes _fadeUp {
+          from { opacity:0; transform:translateX(-50%) translateY(12px); }
+          to   { opacity:1; transform:translateX(-50%) translateY(0);    }
+        }
+      </style>
+      <span style="font-size:1.15rem;flex-shrink:0">🔑</span>
+      <span style="flex:1;line-height:1.55">
+        Tu sesión expiró.
+        <a href="javascript:void(0)"
+          onclick="openLogin();document.getElementById('sessionExpiredToast')?.remove()"
+          style="color:var(--rose,#c9858a);font-weight:600;text-decoration:underline;cursor:pointer">
+          Inicia sesión
+        </a> para continuar.
+      </span>
+      <button onclick="document.getElementById('sessionExpiredToast')?.remove()"
+        style="background:none;border:none;font-size:1.25rem;color:#b0948e;cursor:pointer;padding:0;line-height:1;flex-shrink:0">×</button>`;
+    document.body.appendChild(t);
+  }
 
   function _setMsg(el, txt, type) {
     if (!el) return;
