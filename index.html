@@ -931,6 +931,9 @@
     }
     .bk-opt-icon { font-size: 1.6rem; }
     .bk-opt-name { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--dark); }
+    .bk-opt-precio { font-size: 0.78rem; color: var(--muted); margin-top: -4px; line-height: 1.4; }
+    .bk-opt-precio s { opacity: 0.5; margin-right: 3px; }
+    .bk-opt-precio strong { color: var(--rose); font-weight: 700; }
 
     /* Modality */
     .bk-modality {
@@ -2564,9 +2567,21 @@
       const d = days[state.day];
       const modLabel = state.modality === 'online' ? 'Online' : 'Presencial';
       const dayLabel = `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
+      const precioBase = Number(svc.precio) || 0;
+      const pDesc      = tieneBannerDesc('servicio', svc.id) ? (BANNER_DESCUENTO || 0) : 0;
+      let totalHTML    = '';
+      if (precioBase > 0) {
+        if (pDesc > 0) {
+          const pFinal = Math.round(precioBase * (1 - pDesc / 100) / 1000) * 1000;
+          totalHTML = `<span style="margin-top:6px;font-size:0.9rem">Total: <s style="opacity:0.5;margin-right:3px">$${precioBase.toLocaleString('es-CL')}</s><strong style="color:var(--rose)">$${pFinal.toLocaleString('es-CL')}</strong></span>`;
+        } else {
+          totalHTML = `<span style="margin-top:6px;font-size:0.9rem">Total: <strong>$${precioBase.toLocaleString('es-CL')}</strong></span>`;
+        }
+      }
       elSummary.innerHTML = `
         <span class="bk-summary-title">${svc.emoji} ${svc.titulo}</span>
         <span>${modLabel} · ${dayLabel} · ${state.time} hrs</span>
+        ${totalHTML}
       `;
       // ── Auth gate ──────────────────────────────────────────
       const loginPrompt = document.getElementById('bkLoginPrompt');
@@ -3278,11 +3293,21 @@
         const badge   = conDesc
           ? `<span style="position:absolute;top:-6px;right:-6px;background:var(--rose);color:white;font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:0.05em">${BANNER_DESCUENTO}% OFF</span>`
           : '';
+        let precioHTML = '';
+        if (s.precio) {
+          const original = Number(s.precio);
+          if (conDesc && BANNER_DESCUENTO > 0) {
+            const final = Math.round(original * (1 - BANNER_DESCUENTO / 100) / 1000) * 1000;
+            precioHTML = `<span class="bk-opt-precio"><s>$${original.toLocaleString('es-CL')}</s> <strong>$${final.toLocaleString('es-CL')}</strong></span>`;
+          } else {
+            precioHTML = `<span class="bk-opt-precio">$${original.toLocaleString('es-CL')}</span>`;
+          }
+        }
         const el = document.createElement('div');
         el.className = 'bk-opt';
         el.dataset.id = s.id;
         el.style.position = 'relative';
-        el.innerHTML = `${badge}<span class="bk-opt-icon">${s.emoji}</span><span class="bk-opt-name">${s.titulo}</span>`;
+        el.innerHTML = `${badge}<span class="bk-opt-icon">${s.emoji}</span><span class="bk-opt-name">${s.titulo}</span>${precioHTML}`;
         el.addEventListener('click', () => selectService(s.id));
         elServices.appendChild(el);
       });
