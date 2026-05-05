@@ -2571,12 +2571,15 @@
       const pDesc      = tieneBannerDesc('servicio', svc.id) ? (BANNER_DESCUENTO || 0) : 0;
       let totalHTML    = '';
       if (precioBase > 0) {
-        if (pDesc > 0) {
-          const pFinal = Math.round(precioBase * (1 - pDesc / 100) / 1000) * 1000;
-          totalHTML = `<span style="margin-top:6px;font-size:0.9rem">Total: <s style="opacity:0.5;margin-right:3px">$${precioBase.toLocaleString('es-CL')}</s><strong style="color:var(--rose)">$${pFinal.toLocaleString('es-CL')}</strong></span>`;
-        } else {
-          totalHTML = `<span style="margin-top:6px;font-size:0.9rem">Total: <strong>$${precioBase.toLocaleString('es-CL')}</strong></span>`;
-        }
+        const pFinal = pDesc > 0 ? Math.round(precioBase * (1 - pDesc / 100) / 1000) * 1000 : precioBase;
+        const precioInner = pDesc > 0
+          ? `<s style="opacity:0.45;font-size:0.85rem;margin-right:6px">$${precioBase.toLocaleString('es-CL')}</s><span style="font-size:1.35rem;font-weight:700;color:var(--rose)">$${pFinal.toLocaleString('es-CL')}</span>`
+          : `<span style="font-size:1.35rem;font-weight:700;color:var(--rose)">$${precioBase.toLocaleString('es-CL')}</span>`;
+        totalHTML = `
+          <span style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(201,133,138,0.25)">
+            <span style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);font-family:'Nunito',sans-serif">Total a pagar</span>
+            <span style="display:flex;align-items:baseline;gap:4px;font-family:'Cormorant Garamond',serif">${precioInner}</span>
+          </span>`;
       }
       elSummary.innerHTML = `
         <span class="bk-summary-title">${svc.emoji} ${svc.titulo}</span>
