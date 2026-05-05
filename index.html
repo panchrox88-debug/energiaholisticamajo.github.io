@@ -2571,15 +2571,26 @@
       const pDesc      = tieneBannerDesc('servicio', svc.id) ? (BANNER_DESCUENTO || 0) : 0;
       let totalHTML    = '';
       if (precioBase > 0) {
-        const pFinal = pDesc > 0 ? Math.round(precioBase * (1 - pDesc / 100) / 1000) * 1000 : precioBase;
-        const precioInner = pDesc > 0
-          ? `<s style="opacity:0.45;font-size:0.85rem;margin-right:6px">$${precioBase.toLocaleString('es-CL')}</s><span style="font-size:1.35rem;font-weight:700;color:var(--rose)">$${pFinal.toLocaleString('es-CL')}</span>`
-          : `<span style="font-size:1.35rem;font-weight:700;color:var(--rose)">$${precioBase.toLocaleString('es-CL')}</span>`;
+        const pFinal   = pDesc > 0 ? Math.round(precioBase * (1 - pDesc / 100) / 1000) * 1000 : precioBase;
+        const pAhorro  = precioBase - pFinal;
+        const rowStyle = 'display:flex;justify-content:space-between;align-items:center;font-size:0.84rem;font-family:\'Nunito\',sans-serif';
+        const dctoRow  = pDesc > 0 ? `
+          <div style="${rowStyle};color:var(--rose)">
+            <span>Descuento ${pDesc}% OFF</span>
+            <span>− $${pAhorro.toLocaleString('es-CL')}</span>
+          </div>` : '';
         totalHTML = `
-          <span style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(201,133,138,0.25)">
-            <span style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);font-family:'Nunito',sans-serif">Total a pagar</span>
-            <span style="display:flex;align-items:baseline;gap:4px;font-family:'Cormorant Garamond',serif">${precioInner}</span>
-          </span>`;
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(201,133,138,0.2);display:flex;flex-direction:column;gap:6px">
+            <div style="${rowStyle};color:var(--muted)">
+              <span>${svc.titulo}</span>
+              <span>$${precioBase.toLocaleString('es-CL')}</span>
+            </div>
+            ${dctoRow}
+            <div style="${rowStyle};border-top:1px solid rgba(201,133,138,0.3);padding-top:8px;margin-top:2px">
+              <span style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);font-weight:700">Total</span>
+              <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:var(--rose)">$${pFinal.toLocaleString('es-CL')}</span>
+            </div>
+          </div>`;
       }
       elSummary.innerHTML = `
         <span class="bk-summary-title">${svc.emoji} ${svc.titulo}</span>
