@@ -1397,12 +1397,15 @@
     return r.json();
   }
 
-  async function sbDelete(path) {
+  async function sbDelete(path, { allowEmpty = false } = {}) {
     const r = await fetch(SB_URL + '/rest/v1' + path, {
-      method: 'DELETE', headers: authHeaders(),
+      method: 'DELETE', headers: authHeaders({ 'Prefer': 'return=representation' }),
     });
     if (!r.ok) throw new Error(await r.text());
-    return true;
+    const data = await r.json();
+    if (!allowEmpty && Array.isArray(data) && data.length === 0)
+      throw new Error('No se pudo eliminar. Es posible que no tengas permiso o que el registro ya no exista.');
+    return data;
   }
 
   // ── STORAGE upload ─────────────────────────────────────────
@@ -3095,9 +3098,11 @@
   };
   window._deleteCurso = async id => {
     if (!confirm('¿Eliminar este curso?')) return;
-    await sbDelete(`/cursos?id=eq.${id}`);
-    document.getElementById('curso-card-' + id)?.remove();
-    showMsg('cursosMsg', 'Curso eliminado');
+    try {
+      await sbDelete(`/cursos?id=eq.${id}`);
+      document.getElementById('curso-card-' + id)?.remove();
+      showMsg('cursosMsg', 'Curso eliminado');
+    } catch(e) { showMsg('cursosMsg', 'Error: ' + e.message, 'err'); }
   };
 
   document.getElementById('cursoPdfInput').addEventListener('change', async function() {
@@ -3591,7 +3596,7 @@
   window.eliminarUsuaria = async function(userId, email) {
     if (!confirm(`¿Eliminar a ${email}?\n\nEsto borra su perfil y accesos.\nPara eliminarla de auth ve a Supabase → Authentication → Users.`)) return;
     try {
-      await sbDelete(`/accesos?user_id=eq.${userId}`);
+      await sbDelete(`/accesos?user_id=eq.${userId}`, { allowEmpty: true });
       await sbDelete(`/perfiles?id=eq.${userId}`);
       await loadUsuarias();
       showMsg('usuariasMsg', 'Usuaria eliminada ✓');
@@ -3721,9 +3726,11 @@
   window._editPost = p => openBlogModal(p);
   window._deletePost = async id => {
     if (!confirm('¿Eliminar esta entrada?')) return;
-    await sbDelete(`/blog_posts?id=eq.${id}`);
-    document.getElementById('blog-card-' + id)?.remove();
-    showMsg('blogMsg', 'Entrada eliminada');
+    try {
+      await sbDelete(`/blog_posts?id=eq.${id}`);
+      document.getElementById('blog-card-' + id)?.remove();
+      showMsg('blogMsg', 'Entrada eliminada');
+    } catch(e) { showMsg('blogMsg', 'Error: ' + e.message, 'err'); }
   };
 
   document.getElementById('blogImgInput').addEventListener('change', async function() {
