@@ -2083,7 +2083,7 @@
     const body = { id, emoji, titulo, descripcion, modo, slides: svcCurrentSlides, precio, foto_fondo: svcFondoUrl || null };
     try {
       if (idOriginal) {
-        await sbPatch(`/servicios?id=eq.${idOriginal}`, body);
+        await sbPatch(`/servicios?id=eq.${encodeURIComponent(idOriginal)}`, body);
       } else {
         // Get max orden
         const all = await sbGet('/servicios?select=orden&order=orden.desc&limit=1');
@@ -2099,7 +2099,7 @@
   window._deleteSvc = async id => {
     if (!confirm(`¿Eliminar el servicio "${id}"?`)) return;
     try {
-      await sbDelete(`/servicios?id=eq.${id}`);
+      await sbDelete(`/servicios?id=eq.${encodeURIComponent(id)}`);
       document.getElementById('svc-card-' + id)?.remove();
       showMsg('serviciosMsg', 'Servicio eliminado');
     } catch(e) { showMsg('serviciosMsg', 'Error: ' + e.message, 'err'); }
@@ -2112,8 +2112,8 @@
       const swapIdx = idx + dir;
       if (swapIdx < 0 || swapIdx >= rows.length) return;
       const a = rows[idx], b = rows[swapIdx];
-      await sbPatch(`/servicios?id=eq.${a.id}`, { orden: b.orden });
-      await sbPatch(`/servicios?id=eq.${b.id}`, { orden: a.orden });
+      await sbPatch(`/servicios?id=eq.${encodeURIComponent(a.id)}`, { orden: b.orden });
+      await sbPatch(`/servicios?id=eq.${encodeURIComponent(b.id)}`, { orden: a.orden });
       loadServicios();
     } catch(e) { showMsg('serviciosMsg', 'Error: ' + e.message, 'err'); }
   };
