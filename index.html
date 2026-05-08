@@ -2710,6 +2710,15 @@
         const precio         = descuento > 0
           ? Math.round(precioOriginal * (1 - descuento / 100) / 1000) * 1000
           : precioOriginal;
+
+        // Guardar precio real pagado en la reserva (para contabilidad)
+        if (reserva?.id && precio > 0) {
+          sbFetch(`/reservas?id=eq.${reserva.id}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ precio_pagado: precio }),
+          }).catch(() => {}); // silencioso, no bloquea el flujo
+        }
         const base   = window.location.href.split('?')[0];
         const mpRes  = await fetch(
           `${APPS_URL}?action=crearPago` +
