@@ -909,8 +909,7 @@
                   <th style="text-align:left;padding:8px 10px">Fecha</th>
                   <th style="text-align:left;padding:8px 10px">Servicio</th>
                   <th style="text-align:left;padding:8px 10px">Cliente</th>
-                  <th style="text-align:right;padding:8px 10px">Bruto</th>
-                  <th style="text-align:right;padding:8px 10px">Dcto</th>
+                  <th style="text-align:right;padding:8px 10px">Cobrado</th>
                   <th style="text-align:right;padding:8px 10px">Comisión MP</th>
                   <th style="text-align:right;padding:8px 10px">Neto</th>
                 </tr>
@@ -5178,7 +5177,7 @@ ON CONFLICT DO NOTHING;`;
 
     try {
       const reservas = await sbGet(
-        `/reservas?select=id,fecha,servicio_nombre,nombre_cliente,precio_pagado,descuento_pct,estado` +
+        `/reservas?select=id,fecha,servicio_nombre,nombre_cliente,precio_original,precio_pagado,descuento_pct,estado` +
         `&fecha=gte.${desde}&fecha=lte.${hasta}` +
         `&estado=not.in.(cancelada,pendiente_pago)` +
         `&order=fecha.asc`
@@ -5215,16 +5214,22 @@ ON CONFLICT DO NOTHING;`;
         const [, mes, dia] = r.fecha.split('-');
         const fechaFmt = `${dia}/${mes}`;
         const sinPrecio = r.precio_pagado == null;
-        const dcto = r.descuento_pct > 0
-          ? `<span style="background:#fff3cd;color:#856404;border-radius:6px;padding:2px 7px;font-size:.72rem;font-weight:700">−${r.descuento_pct}%</span>`
-          : '—';
+        const tieneDcto = r.descuento_pct > 0 && r.precio_original;
+        const celdaBruto = sinPrecio
+          ? '<span style="color:var(--muted);font-size:.75rem">Sin precio</span>'
+          : tieneDcto
+            ? `<div style="line-height:1.4">
+                <span style="text-decoration:line-through;color:var(--muted);font-size:.78rem">${CLP(r.precio_original)}</span>
+                <span style="background:#fff3cd;color:#856404;border-radius:6px;padding:1px 6px;font-size:.7rem;font-weight:700;margin-left:4px">−${r.descuento_pct}%</span>
+                <div style="font-weight:700">${CLP(bruto)}</div>
+               </div>`
+            : CLP(bruto);
 
         filas += `<tr style="border-bottom:1px solid var(--beige)">
           <td style="padding:9px 10px;color:var(--muted)">${fechaFmt}</td>
           <td style="padding:9px 10px">${r.servicio_nombre}</td>
           <td style="padding:9px 10px">${r.nombre_cliente}</td>
-          <td style="padding:9px 10px;text-align:right">${sinPrecio ? '<span style="color:var(--muted);font-size:.75rem">Sin precio</span>' : CLP(bruto)}</td>
-          <td style="padding:9px 10px;text-align:right">${sinPrecio ? '—' : dcto}</td>
+          <td style="padding:9px 10px;text-align:right">${celdaBruto}</td>
           <td style="padding:9px 10px;text-align:right;color:#c0392b">${sinPrecio ? '—' : '−' + CLP(comision)}</td>
           <td style="padding:9px 10px;text-align:right;color:#27ae60;font-weight:600">${sinPrecio ? '—' : CLP(neto)}</td>
         </tr>`;
@@ -5236,7 +5241,7 @@ ON CONFLICT DO NOTHING;`;
       tbody.innerHTML = filas;
       tfoot.innerHTML = `
         <tr style="border-top:2px solid var(--beige);font-weight:700;background:var(--cream)">
-          <td colspan="4" style="padding:10px 10px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">
+          <td colspan="3" style="padding:10px 10px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">
             Total ${CONT_MESES[contMes-1]}
           </td>
           <td style="padding:10px 10px;text-align:right">${CLP(totalBruto)}</td>
