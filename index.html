@@ -2674,7 +2674,14 @@
       const dayLabel = `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
 
       try {
-        // 1. Insertar reserva con estado pendiente_pago y obtener su ID
+        // 0. Calcular precio real ANTES del INSERT (con descuento si hay banner activo)
+        const precioOriginal = Number(svc.precio) || 0;
+        const descuento      = tieneBannerDesc('servicio', svc.id) ? (BANNER_DESCUENTO || 0) : 0;
+        const precio         = descuento > 0
+          ? Math.round(precioOriginal * (1 - descuento / 100) / 1000) * 1000
+          : precioOriginal;
+
+        // 1. Insertar reserva con precio_pagado y descuento incluidos desde el inicio
         const res = await sbFetch('/reservas?select=id', {
           method: 'POST',
           headers: { 'Prefer': 'return=representation' },
@@ -2689,6 +2696,8 @@
             email_cliente:    email,
             telefono_cliente: telefono,
             estado:           'pendiente_pago',
+            precio_pagado:    precio || null,
+            descuento_pct:    descuento || null,
           }),
         });
         if (!res.ok && res.status !== 201) throw new Error('Error al guardar');
@@ -2703,22 +2712,6 @@
           dayLabel,
           hora: state.time,
         }));
-
-        // 3. Crear preferencia de pago en Mercado Pago vía Apps Script
-        const precioOriginal = Number(svc.precio) || 0;
-        const descuento      = tieneBannerDesc('servicio', svc.id) ? (BANNER_DESCUENTO || 0) : 0;
-        const precio         = descuento > 0
-          ? Math.round(precioOriginal * (1 - descuento / 100) / 1000) * 1000
-          : precioOriginal;
-
-        // Guardar precio real pagado en la reserva (para contabilidad)
-        if (reserva?.id && precio > 0) {
-          sbFetch(`/reservas?id=eq.${reserva.id}`, {
-            method: 'PATCH',
-            headers: { 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ precio_pagado: precio }),
-          }).catch(() => {}); // silencioso, no bloquea el flujo
-        }
         const base   = window.location.href.split('?')[0];
         const mpRes  = await fetch(
           `${APPS_URL}?action=crearPago` +
