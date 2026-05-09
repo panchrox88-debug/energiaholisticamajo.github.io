@@ -872,13 +872,12 @@
         <div id="contMsg" class="msg-banner"></div>
 
         <!-- Navegación mes/año -->
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px">
-          <button class="btn btn-secondary" onclick="contCambiarMes(-1)" style="padding:6px 14px;font-size:.85rem">← Anterior</button>
-          <span id="contTituloMes" style="font-size:1.05rem;font-weight:700;color:var(--dark);min-width:140px;text-align:center"></span>
-          <button class="btn btn-secondary" onclick="contCambiarMes(1)" style="padding:6px 14px;font-size:.85rem">Siguiente →</button>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+          <select id="contSelMes" onchange="window.contIrMes()" style="padding:7px 12px;border:1.5px solid var(--beige);border-radius:8px;font-family:inherit;font-size:.9rem;background:white;color:var(--dark);cursor:pointer;outline:none"></select>
+          <select id="contSelAnio" onchange="window.contIrMes()" style="padding:7px 12px;border:1.5px solid var(--beige);border-radius:8px;font-family:inherit;font-size:.9rem;background:white;color:var(--dark);cursor:pointer;outline:none"></select>
           <span style="flex:1"></span>
-          <button class="btn btn-secondary" id="btnContAnual" onclick="contToggleAnual()" style="padding:6px 14px;font-size:.85rem">📊 Ver año completo</button>
-          <button class="btn btn-secondary" onclick="contExportarCSV()" style="padding:6px 14px;font-size:.85rem">📥 Exportar CSV</button>
+          <button class="btn btn-secondary" id="btnContAnual" onclick="window.contToggleAnual()" style="padding:6px 14px;font-size:.85rem">📊 Ver año completo</button>
+          <button class="btn btn-secondary" onclick="window.contExportarCSV()" style="padding:6px 14px;font-size:.85rem">📥 Exportar CSV</button>
         </div>
 
         <!-- Tarjetas resumen -->
@@ -5125,24 +5124,45 @@ ON CONFLICT DO NOTHING;`;
     return '$' + Math.round(n).toLocaleString('es-CL');
   }
 
-  function contCambiarMes(delta) {
-    contMes += delta;
-    if (contMes > 12) { contMes = 1;  contAnio++; }
-    if (contMes < 1)  { contMes = 12; contAnio--; }
-    loadContabilidad();
+  function contInitSelects() {
+    const selMes  = document.getElementById('contSelMes');
+    const selAnio = document.getElementById('contSelAnio');
+    if (!selMes || !selAnio) return;
+
+    // Poblar meses
+    selMes.innerHTML = CONT_MESES.map((m, i) =>
+      `<option value="${i+1}" ${i+1 === contMes ? 'selected' : ''}>${m}</option>`
+    ).join('');
+
+    // Poblar años (desde 2024 hasta año actual + 1)
+    const anioActual = new Date().getFullYear();
+    let optsAnio = '';
+    for (let a = 2024; a <= anioActual + 1; a++) {
+      optsAnio += `<option value="${a}" ${a === contAnio ? 'selected' : ''}>${a}</option>`;
+    }
+    selAnio.innerHTML = optsAnio;
+
+    // Ocultar select de mes en modo anual
+    selMes.style.display = contModoAnual ? 'none' : '';
   }
 
-  function contToggleAnual() {
+  window.contIrMes = function() {
+    contMes  = parseInt(document.getElementById('contSelMes').value);
+    contAnio = parseInt(document.getElementById('contSelAnio').value);
+    loadContabilidad();
+  };
+
+  window.contToggleAnual = function() {
     contModoAnual = !contModoAnual;
     document.getElementById('btnContAnual').textContent = contModoAnual ? '📅 Ver mes' : '📊 Ver año completo';
     document.getElementById('contVistaDetalle').style.display = contModoAnual ? 'none' : 'block';
     document.getElementById('contVistaAnual').style.display   = contModoAnual ? 'block' : 'none';
+    document.getElementById('contSelMes').style.display = contModoAnual ? 'none' : '';
     loadContabilidad();
-  }
+  };
 
   async function loadContabilidad() {
-    document.getElementById('contTituloMes').textContent =
-      CONT_MESES[contMes - 1] + ' ' + contAnio;
+    contInitSelects();
     if (contModoAnual) {
       await contCargarAnual();
     } else {
@@ -5290,7 +5310,7 @@ ON CONFLICT DO NOTHING;`;
     }
   }
 
-  function contExportarCSV() {
+  window.contExportarCSV = function contExportarCSV() {
     if (!contDatosCache.length) return;
 
     const header = contModoAnual
