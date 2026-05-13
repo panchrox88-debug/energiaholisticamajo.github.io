@@ -1812,21 +1812,15 @@
         ? `<a href="${waLink}" target="_blank" class="btn" style="font-size:.72rem;padding:6px 12px;background:#25d366;color:white;text-decoration:none;text-align:center;white-space:nowrap">📲 WhatsApp</a>`
         : '';
 
-      const acciones = mode === 'reagendar'
-        ? `<div class="card-actions" style="display:flex;flex-direction:column;gap:6px">
-             <button class="btn btn-green" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
-               onclick="window._confirmarReserva('${r.id}')">✓ Confirmar</button>
-             ${waBtnHtml}
-             <button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px"
-               onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
-           </div>`
-        : mode === 'proxima'
-          ? `<div class="card-actions" style="display:flex;flex-direction:column;gap:6px">
-               ${waBtnHtml}
-               <button class="btn btn-danger" style="font-size:.75rem;padding:6px 12px"
-                 onclick="window._cancelarReserva('${r.id}')">Cancelar</button>
-             </div>`
-          : '';
+      const btnConfirmar = mode === 'reagendar'
+        ? `<button class="btn btn-green" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
+             onclick="window._confirmarReserva('${r.id}')">✓ Confirmar</button>`
+        : '';
+
+      const btnCancelar = (mode === 'reagendar' || mode === 'proxima')
+        ? `<button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px"
+             onclick="window._cancelarReserva('${r.id}')">Cancelar</button>`
+        : '';
 
       const tieneFicha = !!_fichasMap[r.email_cliente];
       const hayFichas  = Object.keys(_fichasMap).length > 0;
@@ -1871,7 +1865,9 @@
             ${fichaBtn}
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-            ${acciones ? acciones.replace('<div class="card-actions"','<div').replace('</div>','') : ''}
+            ${btnConfirmar}
+            ${waBtnHtml}
+            ${btnCancelar}
             <button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
               onclick="window._eliminarReserva('${r.id}')">🗑️ Eliminar</button>
           </div>
