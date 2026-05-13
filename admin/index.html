@@ -1780,15 +1780,15 @@
         ? '<span class="badge" style="background:#fff3e0;color:#e67e22;border:1px solid #f0a500">🔄 Reagendar solicitado</span>'
         : '<span class="badge green">Confirmada</span>';
 
-    // Borde izquierdo según tipo: naranja=reagendar, verde=próxima, rojo=cancelada, oro=historial pasada
+    // Borde izquierdo grueso + fondo tintado según tipo
     const borderStyle = r.estado === 'reagendar_solicitado'
-      ? 'border-left: 4px solid #f0a500;'
+      ? 'border-left: 8px solid #f0a500; background: #fff8ed;'
       : mode === 'proxima'
-        ? 'border-left: 4px solid var(--green);'
+        ? 'border-left: 8px solid var(--green); background: #f0f7f3;'
         : mode === false
           ? r.estado === 'cancelada'
-            ? 'border-left: 4px solid var(--red);'
-            : 'border-left: 4px solid var(--gold);'
+            ? 'border-left: 8px solid var(--red); background: #fdf2f2;'
+            : 'border-left: 8px solid var(--gold); background: #fdf8f1;'
           : '';
 
     // Parsear nueva hora propuesta (formato "HH:MM|HH:MM")
