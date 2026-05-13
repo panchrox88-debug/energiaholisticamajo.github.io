@@ -1759,7 +1759,7 @@
 
       renderReservasGroup('reservasSolicitudes', solicitudes, 'reagendar');
       renderReservasGroup('reservasProximas',    proximas,    'proxima');
-      renderReservasGroup('reservasHistorial',   historial,   false);
+      renderHistorial(historial);
 
       // Mostrar/ocultar sección de solicitudes
       const secEl = document.getElementById('secSolicitudes');
@@ -1770,111 +1770,168 @@
     }
   }
 
+  // ── Builder de una card de reserva ──────────────────────────────
+  function buildResCard(r, mode) {
+    const fecha = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+
+    const badge = r.estado === 'cancelada'
+      ? '<span class="badge" style="background:#fde8e8;color:var(--red)">Cancelada</span>'
+      : r.estado === 'reagendar_solicitado'
+        ? '<span class="badge" style="background:#fff3e0;color:#e67e22;border:1px solid #f0a500">🔄 Reagendar solicitado</span>'
+        : '<span class="badge green">Confirmada</span>';
+
+    // Borde izquierdo según tipo: naranja=reagendar, verde=próxima, rojo=cancelada, oro=historial pasada
+    const borderStyle = r.estado === 'reagendar_solicitado'
+      ? 'border-left: 4px solid #f0a500;'
+      : mode === 'proxima'
+        ? 'border-left: 4px solid var(--green);'
+        : mode === false
+          ? r.estado === 'cancelada'
+            ? 'border-left: 4px solid var(--red);'
+            : 'border-left: 4px solid var(--gold);'
+          : '';
+
+    // Parsear nueva hora propuesta (formato "HH:MM|HH:MM")
+    const [nHoraIn, nHoraFin] = (r.nueva_hora_propuesta || '').split('|');
+    const nHoraLabel = nHoraIn ? ` · ${nHoraIn}–${nHoraFin || ''} hrs` : '';
+
+    const notaReagendar = r.estado === 'reagendar_solicitado'
+      ? `<div style="margin-top:8px;padding:10px 14px;background:#fff8e1;border-radius:8px;font-size:0.8rem;color:#7a6000;line-height:1.6">
+           ${r.nueva_fecha_propuesta ? `📅 <strong>Nueva fecha propuesta:</strong> ${esc(r.nueva_fecha_propuesta)}${esc(nHoraLabel)}<br>` : ''}
+           ${r.notas_reagendar ? `💬 <em>"${esc(r.notas_reagendar)}"</em>` : ''}
+         </div>`
+      : '';
+
+    const waLink = (() => {
+      if (!r.telefono_cliente) return null;
+      let tel = r.telefono_cliente.replace(/\D/g, '');
+      if (tel.startsWith('0')) tel = tel.slice(1);
+      if (!tel.startsWith('56')) tel = '56' + tel;
+      const nombre = r.nombre_cliente || r.email_cliente || 'hola';
+      const msg = `Hola ${nombre}, te recuerdo que tienes tu sesión de *${r.servicio_nombre}* el *${fecha}* a las *${r.hora_inicio} hrs*.\n\n¡Te espero!\n— Majo, Energía Holística`;
+      return `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+    })();
+
+    const waBtnHtml = waLink
+      ? `<a href="${waLink}" target="_blank" class="btn" style="font-size:.72rem;padding:6px 12px;background:#25d366;color:white;text-decoration:none;text-align:center;white-space:nowrap">📲 WhatsApp</a>`
+      : '';
+
+    const btnConfirmar = mode === 'reagendar'
+      ? `<button class="btn btn-green" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
+           onclick="window._confirmarReserva('${r.id}')">✓ Confirmar</button>`
+      : '';
+
+    const btnCancelar = (mode === 'reagendar' || mode === 'proxima')
+      ? `<button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px"
+           onclick="window._cancelarReserva('${r.id}')">Cancelar</button>`
+      : '';
+
+    const tieneFicha = !!_fichasMap[r.email_cliente];
+    const hayFichas  = Object.keys(_fichasMap).length > 0;
+    const emailSafe  = (r.email_cliente || '').replace(/'/g, "\\'");
+    const nomSafe    = (r.nombre_cliente || '').replace(/'/g, "\\'");
+    const telSafe    = (r.telefono_cliente || '').replace(/'/g, "\\'");
+    const fichaBtn = tieneFicha
+      ? `<button
+          data-ficha-email="${r.email_cliente}"
+          onclick="abrirFicha('${emailSafe}')"
+          style="font-size:.68rem;padding:4px 11px;border-radius:20px;border:1.5px solid var(--gold);background:none;color:var(--gold);cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif;margin-top:8px">
+          🗂️ Ver ficha
+        </button>`
+      : `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          <button
+            data-ficha-email="${r.email_cliente}"
+            onclick="crearFichaDesdeReserva('${emailSafe}','${nomSafe}','${telSafe}')"
+            style="font-size:.68rem;padding:4px 11px;border-radius:20px;border:1.5px solid var(--beige);background:none;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif">
+            + Crear ficha
+          </button>
+          ${hayFichas ? `<button
+            onclick="abrirAsociarFicha('${emailSafe}','${nomSafe}')"
+            style="font-size:.68rem;padding:4px 11px;border-radius:20px;border:1.5px solid var(--beige);background:none;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif">
+            + Asociar ficha
+          </button>` : ''}
+        </div>`;
+
+    return `
+    <div class="card" id="res-${r.id}" style="${borderStyle}">
+      <div class="card-row" style="align-items:flex-start">
+        <input type="checkbox" class="res-check" data-id="${r.id}"
+          style="margin-top:4px;flex-shrink:0;width:16px;height:16px;cursor:pointer;accent-color:var(--rose)"
+          onchange="actualizarBulkBar()"/>
+        <div class="card-body">
+          <div class="card-name">${esc(r.servicio_nombre)} ${badge}</div>
+          <div class="card-sub">${esc(r.modalidad)} · ${esc(fecha)} · ${esc(r.hora_inicio)}–${esc(r.hora_fin)} hrs</div>
+          <div class="card-text">
+            👤 ${esc(r.nombre_cliente)}<br>
+            📧 ${esc(r.email_cliente)}${r.telefono_cliente ? '<br>📱 ' + esc(r.telefono_cliente) : ''}
+          </div>
+          ${notaReagendar}
+          ${fichaBtn}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          ${btnConfirmar}
+          ${waBtnHtml}
+          ${btnCancelar}
+          <button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
+            onclick="window._eliminarReserva('${r.id}')">🗑️ Eliminar</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── Render de solicitudes / próximas (sin paginación) ────────────
   function renderReservasGroup(containerId, items, mode) {
     const el = document.getElementById(containerId);
     if (!el) return;
     if (!items.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.8rem;padding:8px 0">— Ninguna —</p>'; return; }
-    el.innerHTML = items.map(r => {
-      const fecha = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
-
-      const badge = r.estado === 'cancelada'
-        ? '<span class="badge" style="background:#fde8e8;color:var(--red)">Cancelada</span>'
-        : r.estado === 'reagendar_solicitado'
-          ? '<span class="badge" style="background:#fff3e0;color:#e67e22;border:1px solid #f0a500">🔄 Reagendar solicitado</span>'
-          : '<span class="badge green">Confirmada</span>';
-
-      const borderStyle = r.estado === 'reagendar_solicitado'
-        ? 'border-left: 4px solid #f0a500;'
-        : '';
-
-      // Parsear nueva hora propuesta (formato "HH:MM|HH:MM")
-      const [nHoraIn, nHoraFin] = (r.nueva_hora_propuesta || '').split('|');
-      const nHoraLabel = nHoraIn ? ` · ${nHoraIn}–${nHoraFin || ''} hrs` : '';
-
-      const notaReagendar = r.estado === 'reagendar_solicitado'
-        ? `<div style="margin-top:8px;padding:10px 14px;background:#fff8e1;border-radius:8px;font-size:0.8rem;color:#7a6000;line-height:1.6">
-             ${r.nueva_fecha_propuesta ? `📅 <strong>Nueva fecha propuesta:</strong> ${esc(r.nueva_fecha_propuesta)}${esc(nHoraLabel)}<br>` : ''}
-             ${r.notas_reagendar ? `💬 <em>"${esc(r.notas_reagendar)}"</em>` : ''}
-           </div>`
-        : '';
-
-      const waLink = (() => {
-        if (!r.telefono_cliente) return null;
-        let tel = r.telefono_cliente.replace(/\D/g, '');
-        if (tel.startsWith('0')) tel = tel.slice(1);
-        if (!tel.startsWith('56')) tel = '56' + tel;
-        const nombre = r.nombre_cliente || r.email_cliente || 'hola';
-        const msg = `Hola ${nombre}, te recuerdo que tienes tu sesión de *${r.servicio_nombre}* el *${fecha}* a las *${r.hora_inicio} hrs*.\n\n¡Te espero!\n— Majo, Energía Holística`;
-        return `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
-      })();
-
-      const waBtnHtml = waLink
-        ? `<a href="${waLink}" target="_blank" class="btn" style="font-size:.72rem;padding:6px 12px;background:#25d366;color:white;text-decoration:none;text-align:center;white-space:nowrap">📲 WhatsApp</a>`
-        : '';
-
-      const btnConfirmar = mode === 'reagendar'
-        ? `<button class="btn btn-green" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
-             onclick="window._confirmarReserva('${r.id}')">✓ Confirmar</button>`
-        : '';
-
-      const btnCancelar = (mode === 'reagendar' || mode === 'proxima')
-        ? `<button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px"
-             onclick="window._cancelarReserva('${r.id}')">Cancelar</button>`
-        : '';
-
-      const tieneFicha = !!_fichasMap[r.email_cliente];
-      const hayFichas  = Object.keys(_fichasMap).length > 0;
-      const emailSafe  = (r.email_cliente || '').replace(/'/g, "\\'");
-      const nomSafe    = (r.nombre_cliente || '').replace(/'/g, "\\'");
-      const telSafe    = (r.telefono_cliente || '').replace(/'/g, "\\'");
-      const fichaBtn = tieneFicha
-        ? `<button
-            data-ficha-email="${r.email_cliente}"
-            onclick="abrirFicha('${emailSafe}')"
-            style="font-size:.68rem;padding:4px 11px;border-radius:20px;border:1.5px solid var(--gold);background:none;color:var(--gold);cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif;margin-top:8px">
-            🗂️ Ver ficha
-          </button>`
-        : `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-            <button
-              data-ficha-email="${r.email_cliente}"
-              onclick="crearFichaDesdeReserva('${emailSafe}','${nomSafe}','${telSafe}')"
-              style="font-size:.68rem;padding:4px 11px;border-radius:20px;border:1.5px solid var(--beige);background:none;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif">
-              + Crear ficha
-            </button>
-            ${hayFichas ? `<button
-              onclick="abrirAsociarFicha('${emailSafe}','${nomSafe}')"
-              style="font-size:.68rem;padding:4px 11px;border-radius:20px;border:1.5px solid var(--beige);background:none;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif">
-              + Asociar ficha
-            </button>` : ''}
-          </div>`;
-
-      return `
-      <div class="card" id="res-${r.id}" style="${borderStyle}">
-        <div class="card-row" style="align-items:flex-start">
-          <input type="checkbox" class="res-check" data-id="${r.id}"
-            style="margin-top:4px;flex-shrink:0;width:16px;height:16px;cursor:pointer;accent-color:var(--rose)"
-            onchange="actualizarBulkBar()"/>
-          <div class="card-body">
-            <div class="card-name">${esc(r.servicio_nombre)} ${badge}</div>
-            <div class="card-sub">${esc(r.modalidad)} · ${esc(fecha)} · ${esc(r.hora_inicio)}–${esc(r.hora_fin)} hrs</div>
-            <div class="card-text">
-              👤 ${esc(r.nombre_cliente)}<br>
-              📧 ${esc(r.email_cliente)}${r.telefono_cliente ? '<br>📱 ' + esc(r.telefono_cliente) : ''}
-            </div>
-            ${notaReagendar}
-            ${fichaBtn}
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-            ${btnConfirmar}
-            ${waBtnHtml}
-            ${btnCancelar}
-            <button class="btn btn-danger" style="font-size:.72rem;padding:6px 12px;white-space:nowrap"
-              onclick="window._eliminarReserva('${r.id}')">🗑️ Eliminar</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
+    el.innerHTML = items.map(r => buildResCard(r, mode)).join('');
   }
+
+  // ── Historial paginado ───────────────────────────────────────────
+  let _historialAll = [], _historialPage = 0;
+  const HIST_PAGE_SIZE = 10;
+
+  function renderHistorial(items) {
+    _historialAll = items;
+    _historialPage = 0;
+    renderHistorialPage();
+  }
+
+  function renderHistorialPage() {
+    const el = document.getElementById('reservasHistorial');
+    if (!el) return;
+    if (!_historialAll.length) {
+      el.innerHTML = '<p style="color:var(--muted);font-size:.8rem;padding:8px 0">— Ninguna —</p>';
+      return;
+    }
+    const total      = _historialAll.length;
+    const totalPages = Math.ceil(total / HIST_PAGE_SIZE);
+    const start      = _historialPage * HIST_PAGE_SIZE;
+    const pageItems  = _historialAll.slice(start, start + HIST_PAGE_SIZE);
+
+    const cards = pageItems.map(r => buildResCard(r, false)).join('');
+
+    const paginacion = totalPages > 1 ? `
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px;padding-top:12px;border-top:1px solid var(--beige)">
+        <button class="btn btn-ghost" style="padding:6px 16px;font-size:.8rem"
+          onclick="window.historialIrPag(${_historialPage - 1})"
+          ${_historialPage === 0 ? 'disabled style="padding:6px 16px;font-size:.8rem;opacity:.4;cursor:default"' : ''}>← Anterior</button>
+        <span style="font-size:.8rem;color:var(--muted)">${_historialPage + 1} / ${totalPages} &nbsp;·&nbsp; ${total} reservas</span>
+        <button class="btn btn-ghost" style="padding:6px 16px;font-size:.8rem"
+          onclick="window.historialIrPag(${_historialPage + 1})"
+          ${_historialPage >= totalPages - 1 ? 'disabled style="padding:6px 16px;font-size:.8rem;opacity:.4;cursor:default"' : ''}>Siguiente →</button>
+      </div>` : '';
+
+    el.innerHTML = cards + paginacion;
+  }
+
+  window.historialIrPag = function(page) {
+    const totalPages = Math.ceil(_historialAll.length / HIST_PAGE_SIZE);
+    if (page < 0 || page >= totalPages) return;
+    _historialPage = page;
+    renderHistorialPage();
+    document.getElementById('reservasHistorial')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   window._cancelarReserva = async id => {
     if (!confirm('¿Cancelar esta reserva?')) return;
@@ -1889,7 +1946,15 @@
     if (!confirm('¿Eliminar esta reserva permanentemente? Esta acción no se puede deshacer.')) return;
     try {
       await sbDelete(`/reservas?id=eq.${id}`);
+      const eraHistorial = _historialAll.some(r => r.id === id);
       document.getElementById(`res-${id}`)?.remove();
+      if (eraHistorial) {
+        _historialAll = _historialAll.filter(r => r.id !== id);
+        // Si la página actual queda vacía, retroceder una página
+        const totalPages = Math.ceil(_historialAll.length / HIST_PAGE_SIZE);
+        if (_historialPage >= totalPages && _historialPage > 0) _historialPage = totalPages - 1;
+        renderHistorialPage();
+      }
       showMsg('reservasMsg', 'Reserva eliminada');
       actualizarBulkBar();
     } catch(e) { showMsg('reservasMsg', 'Error: ' + e.message, 'err'); }
