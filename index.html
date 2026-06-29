@@ -3520,6 +3520,16 @@
         setTimeout(() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' }), 300);
 
       } else if (pago === 'error') {
+        // Cancelar la reserva pendiente_pago para liberar el slot
+        const extRef = params.get('external_reference') || '';
+        if (extRef.startsWith('reserva:')) {
+          const reservaId = extRef.split(':')[1];
+          fetch(SB_URL + '/rest/v1/reservas?id=eq.' + reservaId + '&estado=eq.pendiente_pago', {
+            method: 'PATCH',
+            headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ estado: 'cancelada' })
+          }).catch(() => {});
+        }
         // Mostrar banner de error visible sobre el widget de reservas
         const agendaEl = document.getElementById('agenda');
         if (agendaEl) {

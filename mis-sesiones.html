@@ -393,7 +393,7 @@
     const btn = document.getElementById('modalConfirmBtn');
     btn.textContent = 'Cancelando…'; btn.disabled = true;
     try {
-      await sbPatch(SB_KEY, _modalId, { estado: 'cancelada' });
+      await sbPatch(_modalId, { estado: 'cancelada' });
       cerrarModal();
       const card = document.getElementById(`sesion-${_modalId}`);
       if (card) {
@@ -564,7 +564,7 @@
     const nota = document.getElementById('modalReagendarNota').value.trim();
     btn.textContent = 'Enviando…'; btn.disabled = true;
     try {
-      await sbPatch(SB_KEY, reservaId, {
+      await sbPatch(reservaId, {
         estado: 'reagendar_solicitado',
         nueva_fecha_propuesta: _ragState.dia,
         nueva_hora_propuesta:  _ragState.hora + '|' + _ragState.horaFin,
@@ -598,10 +598,12 @@
     btn.textContent = 'Enviar solicitud'; btn.disabled = false;
   }
 
-  async function sbPatch(key, id, data) {
+  async function sbPatch(id, data) {
+    const token = (typeof getAuthToken === 'function') ? await getAuthToken() : null;
+    const authHeader = token && token !== SB_KEY ? { 'Authorization': 'Bearer ' + token } : {};
     const res = await fetch(`${SB_URL}/rest/v1/reservas?id=eq.${id}`, {
       method: 'PATCH',
-      headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal', ...authHeader },
       body: JSON.stringify(data)
     });
     if (!res.ok) {
@@ -707,10 +709,12 @@
     const puedeAccionar = showAcciones && !esCancelada && !esReagendar && !esPasada && horasRestantes > HORAS_ANTICIP;
 
     // Badge de estado
-    const badgeEstado = esCancelada  ? '<span class="badge badge-cancelada">Cancelada</span>'
-      : esReagendar ? '<span class="badge" style="background:#fff3e0;color:#b07800;border:1px solid #f0a500">🔄 Reagendar solicitado</span>'
-      : esPasada    ? '<span class="badge badge-pasada">Completada</span>'
-      :               '<span class="badge badge-confirmada">Confirmada</span>';
+    const esPendientePago = r.estado === 'pendiente_pago';
+    const badgeEstado = esCancelada      ? '<span class="badge badge-cancelada">Cancelada</span>'
+      : esReagendar      ? '<span class="badge" style="background:#fff3e0;color:#b07800;border:1px solid #f0a500">🔄 Reagendar solicitado</span>'
+      : esPendientePago  ? '<span class="badge" style="background:#fff8e1;color:#b07800;border:1px solid #f5c518">⏳ Pago pendiente</span>'
+      : esPasada         ? '<span class="badge badge-pasada">Completada</span>'
+      :                    '<span class="badge badge-confirmada">Confirmada</span>';
 
     const badgeMod = esOnline
       ? '<span class="badge badge-online">💻 Online</span>'

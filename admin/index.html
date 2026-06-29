@@ -1743,7 +1743,7 @@
       const today = new Date().toISOString().slice(0, 10);
       const all   = await sbGet('/reservas?select=*&order=fecha.asc,hora_inicio.asc');
       const solicitudes = all.filter(r => r.estado === 'reagendar_solicitado');
-      const proximas    = all.filter(r => r.fecha >= today && r.estado === 'confirmada');
+      const proximas    = all.filter(r => r.fecha >= today && ['confirmada','pendiente_pago'].includes(r.estado));
       const historial   = all.filter(r => r.fecha <  today || r.estado === 'cancelada');
 
       // Alerta de solicitudes pendientes
@@ -1778,7 +1778,9 @@
       ? '<span class="badge" style="background:#fde8e8;color:var(--red)">Cancelada</span>'
       : r.estado === 'reagendar_solicitado'
         ? '<span class="badge" style="background:#fff3e0;color:#e67e22;border:1px solid #f0a500">🔄 Reagendar solicitado</span>'
-        : '<span class="badge green">Confirmada</span>';
+        : r.estado === 'pendiente_pago'
+          ? '<span class="badge" style="background:#fff8e1;color:#b07800;border:1px solid #f5c518">⏳ Pago pendiente</span>'
+          : '<span class="badge green">Confirmada</span>';
 
     // Borde izquierdo grueso + fondo tintado según tipo
     const borderStyle = r.estado === 'reagendar_solicitado'
