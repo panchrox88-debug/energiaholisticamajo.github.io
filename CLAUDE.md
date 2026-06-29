@@ -1,5 +1,11 @@
 # Energía Holística Majo — Contexto del Proyecto
 
+## Para Claude: contexto de quien escribe
+
+Quien habla contigo es **Cote**, la dueña del sitio. No tiene conocimientos técnicos. Explica todo en español neutro (usa "tú", no "vos"), con palabras simples. Cuando hagas cambios, siempre termina con `git add -A && git commit -m "..." && git push` para publicarlos automáticamente.
+
+---
+
 Sitio web para **Majo**, psicoterapeuta transpersonal. Sistema completo: sitio público + panel admin + reservas con Supabase.
 
 **Repo:** `panchrox88-debug/energiaholisticamajo.github.io` (GitHub Pages, rama `main`)
