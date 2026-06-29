@@ -16,8 +16,8 @@ Sitio web para **Majo**, psicoterapeuta transpersonal. Sistema completo: sitio p
 
 ## Supabase
 
-- URL: `https://yvuzccxqkkytuisgzpqx.supabase.co`
-- Anon key: `sb_publishable_FIYlXkb_cpgXlWW8zF8Gww_sDNLFegi`
+- URL: `https://rnjtfkgggezxegakedyi.supabase.co`
+- Anon key: `sb_publishable_3WdFDCQNYZOZOw_eZNurYg_ObVWYF_Q`
 - Storage: bucket `uploads` (imágenes), bucket `documentos` (PDFs)
 
 ---
