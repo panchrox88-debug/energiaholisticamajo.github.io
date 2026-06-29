@@ -262,7 +262,7 @@
   window.doGoogle = async function () {
     const { error } = await _sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: location.href }
+      options: { redirectTo: window.location.origin + window.location.pathname }
     });
     if (error) {
       const msg = document.getElementById('authMsg');
