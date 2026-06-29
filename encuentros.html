@@ -123,13 +123,13 @@
     try {
       const hoy = new Date().toISOString().slice(0,10);
       const res  = await fetch(`${SB_URL}/rest/v1/encuentros?activo=eq.true&fecha=gte.${hoy}&order=fecha.asc&select=*`, {
-        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+        headers: { 'apikey': SB_KEY }
       });
       const data = await res.json();
 
       // Contar inscritos por encuentro
       const res2 = await fetch(`${SB_URL}/rest/v1/inscripciones?estado=eq.confirmada&select=encuentro_id`, {
-        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+        headers: { 'apikey': SB_KEY }
       });
       const inscripciones = await res2.json();
 

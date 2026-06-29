@@ -312,7 +312,7 @@
         const id = extRef.split(':')[1];
         fetch(SB_URL + '/rest/v1/reservas?id=eq.' + id + '&estado=eq.pendiente_pago', {
           method: 'PATCH',
-          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+          headers: { 'apikey': SB_KEY,
                      'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify({ estado: 'cancelada' })
         }).catch(() => {});
@@ -430,7 +430,7 @@
                  fechas_bloqueadas:[], horarios_por_dia:{}, planificacion_semanas:{}, dias_adelante:30 };
     try {
       const res = await fetch(`${SB_URL}/rest/v1/agenda?id=eq.1&select=*`,
-        { headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY } });
+        { headers:{ 'apikey':SB_KEY } });
       const rows = await res.json();
       if (rows?.[0]) AGENDA_R = { ...AGENDA_R, ...rows[0] };
     } catch(e) {}
@@ -529,7 +529,7 @@
     try {
       const res = await fetch(
         `${SB_URL}/rest/v1/reservas?fecha=eq.${ds}&estado=in.(confirmada,reagendar_solicitado)&select=hora_inicio`,
-        { headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY } });
+        { headers:{ 'apikey':SB_KEY } });
       const rows = await res.json();
       ocupados = (rows||[]).map(r => r.hora_inicio);
     } catch(e) {}
@@ -634,7 +634,7 @@
     // Cargar tiempo mínimo de anticipación para reagendar
     try {
       const agRes = await fetch(`${SB_URL}/rest/v1/agenda?id=eq.1&select=horas_anticipacion_reagendar`,
-        { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } });
+        { headers: { 'apikey': SB_KEY } });
       const agRows = await agRes.json();
       if (agRows?.[0]?.horas_anticipacion_reagendar != null)
         HORAS_ANTICIP = agRows[0].horas_anticipacion_reagendar;

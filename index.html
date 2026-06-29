@@ -2086,12 +2086,14 @@
 
   <script>
     async function sbFetch(path, opts = {}) {
+      const token = (typeof getAuthToken === 'function') ? await getAuthToken() : null;
+      const authHeader = token && token !== SB_KEY ? { 'Authorization': 'Bearer ' + token } : {};
       return fetch(SB_URL + '/rest/v1' + path, {
         ...opts,
         headers: {
           'apikey': SB_KEY,
-          'Authorization': 'Bearer ' + SB_KEY,
           'Content-Type': 'application/json',
+          ...authHeader,
           ...(opts.headers || {}),
         },
       });

@@ -157,8 +157,8 @@
 
     try {
       const [r1, r2] = await Promise.all([
-        fetch(`${SB_URL}/rest/v1/encuentros?id=eq.${id}&select=*`, { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }),
-        fetch(`${SB_URL}/rest/v1/inscripciones?encuentro_id=eq.${id}&estado=eq.confirmada&select=id`, { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } })
+        fetch(`${SB_URL}/rest/v1/encuentros?id=eq.${id}&select=*`, { headers: { 'apikey': SB_KEY } }),
+        fetch(`${SB_URL}/rest/v1/inscripciones?encuentro_id=eq.${id}&estado=eq.confirmada&select=id`, { headers: { 'apikey': SB_KEY } })
       ]);
       const [rows, inscs] = await Promise.all([r1.json(), r2.json()]);
       if (!rows?.length) { location.href = 'encuentros.html'; return; }
@@ -358,7 +358,7 @@
       const res = await fetch(`${SB_URL}/rest/v1/inscripciones?select=id`, {
         method: 'POST',
         headers: {
-          'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+          'apikey': SB_KEY,
           'Content-Type': 'application/json', 'Prefer': 'return=representation'
         },
         body: JSON.stringify({

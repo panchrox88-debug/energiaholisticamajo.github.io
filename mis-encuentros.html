@@ -131,7 +131,7 @@
         const id = extRef.split(':')[1];
         fetch(SB_URL + '/rest/v1/inscripciones?id=eq.' + id + '&estado=eq.pendiente_pago', {
           method: 'PATCH',
-          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+          headers: { 'apikey': SB_KEY,
                      'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify({ estado: 'cancelada' })
         }).catch(() => {});

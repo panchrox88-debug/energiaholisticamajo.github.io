@@ -238,7 +238,7 @@
   const SB_KEY = 'sb_publishable_3WdFDCQNYZOZOw_eZNurYg_ObVWYF_Q';
   async function sbFetch(path) {
     return fetch(SB_URL + '/rest/v1' + path, {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      headers: { 'apikey': SB_KEY }
     });
   }
 
@@ -481,7 +481,7 @@
     try {
       const res = await fetch(SB_URL + '/rest/v1/comentarios', {
         method: 'POST',
-        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ post_id: postId, nombre, mensaje })
       });
       if (!res.ok) throw new Error();

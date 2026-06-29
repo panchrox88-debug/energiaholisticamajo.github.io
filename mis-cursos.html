@@ -231,7 +231,7 @@
         const id = extRef.split(':')[1];
         fetch(SB_URL + '/rest/v1/accesos?id=eq.' + id + '&estado=eq.pendiente', {
           method: 'DELETE',
-          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+          headers: { 'apikey': SB_KEY }
         }).catch(() => {});
       }
       const b = document.createElement('div');

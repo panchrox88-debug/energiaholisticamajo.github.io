@@ -215,7 +215,7 @@
   (async function() {
     try {
       const r = await fetch(`${SB_URL}/rest/v1/politicas?select=*&activa=eq.true&order=orden.asc`, {
-        headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+        headers: { 'apikey': SB_KEY }
       });
       if (!r.ok) return; // fallback al contenido estático
       const rows = await r.json();
