@@ -292,7 +292,10 @@
       font-size: 0.6rem; letter-spacing: 0.35em;
       text-transform: uppercase; color: var(--gold);
     }
-    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a { white-space: nowrap; }
+    @media (max-width: 1240px) { nav .nav-links { gap: 16px; } nav .nav-links a { letter-spacing: 0.12em; } }
+    @media (max-width: 1000px) { nav .nav-links { gap: 12px; } nav .nav-links a { font-size: 0.66rem; letter-spacing: 0.08em; } }
     .nav-links a {
       font-size: 0.72rem; letter-spacing: 0.2em;
       text-transform: uppercase; color: var(--muted);
@@ -1699,6 +1702,7 @@
       <li><a href="cursos.html">Cursos</a></li>
       <li><a href="encuentros.html">Encuentros</a></li>
       <li><a href="promociones.html">Promociones</a></li>
+      <li><a href="https://mi-cuerpo-en-alerta.netlify.app/?utm_source=web&amp;utm_medium=menu" target="_blank" rel="noopener">Ebook</a></li>
       <li><a href="blog.html">Blog</a></li>
       <li><a href="#contact">Contacto</a></li>
     </ul>
@@ -1801,6 +1805,7 @@
       <a href="cursos.html">Cursos</a>
       <a href="encuentros.html">Encuentros</a>
       <a href="promociones.html">Promociones</a>
+      <a href="https://mi-cuerpo-en-alerta.netlify.app/?utm_source=web&amp;utm_medium=menu" target="_blank" rel="noopener">Ebook 🌙</a>
       <a href="blog.html">Blog</a>
       <div class="mobile-menu-divider"></div>
       <a href="#contact">Contacto</a>
@@ -2199,6 +2204,8 @@
 
     // ── Modalidad asincrónica: servicios que la ofrecen (id del servicio) ──
     const SERVICIOS_ASINCRONICOS = ['limpieza', 'limpieza-energética-hogar', 'utero'];
+    // Servicios que se muestran en "Servicios" pero NO se reservan por la agenda
+    const SERVICIOS_SIN_AGENDA = ['circulo'];
 
     // ── Semanas con hija (horario de colegio), cada 2 semanas desde el lunes `ancla`.
     // En esas semanas la atención PRESENCIAL solo se ofrece hasta la hora indicada
@@ -2511,6 +2518,7 @@
     });
 
     function selectService(id) {
+      if (SERVICIOS_SIN_AGENDA.includes(id)) return;
       state.service = id;
       [...elServices.children].forEach(c => c.classList.toggle('selected', c.dataset.id === id));
       // Update modality availability
@@ -3075,12 +3083,37 @@
       if (document.body.classList.contains('banner-open')) adjustBannerOffset();
     });
 
+    // Banner del ebook: se muestra cuando no hay un banner de promoción activo
+    function mostrarBannerEbook() {
+      const el = document.getElementById('siteBanner');
+      if (!el) return;
+      el.style.background = 'var(--rose)';
+      el.style.color = '#ffffff';
+      el.style.cursor = 'pointer';
+      document.getElementById('bannerTexto').textContent = '🌙 Nuevo ebook: «Mi cuerpo en alerta»';
+      const subEl = document.getElementById('bannerSub');
+      subEl.textContent = 'Aprende a regular tu sistema nervioso · Conócelo aquí →';
+      subEl.style.display = 'inline';
+      el.querySelector('.site-banner-body').addEventListener('click', () => {
+        window.open('https://mi-cuerpo-en-alerta.netlify.app/?utm_source=web&utm_medium=banner', '_blank', 'noopener');
+      });
+      el.classList.add('visible');
+      document.body.classList.add('banner-open');
+      adjustBannerOffset();
+      document.getElementById('bannerClose').addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        el.classList.remove('visible');
+        document.body.classList.remove('banner-open');
+        document.documentElement.style.removeProperty('--banner-h');
+      });
+    }
+
     async function loadBanner() {
       try {
         const res  = await sbFetch('/banner?id=eq.1&select=*');
         const rows = await res.json();
         const b = rows && rows[0] ? rows[0] : null;
-        if (!b || !b.activo || !b.texto) return;
+        if (!b || !b.activo || !b.texto) { mostrarBannerEbook(); return; }
 
         BANNER_DESCUENTO    = b.descuento    || 0;
         BANNER_APLICA_TODOS = b.aplica_todos !== false;
@@ -3391,6 +3424,7 @@
     function buildBookingServices() {
       elServices.innerHTML = '';
       SERVICIOS_DATA.forEach(s => {
+        if (SERVICIOS_SIN_AGENDA.includes(s.id)) return;
         const conDesc = tieneBannerDesc('servicio', s.id);
         const badge   = conDesc
           ? `<span style="position:absolute;top:-6px;right:-6px;background:var(--rose);color:white;font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:0.05em">${BANNER_DESCUENTO}% OFF</span>`
@@ -3514,6 +3548,12 @@
     // "Reservar" CTA: close + scroll to booking + preselect service
     detailReserve.addEventListener('click', () => {
       const serviceId = carousel.currentService;
+      if (SERVICIOS_SIN_AGENDA.includes(serviceId)) {
+        const svcSA = (typeof SERVICIOS_DATA !== 'undefined' ? SERVICIOS_DATA : []).find(x => x.id === serviceId);
+        const txt = encodeURIComponent('Hola Majo 🌙 Quiero información sobre ' + (svcSA ? svcSA.titulo : 'tus encuentros'));
+        window.open('https://wa.me/' + WHATSAPP + '?text=' + txt, '_blank', 'noopener');
+        return;
+      }
       closeService();
       setTimeout(() => {
         const booking = document.getElementById('booking');
