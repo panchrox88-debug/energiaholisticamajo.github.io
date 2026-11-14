@@ -15,7 +15,8 @@
     html.solo-agenda section:not(#booking),
     html.solo-agenda .cta-banner,
     html.solo-agenda #siteBanner,
-    html.solo-agenda .fl-agendar { display: none !important; }
+    html.solo-agenda .fl-agendar,
+    html.solo-agenda .agendar-float { display: none !important; }
     html.solo-agenda #booking { padding-top: 120px; min-height: 100vh; }
     html.solo-agenda #booking .reveal { opacity: 1 !important; transform: none !important; }
     html.solo-agenda .solo-agenda-volver { display: block; }
@@ -956,8 +957,11 @@
 
     /* Modality */
     .bk-modality {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
     }
+    .bk-mod-nota { font-size: 0.78rem; color: var(--muted); margin: 12px 4px 0; line-height: 1.6; }
+    .bk-time.solo-otra { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+    @media (max-width: 520px) { .bk-modality { grid-template-columns: 1fr; } }
     .bk-mod {
       background: var(--cream);
       border: 1.5px solid rgba(201,133,138,0.2);
@@ -1980,7 +1984,9 @@
         <div class="bk-modality" id="bkModality">
           <div class="bk-mod" data-mod="online"><span class="bk-mod-icon">💻</span> Online</div>
           <div class="bk-mod" data-mod="presencial"><span class="bk-mod-icon">🌸</span> Presencial</div>
+          <div class="bk-mod" data-mod="asincronico"><span class="bk-mod-icon">⏳</span> Asincrónica</div>
         </div>
+        <p class="bk-mod-nota" id="bkModNota" style="display:none"></p>
       </div>
 
       <!-- Step 3: Day -->
@@ -2190,6 +2196,33 @@
       horarios_por_dia: {},
     };
     let AGENDA_DIA_OVERRIDE = null; // override del día seleccionado
+
+    // ── Modalidad asincrónica: servicios que la ofrecen (id del servicio) ──
+    const SERVICIOS_ASINCRONICOS = ['limpieza', 'limpieza-energética-hogar', 'utero'];
+
+    // ── Semanas con hija (horario de colegio), cada 2 semanas desde el lunes `ancla`.
+    // En esas semanas la atención PRESENCIAL solo se ofrece hasta la hora indicada
+    // (hora de INICIO de la última sesión presencial). Online y asincrónica: horario normal.
+    // Semanas sin hija: horario normal para todas las modalidades.
+    const SEMANA_CON_HIJA = {
+      ancla: '2026-11-16',
+      cada_semanas: 2,
+      presencial_hasta: { 1: '14:00', 2: '14:00', 3: '13:00', 4: '11:00', 5: '11:00' },
+    };
+    function esSemanaConHija(date) {
+      const lunes = new Date(getMondayKey(date) + 'T00:00:00Z');
+      const ancla = new Date(SEMANA_CON_HIJA.ancla + 'T00:00:00Z');
+      const semanas = Math.round((lunes - ancla) / (7 * 864e5));
+      return semanas >= 0 && semanas % SEMANA_CON_HIJA.cada_semanas === 0;
+    }
+    // Última hora de inicio presencial para ese día, o null si no hay límite
+    function limitePresencial(date) {
+      if (!date || !esSemanaConHija(date)) return null;
+      return SEMANA_CON_HIJA.presencial_hasta[date.getDay()] || null;
+    }
+    function modalidadLabel(mod) {
+      return mod === 'online' ? 'Online' : mod === 'asincronico' ? 'Asincrónica' : 'Presencial';
+    }
 
     async function loadAgenda() {
       try {
@@ -2435,13 +2468,27 @@
       elTimes.innerHTML = '';
       const conf    = state.day !== null ? getModalidadConfig(days[state.day]) : null;
       const isMixta = conf?.modalidad === 'mixta';
+      const toMinT  = x => { const [h, m] = (x || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+      const limite  = (state.day !== null && state.modality === 'presencial') ? limitePresencial(days[state.day]) : null;
+      const nota    = document.getElementById('bkModNota');
+      if (nota) {
+        if (limite) {
+          nota.style.display = '';
+          nota.textContent = `Este día la atención presencial es hasta las ${limite} hrs. Para horarios más tarde elige Online o Asincrónica.`;
+        } else { nota.style.display = 'none'; }
+      }
       generarHorarios().forEach(t => {
         const el = document.createElement('div');
         const ocupado = SLOTS_OCUPADOS.includes(t) || slotOcupadoEnGcal(t);
-        el.className = 'bk-time' + (ocupado ? ' occupied' : '');
+        const fueraPresencial = !ocupado && limite && toMinT(t) > toMinT(limite);
+        el.className = 'bk-time' + (ocupado ? ' occupied' : '') + (fueraPresencial ? ' solo-otra' : '');
         el.dataset.time = t;
         if (ocupado) {
           el.textContent = t + ' · Ocupado';
+        } else if (fueraPresencial) {
+          el.innerHTML = `${t}<span class="bk-time-label">Online / asinc.</span>`;
+          elTimes.appendChild(el);
+          return;
         } else if (isMixta) {
           const slotMod = getModalidadParaSlot(days[state.day], t);
           const label   = slotMod === 'presencial' ? 'Presencial' : slotMod === 'online' ? 'Online' : '';
@@ -2491,6 +2538,14 @@
       elModality.querySelectorAll('.bk-mod').forEach(m => {
         m.classList.toggle('selected', m.dataset.mod === mod);
       });
+      // Semana con hija: si el horario elegido queda fuera del límite presencial, soltarlo
+      if (state.day !== null && days[state.day]) {
+        const lim = mod === 'presencial' ? limitePresencial(days[state.day]) : null;
+        const toM = x => { const [h, m] = (x || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+        if (lim && state.time && toM(state.time) > toM(lim)) state.time = null;
+        renderTimes();
+        if (state.time) elTimes.querySelectorAll('.bk-time').forEach(c => c.classList.toggle('selected', c.dataset.time === state.time));
+      }
       updateSummary();
       // Si ya hay un día seleccionado, re-verificar conflicto de modalidad
       if (state.day !== null && days[state.day]) {
@@ -2595,7 +2650,7 @@
       }
       const svc = SERVICES.find(s => s.id === state.service);
       const d = days[state.day];
-      const modLabel = state.modality === 'online' ? 'Online' : 'Presencial';
+      const modLabel = modalidadLabel(state.modality);
       const dayLabel = `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
       const precioBase = Number(svc.precio) || 0;
       const pDesc      = tieneBannerDesc('servicio', svc.id) ? (BANNER_DESCUENTO || 0) : 0;
@@ -2700,7 +2755,7 @@
       const svc = SERVICES.find(s => s.id === state.service);
       const d   = days[state.day];
       const fecha = d.toISOString().slice(0, 10);
-      const modLabel = state.modality === 'online' ? 'Online' : 'Presencial';
+      const modLabel = modalidadLabel(state.modality);
       const dayLabel = `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
 
       try {
@@ -3279,7 +3334,7 @@
         SERVICIOS_DATA = (rows || []).map(s => ({
           ...s,
           slides: (s.slides || []).map(src => src.startsWith('/') ? src.slice(1) : src),
-          modes:  modoToModes(s.modo),
+          modes:  modoToModes(s.modo).concat(SERVICIOS_ASINCRONICOS.includes(s.id) ? ['asincronico'] : []),
         }));
         SERVICES = SERVICIOS_DATA; // sincroniza con el array de booking
         // Actualizar lista de servicios en el footer
